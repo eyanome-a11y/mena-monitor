@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MENA Monitor — GeoIntel Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #060910;
+      color: #e2e8f0;
+      font-family: 'Space Mono', monospace;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* HEADER */
+    #header {
+      background: #0d1117;
+      border-bottom: 1px solid #1e293b;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 1000;
+      flex-shrink: 0;
+    }
+
+    #header h1 {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #fff;
+    }
+
+    #header h1 span { color: #f97316; }
+
+    .header-stats {
+      display: flex;
+      gap: 20px;
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+
+    .stat { color: #475569; }
+    .stat b { color: #e2e8f0; }
+
+    .pulse {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 8px #34d399;
+      animation: pulse 1.5s infinite;
+      margin-right: 5px;
+    }
+
+    @keyframes pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50% { opacity:0.4; transform:scale(0.8); }
+    }
+
+    /* MAIN LAYOUT */
+    #main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* MAP */
+    #map {
+      flex: 1;
+      z-index: 1;
+    }
+
+    /* Leaflet dark tiles */
+    .leaflet-tile {
+      filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+    }
+
+    /* SIDEBAR */
+    #sidebar {
+      width: 320px;
+      background: #0d1117;
+      border-left: 1px solid #1e293b;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    #sidebar-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #1e293b;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: #475569;
+    }
+
+    #filters {
+      padding: 10px 16px;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .filter-btn {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      color: #64748b;
+      padding: 3px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      transition: all 0.15s;
+    }
+
+    .filter-btn.active {
+      background: #f9731622;
+      border-color: #f97316;
+      color: #f97316;
+    }
+
+    #events-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    #events-list::-webkit-scrollbar { width: 4px; }
+    #events-list::-webkit-scrollbar-track { background: #0d1117; }
+    #events-list::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
+
+    .event-card {
+      background: #060910;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .event-card:hover {
+      border-color: #334155;
+      background: #0f172a;
+    }
+
+    .event-card.selected {
+      border-color: #f97316;
+      background: #f9731610;
+    }
+
+    .event-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .event-topic {
+      font-size: 9px;
+      letter-spacing: 1px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 700;
+    }
+
+    .event-time {
+      font-size: 9px;
+      color: #475569;
+    }
+
+    .event-location {
+      font-size: 10px;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+
+    .event-summary {
+      font-size: 10px;
+      color: #64748b;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .urgency-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    /* LEGEND */
+    #legend {
+      padding: 10px 16px;
+      border-top: 1px solid #1e293b;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 9px;
+      color: #64748b;
+    }
+
+    .legend-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+
+    /* CUSTOM MARKERS */
+    .custom-marker {
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.3);
+      animation: markerPulse 2s infinite;
+    }
+
+    @keyframes markerPulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.2); }
+      50% { box-shadow: 0 0 0 6px rgba(255,255,255,0); }
+    }
+
+    /* LOADING */
+    #loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2000;
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #475569;
+    }
+
+    #loading .spinner {
+      width: 30px; height: 30px;
+      border: 2px solid #1e293b;
+      border-top-color: #f97316;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 10px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* POPUP */
+    .leaflet-popup-content-wrapper {
+      background: #0d1117 !important;
+      border: 1px solid #1e293b !important;
+      border-radius: 8px !important;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5) !important;
+    }
+
+    .leaflet-popup-tip {
+      background: #0d1117 !important;
+    }
+
+    .leaflet-popup-content {
+      color: #e2e8f0 !important;
+      font-family: 'Space Mono', monospace !important;
+      font-size: 11px !important;
+      margin: 12px !important;
+      min-width: 220px;
+    }
+
+    .popup-title {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: #f97316;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .popup-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 4px;
+      font-size: 10px;
+    }
+
+    .popup-label { color: #475569; min-width: 60px; }
+    .popup-value { color: #94a3b8; }
+
+    .popup-summary {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #1e293b;
+      font-size: 10px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <h1>MENA <span>MONITOR</span> · GEOINTEL</h1>
+  <div class="header-stats">
+    <div class="stat"><span class="pulse"></span>LIVE</div>
+    <div class="stat">EVENTS: <b id="stat-total">—</b></div>
+    <div class="stat">HIGH URGENCY: <b id="stat-high">—</b></div>
+    <div class="stat">LAST UPDATE: <b id="stat-time">—</b></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="map">
+    <div id="loading">
+      <div class="spinner"></div>
+      LOADING INTELLIGENCE DATA...
+    </div>
+  </div>
+
+  <div id="sidebar">
+    <div id="sidebar-header">◈ LIVE EVENTS FEED</div>
+
+    <div id="filters">
+      <button class="filter-btn active" onclick="setFilter('all', event)">ALL</button>
+      <button class="filter-btn" onclick="setFilter('military', event)">MILITARY</button>
+      <button class="filter-btn" onclick="setFilter('diplomacy', event)">DIPLOMACY</button>
+      <button class="filter-btn" onclick="setFilter('politics', event)">POLITICS</button>
+      <button class="filter-btn" onclick="setFilter('humanitarian', event)">HUMANITARIAN</button>
+    </div>
+
+    <div id="events-list"></div>
+
+    <div id="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>HIGH</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>MEDIUM</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>LOW</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div>DIPLOMACY</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>MILITARY</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_URL = "https://function-bun-production-7822.up.railway.app/api/events";
+
+  const TOPIC_COLORS = {
+    military:     "#ef4444",
+    diplomacy:    "#8b5cf6",
+    humanitarian: "#06b6d4",
+    politics:     "#f59e0b",
+    economy:      "#10b981",
+    social:       "#ec4899",
+    other:        "#64748b",
+  };
+
+  const URGENCY_COLORS = {
+    high:   "#ef4444",
+    medium: "#f59e0b",
+    low:    "#3b82f6",
+  };
+
+  let map, allEvents = [], markers = [], currentFilter = 'all', selectedId = null;
+
+  // Init map centered on Iran/Middle East
+  map = L.map('map', { zoomControl: false }).setView([32.0, 44.0], 5);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+    maxZoom: 18,
+  }).addTo(map);
+
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+  function getMarkerColor(event) {
+    return TOPIC_COLORS[event.topic] || "#64748b";
+  }
+
+  function createMarkerIcon(event) {
+    const color = getMarkerColor(event);
+    const size = event.urgency === 'high' ? 16 : event.urgency === 'medium' ? 12 : 9;
+    return L.divIcon({
+      className: '',
+      html: `<div class="custom-marker" style="width:${size}px;height:${size}px;background:${color};box-shadow:0 0 ${size}px ${color}88;"></div>`,
+      iconSize: [size, size],
+      iconAnchor: [size/2, size/2],
+    });
+  }
+
+  function formatTime(ts) {
+    if (!ts) return '—';
+    try {
+      const d = new Date(ts);
+      return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
+    } catch { return ts; }
+  }
+
+  function topicColor(topic) {
+    return TOPIC_COLORS[topic] || "#64748b";
+  }
+
+  function renderEventCard(event, index) {
+    const color = topicColor(event.topic);
+    const urgColor = URGENCY_COLORS[event.urgency] || "#64748b";
+    return `
+      <div class="event-card ${selectedId === index ? 'selected' : ''}" onclick="selectEvent(${index})">
+        <div class="event-meta">
+          <span class="event-topic" style="background:${color}22;color:${color}">
+            ${(event.topic || 'other').toUpperCase()}
+          </span>
+          <span class="event-time">${formatTime(event.captured_at)}</span>
+        </div>
+        <div class="event-location">
+          <span class="urgency-dot" style="background:${urgColor}"></span>
+          ${event.location || '—'} · ${event.channel_title || '—'}
+        </div>
+        <div class="event-summary">${event.brief_summary || event.translated_text || '—'}</div>
+      </div>
+    `;
+  }
+
+  function renderSidebar() {
+    const filtered = currentFilter === 'all'
+      ? allEvents
+      : allEvents.filter(e => e.topic === currentFilter);
+
+    document.getElementById('events-list').innerHTML =
+      filtered.length
+        ? filtered.map((e, i) => renderEventCard(e, i)).join('')
+        : '<div style="padding:20px;text-align:center;font-size:10px;color:#475569;letter-spacing:2px;">NO EVENTS FOUND</div>';
+  }
+
+  function renderMarkers() {
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+
+    const filtered = currentFilter === 'all'
+      ? allEvents
+      : allEvents.filter(e => e.topic === currentFilter);
+
+    filtered.forEach((event, index) => {
+      const lat = parseFloat(event.latitude);
+      const lon = parseFloat(event.longitude);
+      if (isNaN(lat) || isNaN(lon)) return;
+
+      const marker = L.marker([lat, lon], { icon: createMarkerIcon(event) })
+        .addTo(map)
+        .bindPopup(`
+          <div class="popup-title">◈ ${(event.topic || 'EVENT').toUpperCase()}</div>
+          <div class="popup-row"><span class="popup-label">LOCATION</span><span class="popup-value">${event.location || '—'}</span></div>
+          <div class="popup-row"><span class="popup-label">SOURCE</span><span class="popup-value">${event.channel_title || '—'}</span></div>
+          <div class="popup-row"><span class="popup-label">URGENCY</span><span class="popup-value" style="color:${URGENCY_COLORS[event.urgency]}">${(event.urgency || '—').toUpperCase()}</span></div>
+          <div class="popup-row"><span class="popup-label">SENTIMENT</span><span class="popup-value">${event.sentiment || '—'}</span></div>
+          <div class="popup-row"><span class="popup-label">ACTORS</span><span class="popup-value">${event.actors || '—'}</span></div>
+          <div class="popup-summary">${event.brief_summary || '—'}</div>
+        `);
+
+      marker.on('click', () => {
+        selectedId = index;
+        renderSidebar();
+      });
+
+      markers.push(marker);
+    });
+  }
+
+  function setFilter(filter, evt) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    evt.target.classList.add('active');
+    renderMarkers();
+    renderSidebar();
+  }
+
+  function selectEvent(index) {
+    selectedId = index;
+    const e = allEvents[index];
+    const lat = parseFloat(e.latitude);
+    const lon = parseFloat(e.longitude);
+    if (!isNaN(lat) && !isNaN(lon)) {
+      map.setView([lat, lon], 8, { animate: true });
+      markers[index]?.openPopup();
+    }
+    renderSidebar();
+  }
+
+  async function loadEvents() {
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      allEvents = data.events || [];
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('stat-total').textContent = allEvents.length;
+      document.getElementById('stat-high').textContent = allEvents.filter(e => e.urgency === 'high').length;
+      document.getElementById('stat-time').textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+      renderMarkers();
+      renderSidebar();
+    } catch (err) {
+      document.getElementById('loading').innerHTML = '<div style="color:#ef4444;font-size:10px;letter-spacing:2px;">CONNECTION ERROR — RETRYING...</div>';
+      setTimeout(loadEvents, 5000);
+    }
+  }
+
+  // Load on start + refresh every 2 minutes
+  loadEvents();
+  setInterval(loadEvents, 120000);
+</script>
+</body>
+</html>
