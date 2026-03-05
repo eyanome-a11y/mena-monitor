@@ -1,152 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MENA Monitor — GeoIntel Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#060910;color:#e2e8f0;font-family:'Space Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
-    body {
-      background: #060910;
-      color: #e2e8f0;
-      font-family: 'Space Mono', monospace;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+    #header{background:#0d1117;border-bottom:1px solid #1e293b;padding:8px 20px;display:flex;align-items:center;justify-content:space-between;z-index:1000;flex-shrink:0}
+    #header h1{font-size:13px;font-weight:700;letter-spacing:3px;color:#fff}
+    #header h1 span{color:#f97316}
+    .header-stats{display:flex;gap:16px;font-size:10px;letter-spacing:1px}
+    .stat{color:#475569}.stat b{color:#e2e8f0}
+    .pulse{display:inline-block;width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 8px #34d399;animation:pulse 1.5s infinite;margin-right:5px}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
 
-    #header {
-      background: #0d1117;
-      border-bottom: 1px solid #1e293b;
-      padding: 8px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      z-index: 1000;
-      flex-shrink: 0;
-    }
+    #main{display:flex;flex:1;overflow:hidden}
+    #map{flex:1;z-index:1}
 
-    #header h1 { font-size: 13px; font-weight: 700; letter-spacing: 3px; color: #fff; }
-    #header h1 span { color: #f97316; }
+    #sidebar{width:300px;background:#0d1117;border-left:1px solid #1e293b;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
 
-    .header-stats { display: flex; gap: 20px; font-size: 10px; letter-spacing: 1px; }
-    .stat { color: #475569; }
-    .stat b { color: #e2e8f0; }
+    #sidebar-header{padding:10px 16px;border-bottom:1px solid #1e293b;font-size:10px;letter-spacing:2px;color:#475569;display:flex;justify-content:space-between;align-items:center}
 
-    .pulse {
-      display: inline-block; width: 7px; height: 7px;
-      border-radius: 50%; background: #34d399;
-      box-shadow: 0 0 8px #34d399; animation: pulse 1.5s infinite;
-      margin-right: 5px;
-    }
+    .filter-row{padding:7px 16px;border-bottom:1px solid #1e293b;display:flex;flex-wrap:wrap;gap:4px}
 
-    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)} }
+    .filter-btn{background:#0f172a;border:1px solid #1e293b;color:#64748b;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;transition:all .15s}
+    .filter-btn:hover{border-color:#334155;color:#94a3b8}
+    .filter-btn.active{background:#f9731622;border-color:#f97316;color:#f97316}
+    .filter-btn.time-btn.active{background:#a78bfa22;border-color:#a78bfa;color:#a78bfa}
+    .filter-btn.theater-iran.active{background:#f9731622;border-color:#f97316;color:#f97316}
+    .filter-btn.theater-syria.active{background:#06b6d422;border-color:#06b6d4;color:#06b6d4}
+    .filter-btn.theater-all.active{background:#34d39922;border-color:#34d399;color:#34d399}
 
-    #main { display: flex; flex: 1; overflow: hidden; }
-    #map { flex: 1; z-index: 1; }
+    #events-list{flex:1;overflow-y:auto;padding:6px}
+    #events-list::-webkit-scrollbar{width:3px}
+    #events-list::-webkit-scrollbar-track{background:#0d1117}
+    #events-list::-webkit-scrollbar-thumb{background:#1e293b;border-radius:2px}
 
-    #sidebar {
-      width: 300px;
-      background: #0d1117;
-      border-left: 1px solid #1e293b;
-      display: flex; flex-direction: column;
-      overflow: hidden; flex-shrink: 0;
-    }
+    .event-card{background:#060910;border:1px solid #1e293b;border-left:2px solid transparent;border-radius:6px;padding:8px 10px;margin-bottom:5px;cursor:pointer;transition:all .15s}
+    .event-card:hover{border-color:#334155;background:#0f172a}
+    .event-card.selected{border-color:#f97316;background:#f9731608}
+    .event-card.high-urgency{border-left-color:#ef4444}
+    .event-card.medium-urgency{border-left-color:#f59e0b}
+    .event-card.low-urgency{border-left-color:#3b82f6}
 
-    #sidebar-header {
-      padding: 10px 16px;
-      border-bottom: 1px solid #1e293b;
-      font-size: 10px; letter-spacing: 2px; color: #475569;
-      display: flex; justify-content: space-between; align-items: center;
-    }
+    .event-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+    .event-topic{font-size:9px;letter-spacing:1px;padding:2px 5px;border-radius:3px;font-weight:700}
+    .event-theater{font-size:8px;padding:1px 4px;border-radius:3px;letter-spacing:1px}
+    .event-time{font-size:9px;color:#475569}
+    .event-location{font-size:10px;color:#94a3b8;margin-bottom:3px}
+    .event-summary{font-size:10px;color:#64748b;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
-    #time-filter {
-      padding: 8px 16px;
-      border-bottom: 1px solid #1e293b;
-      display: flex; gap: 4px;
-    }
+    #legend{padding:8px 16px;border-top:1px solid #1e293b;display:flex;flex-wrap:wrap;gap:7px}
+    .legend-item{display:flex;align-items:center;gap:4px;font-size:9px;color:#64748b}
+    .legend-dot{width:7px;height:7px;border-radius:50%}
 
-    #filters {
-      padding: 8px 16px;
-      border-bottom: 1px solid #1e293b;
-      display: flex; flex-wrap: wrap; gap: 4px;
-    }
+    .leaflet-popup-content-wrapper{background:#0d1117!important;border:1px solid #1e293b!important;border-radius:8px!important;box-shadow:0 0 20px rgba(0,0,0,.6)!important}
+    .leaflet-popup-tip{background:#0d1117!important}
+    .leaflet-popup-content{color:#e2e8f0!important;font-family:'Space Mono',monospace!important;font-size:11px!important;margin:12px!important;min-width:200px;max-width:260px}
+    .leaflet-popup-close-button{color:#475569!important}
 
-    .filter-btn {
-      background: #0f172a; border: 1px solid #1e293b;
-      color: #64748b; padding: 3px 8px; border-radius: 4px;
-      cursor: pointer; font-family: 'Space Mono', monospace;
-      font-size: 9px; letter-spacing: 1px; transition: all 0.15s;
-    }
-    .filter-btn:hover { border-color: #334155; color: #94a3b8; }
-    .filter-btn.active { background: #f9731622; border-color: #f97316; color: #f97316; }
-    .filter-btn.time-btn.active { background: #a78bfa22; border-color: #a78bfa; color: #a78bfa; }
+    .popup-theater{font-size:8px;letter-spacing:2px;margin-bottom:2px}
+    .popup-topic{font-size:9px;letter-spacing:2px;font-weight:700;margin-bottom:3px}
+    .popup-location{font-size:13px;color:#e2e8f0;font-weight:700;margin-bottom:8px}
+    .popup-grid{display:grid;grid-template-columns:70px 1fr;gap:4px 6px;margin-bottom:8px}
+    .popup-label{font-size:9px;color:#475569;letter-spacing:1px}
+    .popup-value{font-size:10px;color:#94a3b8}
+    .popup-summary{padding-top:8px;border-top:1px solid #1e293b;font-size:10px;color:#64748b;line-height:1.5}
 
-    #events-list { flex: 1; overflow-y: auto; padding: 6px; }
-    #events-list::-webkit-scrollbar { width: 3px; }
-    #events-list::-webkit-scrollbar-track { background: #0d1117; }
-    #events-list::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
-
-    .event-card {
-      background: #060910; border: 1px solid #1e293b;
-      border-radius: 6px; padding: 8px 10px; margin-bottom: 5px;
-      cursor: pointer; transition: all 0.15s;
-      border-left: 2px solid transparent;
-    }
-    .event-card:hover { border-color: #334155; background: #0f172a; }
-    .event-card.selected { border-color: #f97316; background: #f9731608; }
-    .event-card.high-urgency { border-left-color: #ef4444; }
-    .event-card.medium-urgency { border-left-color: #f59e0b; }
-    .event-card.low-urgency { border-left-color: #3b82f6; }
-
-    .event-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-    .event-topic { font-size: 9px; letter-spacing: 1px; padding: 2px 5px; border-radius: 3px; font-weight: 700; }
-    .event-time { font-size: 9px; color: #475569; }
-    .event-location { font-size: 10px; color: #94a3b8; margin-bottom: 3px; }
-    .event-summary { font-size: 10px; color: #64748b; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
-    #legend {
-      padding: 8px 16px; border-top: 1px solid #1e293b;
-      display: flex; flex-wrap: wrap; gap: 8px;
-    }
-    .legend-item { display: flex; align-items: center; gap: 4px; font-size: 9px; color: #64748b; }
-    .legend-dot { width: 7px; height: 7px; border-radius: 50%; }
-
-    .leaflet-popup-content-wrapper {
-      background: #0d1117 !important; border: 1px solid #1e293b !important;
-      border-radius: 8px !important; box-shadow: 0 0 20px rgba(0,0,0,.6) !important;
-    }
-    .leaflet-popup-tip { background: #0d1117 !important; }
-    .leaflet-popup-content {
-      color: #e2e8f0 !important; font-family: 'Space Mono', monospace !important;
-      font-size: 11px !important; margin: 12px !important; min-width: 200px; max-width: 260px;
-    }
-    .leaflet-popup-close-button { color: #475569 !important; }
-
-    .popup-topic { font-size: 9px; letter-spacing: 2px; font-weight: 700; margin-bottom: 3px; }
-    .popup-location { font-size: 13px; color: #e2e8f0; font-weight: 700; margin-bottom: 8px; }
-    .popup-grid { display: grid; grid-template-columns: 70px 1fr; gap: 4px 6px; margin-bottom: 8px; }
-    .popup-label { font-size: 9px; color: #475569; letter-spacing: 1px; }
-    .popup-value { font-size: 10px; color: #94a3b8; }
-    .popup-summary { padding-top: 8px; border-top: 1px solid #1e293b; font-size: 10px; color: #64748b; line-height: 1.5; }
-
-    #loading {
-      position: absolute; top: 50%; left: 40%;
-      transform: translate(-50%, -50%);
-      z-index: 2000; text-align: center;
-      font-size: 10px; letter-spacing: 2px; color: #475569;
-    }
-    .spinner {
-      width: 28px; height: 28px; border: 2px solid #1e293b;
-      border-top-color: #f97316; border-radius: 50%;
-      animation: spin .8s linear infinite; margin: 0 auto 8px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading{position:absolute;top:50%;left:40%;transform:translate(-50%,-50%);z-index:2000;text-align:center;font-size:10px;letter-spacing:2px;color:#475569}
+    .spinner{width:28px;height:28px;border:2px solid #1e293b;border-top-color:#f97316;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 8px}
+    @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
@@ -157,6 +85,8 @@
     <div class="stat"><span class="pulse"></span>LIVE</div>
     <div class="stat">EVENTS: <b id="stat-total">—</b></div>
     <div class="stat">HIGH: <b id="stat-high" style="color:#ef4444">—</b></div>
+    <div class="stat">IRAN-ISR: <b id="stat-iran" style="color:#f97316">—</b></div>
+    <div class="stat">SYRIA: <b id="stat-syria" style="color:#06b6d4">—</b></div>
     <div class="stat">UPDATED: <b id="stat-time">—</b></div>
   </div>
 </div>
@@ -172,19 +102,28 @@
       <span id="event-count" style="color:#f97316">—</span>
     </div>
 
-    <div id="time-filter">
-      <button class="filter-btn time-btn active" onclick="setTimeFilter(6, this)">6H</button>
-      <button class="filter-btn time-btn" onclick="setTimeFilter(24, this)">24H</button>
-      <button class="filter-btn time-btn" onclick="setTimeFilter(72, this)">72H</button>
-      <button class="filter-btn time-btn" onclick="setTimeFilter(0, this)">ALL</button>
+    <!-- Theater filter -->
+    <div class="filter-row">
+      <button class="filter-btn theater-all active" onclick="setTheater('all',this)">🌍 ALL</button>
+      <button class="filter-btn theater-iran" onclick="setTheater('iran',this)">⚔️ IRAN-ISRAEL</button>
+      <button class="filter-btn theater-syria" onclick="setTheater('syria',this)">🇸🇾 SYRIA</button>
     </div>
 
-    <div id="filters">
-      <button class="filter-btn active" onclick="setTopicFilter('all', this)">ALL</button>
-      <button class="filter-btn" onclick="setTopicFilter('military', this)">MILITARY</button>
-      <button class="filter-btn" onclick="setTopicFilter('diplomacy', this)">DIPLOMACY</button>
-      <button class="filter-btn" onclick="setTopicFilter('politics', this)">POLITICS</button>
-      <button class="filter-btn" onclick="setTopicFilter('humanitarian', this)">HUMANITARIAN</button>
+    <!-- Time filter -->
+    <div class="filter-row">
+      <button class="filter-btn time-btn" onclick="setTimeFilter(6,this)">6H</button>
+      <button class="filter-btn time-btn" onclick="setTimeFilter(24,this)">24H</button>
+      <button class="filter-btn time-btn" onclick="setTimeFilter(72,this)">72H</button>
+      <button class="filter-btn time-btn active" onclick="setTimeFilter(0,this)">ALL</button>
+    </div>
+
+    <!-- Topic filter -->
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="setTopicFilter('all',this)">ALL</button>
+      <button class="filter-btn" onclick="setTopicFilter('military',this)">MILITARY</button>
+      <button class="filter-btn" onclick="setTopicFilter('diplomacy',this)">DIPLOMACY</button>
+      <button class="filter-btn" onclick="setTopicFilter('politics',this)">POLITICS</button>
+      <button class="filter-btn" onclick="setTopicFilter('humanitarian',this)">HUMAN.</button>
     </div>
 
     <div id="events-list"></div>
@@ -203,61 +142,62 @@
 const API_URL = "https://function-bun-production-7822.up.railway.app/api/events";
 
 const TOPIC_COLORS = {
-  military: "#ef4444", diplomacy: "#8b5cf6", humanitarian: "#06b6d4",
-  politics: "#f59e0b", economy: "#10b981", social: "#ec4899", other: "#64748b",
+  military:"#ef4444", diplomacy:"#8b5cf6", humanitarian:"#06b6d4",
+  politics:"#f59e0b", economy:"#10b981", social:"#ec4899", other:"#64748b",
 };
+const URGENCY_SIZES = {high:14, medium:10, low:7};
+const THEATER_COLORS = {iran:"#f97316", syria:"#06b6d4"};
 
-const URGENCY_SIZES = { high: 14, medium: 10, low: 7 };
+let map, allEvents=[], markers=[], selectedIdx=null;
+let currentTopic='all', currentHours=0, currentTheater='all';
 
-let map, allEvents = [], markers = [], selectedIdx = null;
-let currentTopic = 'all', currentHours = 6;
-
-map = L.map('map', { zoomControl: false }).setView([32.0, 44.0], 5);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '© OpenStreetMap © CARTO', maxZoom: 18,
+map = L.map('map',{zoomControl:false}).setView([33.0,42.0],5);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+  attribution:'© OpenStreetMap © CARTO', maxZoom:18,
 }).addTo(map);
-L.control.zoom({ position: 'bottomright' }).addTo(map);
+L.control.zoom({position:'bottomright'}).addTo(map);
 
-function getAgeHours(ts) {
-  if (!ts) return 9999;
-  try { return (Date.now() - new Date(ts).getTime()) / 3600000; }
-  catch { return 9999; }
+function getAgeHours(ts){
+  if(!ts) return 9999;
+  try{return(Date.now()-new Date(ts).getTime())/3600000}catch{return 9999}
 }
 
-function getOpacity(ts) {
-  const h = getAgeHours(ts);
-  if (h < 1)  return 1.0;
-  if (h < 6)  return 0.85;
-  if (h < 24) return 0.65;
-  if (h < 72) return 0.4;
+function getOpacity(ts){
+  const h=getAgeHours(ts);
+  if(h<1) return 1.0;
+  if(h<6) return 0.85;
+  if(h<24) return 0.65;
+  if(h<72) return 0.4;
   return 0.25;
 }
 
-function createIcon(event) {
-  const color = TOPIC_COLORS[event.topic] || "#64748b";
-  const size = URGENCY_SIZES[event.urgency] || 8;
+function createIcon(event){
+  const color = TOPIC_COLORS[event.topic]||"#64748b";
+  const size = URGENCY_SIZES[event.urgency]||8;
   const opacity = getOpacity(event.captured_at);
+  const ring = THEATER_COLORS[event.theater]||"#ffffff";
   return L.divIcon({
-    className: '',
-    html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};opacity:${opacity};box-shadow:0 0 ${size+2}px ${color};border:1px solid rgba(255,255,255,0.2);"></div>`,
-    iconSize: [size, size],
-    iconAnchor: [size/2, size/2],
+    className:'',
+    html:`<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};opacity:${opacity};box-shadow:0 0 ${size+2}px ${color};border:1.5px solid ${ring};"></div>`,
+    iconSize:[size,size], iconAnchor:[size/2,size/2],
   });
 }
 
-function formatTime(ts) {
-  if (!ts) return '—';
-  try { return new Date(ts).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }); }
-  catch { return ts.slice(0,16).replace('T',' '); }
+function formatTime(ts){
+  if(!ts) return '—';
+  try{return new Date(ts).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}
+  catch{return ts.slice(0,16).replace('T',' ')}
 }
 
-function buildPopup(e) {
-  const color = TOPIC_COLORS[e.topic] || "#64748b";
-  const uc = e.urgency === 'high' ? '#ef4444' : e.urgency === 'medium' ? '#f59e0b' : '#3b82f6';
-  const sc = e.sentiment === 'negative' ? '#ef4444' : e.sentiment === 'positive' ? '#34d399' : '#94a3b8';
+function buildPopup(e){
+  const color=TOPIC_COLORS[e.topic]||"#64748b";
+  const uc=e.urgency==='high'?'#ef4444':e.urgency==='medium'?'#f59e0b':'#3b82f6';
+  const sc=e.sentiment==='negative'?'#ef4444':e.sentiment==='positive'?'#34d399':'#94a3b8';
+  const tc=THEATER_COLORS[e.theater]||"#ffffff";
   return `
+    <div class="popup-theater" style="color:${tc}">${e.theater==='iran'?'IRAN-ISRAEL':(e.theater||'').toUpperCase()} THEATER</div>
     <div class="popup-topic" style="color:${color}">${(e.topic||'EVENT').toUpperCase()}</div>
-    <div class="popup-location">${e.location || '—'}</div>
+    <div class="popup-location">${e.location||'—'}</div>
     <div class="popup-grid">
       <span class="popup-label">SOURCE</span><span class="popup-value">${e.channel_title||'—'}</span>
       <span class="popup-label">URGENCY</span><span class="popup-value" style="color:${uc}">${(e.urgency||'—').toUpperCase()}</span>
@@ -265,45 +205,47 @@ function buildPopup(e) {
       <span class="popup-label">BIAS</span><span class="popup-value">${e.source_bias||'—'}</span>
       <span class="popup-label">TIME</span><span class="popup-value">${formatTime(e.captured_at)}</span>
     </div>
-    ${e.brief_summary ? `<div class="popup-summary">${e.brief_summary}</div>` : ''}
+    ${e.brief_summary?`<div class="popup-summary">${e.brief_summary}</div>`:''}
   `;
 }
 
-function getFiltered() {
-  return allEvents.filter(e => {
-    const topicOk = currentTopic === 'all' || e.topic === currentTopic;
-    const timeOk  = currentHours === 0 || getAgeHours(e.captured_at) <= currentHours;
-    return topicOk && timeOk;
+function getFiltered(){
+  return allEvents.filter(e=>{
+    const topicOk = currentTopic==='all'||e.topic===currentTopic;
+    const timeOk  = currentHours===0||getAgeHours(e.captured_at)<=currentHours;
+    const theaterOk = currentTheater==='all'||e.theater===currentTheater;
+    return topicOk&&timeOk&&theaterOk;
   });
 }
 
-function renderMarkers() {
-  markers.forEach(m => map.removeLayer(m));
-  markers = [];
-  getFiltered().forEach((e, i) => {
-    const lat = parseFloat(e.latitude);
-    const lon = parseFloat(e.longitude);
-    if (isNaN(lat) || isNaN(lon)) return;
-    const m = L.marker([lat, lon], { icon: createIcon(e) })
-      .addTo(map)
-      .bindPopup(buildPopup(e), { maxWidth: 280 });
-    m.on('click', () => { selectedIdx = i; renderSidebar(); });
+function renderMarkers(){
+  markers.forEach(m=>map.removeLayer(m));
+  markers=[];
+  getFiltered().forEach((e,i)=>{
+    const lat=parseFloat(e.latitude), lon=parseFloat(e.longitude);
+    if(isNaN(lat)||isNaN(lon)) return;
+    const m=L.marker([lat,lon],{icon:createIcon(e)}).addTo(map).bindPopup(buildPopup(e),{maxWidth:280});
+    m.on('click',()=>{selectedIdx=i;renderSidebar()});
     markers.push(m);
   });
 }
 
-function renderSidebar() {
-  const filtered = getFiltered();
-  document.getElementById('event-count').textContent = filtered.length + ' events';
-  if (!filtered.length) {
-    document.getElementById('events-list').innerHTML = '<div style="padding:20px;text-align:center;font-size:10px;color:#475569;letter-spacing:2px;">NO EVENTS IN THIS RANGE</div>';
+function renderSidebar(){
+  const filtered=getFiltered();
+  document.getElementById('event-count').textContent=filtered.length+' events';
+  if(!filtered.length){
+    document.getElementById('events-list').innerHTML='<div style="padding:20px;text-align:center;font-size:10px;color:#475569;letter-spacing:2px;">NO EVENTS IN THIS RANGE</div>';
     return;
   }
-  document.getElementById('events-list').innerHTML = filtered.map((e, i) => {
-    const color = TOPIC_COLORS[e.topic] || "#64748b";
+  document.getElementById('events-list').innerHTML=filtered.map((e,i)=>{
+    const color=TOPIC_COLORS[e.topic]||"#64748b";
+    const tc=THEATER_COLORS[e.theater]||"#94a3b8";
     return `<div class="event-card ${(e.urgency||'low')}-urgency ${selectedIdx===i?'selected':''}" onclick="selectEvent(${i})">
       <div class="event-meta">
-        <span class="event-topic" style="background:${color}22;color:${color}">${(e.topic||'other').toUpperCase()}</span>
+        <div style="display:flex;gap:4px;align-items:center">
+          <span class="event-topic" style="background:${color}22;color:${color}">${(e.topic||'other').toUpperCase()}</span>
+          <span class="event-theater" style="background:${tc}18;color:${tc}">${e.theater==='iran'?'IRAN-ISRAEL':(e.theater||'').toUpperCase()}</span>
+        </div>
         <span class="event-time">${formatTime(e.captured_at)}</span>
       </div>
       <div class="event-location">${e.location||'—'} · ${e.channel_title||'—'}</div>
@@ -312,50 +254,61 @@ function renderSidebar() {
   }).join('');
 }
 
-function selectEvent(i) {
-  selectedIdx = i;
-  const e = getFiltered()[i];
-  const lat = parseFloat(e.latitude);
-  const lon = parseFloat(e.longitude);
-  if (!isNaN(lat) && !isNaN(lon)) {
-    map.setView([lat, lon], 8, { animate: true });
-    if (markers[i]) markers[i].openPopup();
+function selectEvent(i){
+  selectedIdx=i;
+  const e=getFiltered()[i];
+  const lat=parseFloat(e.latitude), lon=parseFloat(e.longitude);
+  if(!isNaN(lat)&&!isNaN(lon)){
+    map.setView([lat,lon],8,{animate:true});
+    if(markers[i]) markers[i].openPopup();
   }
   renderSidebar();
 }
 
-function setTopicFilter(topic, btn) {
-  currentTopic = topic;
-  document.querySelectorAll('#filters .filter-btn').forEach(b => b.classList.remove('active'));
+function setTopicFilter(topic,btn){
+  currentTopic=topic;
+  document.querySelectorAll('#filters .filter-btn, .filter-row:nth-child(4) .filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  selectedIdx = null; renderMarkers(); renderSidebar();
+  selectedIdx=null; renderMarkers(); renderSidebar();
 }
 
-function setTimeFilter(hours, btn) {
-  currentHours = hours;
-  document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+function setTimeFilter(hours,btn){
+  currentHours=hours;
+  document.querySelectorAll('.time-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  selectedIdx = null; renderMarkers(); renderSidebar();
+  selectedIdx=null; renderMarkers(); renderSidebar();
 }
 
-async function loadEvents() {
-  try {
-    const res = await fetch(API_URL);
-    const data = await res.json();
-    allEvents = data.events || [];
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('stat-total').textContent = allEvents.length;
-    document.getElementById('stat-high').textContent = allEvents.filter(e => e.urgency === 'high').length;
-    document.getElementById('stat-time').textContent = new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+function setTheater(theater,btn){
+  currentTheater=theater;
+  document.querySelectorAll('.theater-all,.theater-iran,.theater-syria').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedIdx=null; renderMarkers(); renderSidebar();
+  if(theater==='iran') map.setView([32,53],5,{animate:true});
+  else if(theater==='syria') map.setView([35,38],6,{animate:true});
+  else map.setView([33,42],5,{animate:true});
+}
+
+async function loadEvents(){
+  try{
+    const res=await fetch(API_URL);
+    const data=await res.json();
+    allEvents=data.events||[];
+    document.getElementById('loading').style.display='none';
+    document.getElementById('stat-total').textContent=allEvents.length;
+    document.getElementById('stat-high').textContent=allEvents.filter(e=>e.urgency==='high').length;
+    document.getElementById('stat-iran').textContent=allEvents.filter(e=>e.theater==='iran').length;
+    document.getElementById('stat-syria').textContent=allEvents.filter(e=>e.theater==='syria').length;
+    document.getElementById('stat-time').textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     renderMarkers(); renderSidebar();
-  } catch(err) {
-    document.getElementById('loading').innerHTML = '<div style="color:#ef4444;font-size:10px;letter-spacing:2px;">CONNECTION ERROR — RETRYING...</div>';
-    setTimeout(loadEvents, 5000);
+  }catch(err){
+    document.getElementById('loading').innerHTML='<div style="color:#ef4444;font-size:10px;letter-spacing:2px;">CONNECTION ERROR — RETRYING...</div>';
+    setTimeout(loadEvents,5000);
   }
 }
 
 loadEvents();
-setInterval(loadEvents, 120000);
+setInterval(loadEvents,120000);
 </script>
 </body>
 </html>
