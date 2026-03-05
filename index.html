@@ -448,8 +448,8 @@
       : allEvents.filter(e => e.topic === currentFilter);
 
     filtered.forEach((event, index) => {
-      const lat = parseFloat(event.latitude);
-      const lon = parseFloat(event.longitude);
+      const lat = parseFloat((event.latitude || '').replace(',', '.'));
+      const lon = parseFloat((event.longitude || '').replace(',', '.'));
       if (isNaN(lat) || isNaN(lon)) return;
 
       const marker = L.marker([lat, lon], { icon: createMarkerIcon(event) })
