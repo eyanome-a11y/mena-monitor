@@ -98,9 +98,6 @@
       <button id="firms-btn" class="filter-btn" onclick="toggleFIRMS(this)" style="background:#0d1117;padding:6px 10px;font-size:10px">
         🛰️ SATELLITE
       </button>
-      <button id="gpsjam-btn" class="filter-btn" onclick="toggleGPSJam(this)" style="background:#0d1117;padding:6px 10px;font-size:10px;margin-top:4px">
-  📡 GPS JAM
-      </button>
       <button class="filter-btn" onclick="toggleFlights(this)" style="background:#0d1117;padding:6px 10px;font-size:10px;margin-top:4px">
   ✈ FLIGHTS
       </button>
@@ -253,28 +250,7 @@ function toggleFlights(btn) {
     btn.style.color = '';
   }
 }  
-  // GPSJam layer
-let gpsjamLayer = null;
-let gpsjamVisible = false;
-
-function toggleGPSJam(btn) {
-  gpsjamVisible = !gpsjamVisible;
-  if (gpsjamVisible) {
-    const today = new Date().toISOString().slice(0, 10);
-    gpsjamLayer = L.tileLayer(
-      `https://gpsjam.org/tiles/${today}/{z}/{x}/{y}.png`,
-      { opacity: 0.6, maxZoom: 18, attribution: '© GPSJam' }
-    ).addTo(map);
-    btn.classList.add('active');
-    btn.style.borderColor = '#22d3ee';
-    btn.style.color = '#22d3ee';
-  } else {
-    if (gpsjamLayer) map.removeLayer(gpsjamLayer);
-    btn.classList.remove('active');
-    btn.style.borderColor = '';
-    btn.style.color = '';
-  }
-}
+ 
 function getAgeHours(ts){
   if(!ts) return 9999;
   try{return(Date.now()-new Date(ts).getTime())/3600000}catch{return 9999}
