@@ -118,8 +118,18 @@
     </div>
 
     <!-- Time filter -->
-    <div class="filter-row">
-      <button class="filter-btn time-btn" onclick="setTimeFilter(6,this)">6H</button>
+    <!-- Timeline slider -->
+<div style="padding:8px 16px;border-bottom:1px solid #1e293b">
+  <div style="font-size:9px;color:#475569;letter-spacing:2px;margin-bottom:6px">⏱ TIMELINE</div>
+  <input type="range" id="timeline-slider" min="0" max="72" value="72"
+    style="width:100%;accent-color:#f97316;cursor:pointer"
+    oninput="setTimeline(this.value)">
+  <div style="display:flex;justify-content:space-between;font-size:9px;color:#475569;margin-top:3px">
+    <span>72H AGO</span>
+    <span id="timeline-label" style="color:#f97316">NOW</span>
+    <span>NOW</span>
+  </div>
+</div>
       <button class="filter-btn time-btn" onclick="setTimeFilter(24,this)">24H</button>
       <button class="filter-btn time-btn" onclick="setTimeFilter(72,this)">72H</button>
       <button class="filter-btn time-btn active" onclick="setTimeFilter(0,this)">ALL</button>
