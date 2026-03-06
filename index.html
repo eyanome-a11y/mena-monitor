@@ -105,6 +105,7 @@
     <div id="map-controls">
       <button class="filter-btn" onclick="toggleFIRMS(this)" style="background:#0d1117;padding:6px 10px;font-size:10px">🛰️ SATELLITE</button>
       <button class="filter-btn" onclick="toggleFlights(this)" style="background:#0d1117;padding:6px 10px;font-size:10px">✈ FLIGHTS</button>
+      <button class="filter-btn" onclick="toggleShips(this)" style="background:#0d1117;padding:6px 10px;font-size:10px">🚢 SHIPS</button>
     </div>
   </div>
 
@@ -249,7 +250,55 @@ function toggleFlights(btn) {
     btn.style.borderColor=''; btn.style.color='';
   }
 }
+// AIS Ships
+let shipsLayer = L.layerGroup();
+let shipsVisible = false;
+let shipsSocket = null;
 
+function toggleShips(btn) {
+  shipsVisible = !shipsVisible;
+  if (shipsVisible) {
+    shipsLayer.addTo(map);
+    btn.style.borderColor='#34d399'; btn.style.color='#34d399';
+    shipsSocket = new WebSocket("wss://stream.aisstream.io/v0/stream");
+    shipsSocket.onopen = () => {
+      shipsSocket.send(JSON.stringify({
+        APIKey: "d06c0bd06fcbe6ee82139b703211bdaf10707c31",
+        BoundingBoxes: [[[12,25],[42,65]]],
+        FilterMessageTypes: ["PositionReport"]
+      }));
+    };
+    shipsSocket.onmessage = (evt) => {
+      const data = JSON.parse(evt.data);
+      const meta = data.MetaData || {};
+      const msg = data.Message?.PositionReport || {};
+      const lat = meta.latitude || msg.Latitude;
+      const lon = meta.longitude || msg.Longitude;
+      const name = (meta.ShipName||'Unknown').trim();
+      const heading = msg.TrueHeading||msg.CourseOverGround||0;
+      const speed = msg.SpeedOverGround||0;
+      const mmsi = meta.MMSI||'—';
+      if(!lat||!lon) return;
+      const icon = L.divIcon({
+        className:'',
+        html:`<div style="color:#34d399;font-size:13px;transform:rotate(${heading}deg)">▲</div>`,
+        iconSize:[13,13],iconAnchor:[6,6]
+      });
+      L.marker([lat,lon],{icon}).bindPopup(`
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0">
+          <div style="color:#34d399;font-weight:700;letter-spacing:2px">🚢 ${name}</div>
+          <div style="color:#94a3b8;margin-top:4px">MMSI: ${mmsi}</div>
+          <div style="color:#94a3b8">Speed: ${speed} kn</div>
+          <div style="color:#94a3b8">Heading: ${heading}°</div>
+        </div>`).addTo(shipsLayer);
+    };
+  } else {
+    if(shipsSocket) shipsSocket.close();
+    map.removeLayer(shipsLayer);
+    shipsLayer = L.layerGroup();
+    btn.style.borderColor=''; btn.style.color='';
+  }
+}
 function getAgeHours(ts) {
   if(!ts) return 9999;
   try{return(Date.now()-new Date(ts).getTime())/3600000}catch{return 9999}
