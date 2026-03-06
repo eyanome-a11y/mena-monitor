@@ -101,6 +101,9 @@
       <button id="gpsjam-btn" class="filter-btn" onclick="toggleGPSJam(this)" style="background:#0d1117;padding:6px 10px;font-size:10px;margin-top:4px">
   📡 GPS JAM
       </button>
+      <button class="filter-btn" onclick="toggleFlights(this)" style="background:#0d1117;padding:6px 10px;font-size:10px;margin-top:4px">
+  ✈ FLIGHTS
+      </button>
     </div>
   </div>
 
@@ -206,6 +209,50 @@ function toggleFIRMS(btn) {
     btn.style.color = '';
   }
 }
+let flightsLayer = L.layerGroup();
+let flightsVisible = false;
+let flightsInterval = null;
+
+async function loadFlights() {
+  const res = await fetch('https://opensky-network.org/api/states/all?lamin=12&lomin=25&lamax=42&lomax=65');
+  const data = await res.json();
+  flightsLayer.clearLayers();
+  (data.states || []).filter(s => s[5] && s[6]).forEach(s => {
+    const lat = s[6], lon = s[5];
+    const callsign = (s[1]||'').trim()||'Unknown';
+    const country = s[2]||'—';
+    const heading = s[10]||0;
+    const alt = s[7] ? Math.round(s[7])+'m' : '—';
+    L.marker([lat, lon], {
+      icon: L.divIcon({
+        className:'',
+        html:`<div style="color:#60a5fa;font-size:14px;transform:rotate(${heading}deg)">✈</div>`,
+        iconSize:[14,14], iconAnchor:[7,7]
+      })
+    }).bindPopup(`<div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0">
+      <div style="color:#60a5fa;font-weight:700;letter-spacing:2px">✈ ${callsign}</div>
+      <div style="color:#94a3b8;margin-top:4px">Country: ${country}</div>
+      <div style="color:#94a3b8">Altitude: ${alt}</div>
+    </div>`).addTo(flightsLayer);
+  });
+}
+function toggleFlights(btn) {
+  flightsVisible = !flightsVisible;
+  if (flightsVisible) {
+    flightsLayer.addTo(map);
+    loadFlights();
+    flightsInterval = setInterval(loadFlights, 30000);
+    btn.classList.add('active');
+    btn.style.borderColor = '#60a5fa';
+    btn.style.color = '#60a5fa';
+  } else {
+    map.removeLayer(flightsLayer);
+    clearInterval(flightsInterval);
+    btn.classList.remove('active');
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  }
+}  
   // GPSJam layer
 let gpsjamLayer = null;
 let gpsjamVisible = false;
