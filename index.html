@@ -392,7 +392,15 @@ function setTheater(theater,btn){
   else if(theater==='syria') map.setView([35,38],6,{animate:true});
   else map.setView([33,42],5,{animate:true});
 }
-
+function setTimeline(val) {
+  const hoursAgo = 72 - parseInt(val);
+  const label = hoursAgo === 0 ? 'NOW' : hoursAgo + 'H AGO';
+  document.getElementById('timeline-label').textContent = label;
+  currentHours = hoursAgo === 0 ? 0 : hoursAgo;
+  selectedIdx = null;
+  renderMarkers();
+  renderSidebar();
+}
 async function loadEvents(){
   try{
     const res=await fetch(API_URL);
