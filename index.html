@@ -156,7 +156,48 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
   attribution:'© OpenStreetMap © CARTO', maxZoom:18,
 }).addTo(map);
 L.control.zoom({position:'bottomright'}).addTo(map);
+// FIRMS satellite layer
+let firmsLayer = L.layerGroup();
+let firmsVisible = false;
 
+async function loadFIRMS() {
+  const res = await fetch('https://function-bun-production-7822.up.railway.app/api/firms');
+  const data = await res.json();
+  firmsLayer.clearLayers();
+  (data.points || []).forEach(p => {
+    const lat = parseFloat(p.latitude);
+    const lon = parseFloat(p.longitude);
+    const bright = parseFloat(p.bright_ti4) || 300;
+    const intensity = Math.min((bright - 300) / 100, 1);
+    const size = 4 + Math.round(intensity * 6);
+    const color = intensity > 0.6 ? '#ff2200' : intensity > 0.3 ? '#ff6600' : '#ffaa00';
+    L.circleMarker([lat, lon], {
+      radius: size, color: 'transparent',
+      fillColor: color, fillOpacity: 0.7,
+    }).bindPopup(`<div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0">
+      <div style="color:#ff6600;font-weight:700;letter-spacing:2px">🛰️ THERMAL DETECTION</div>
+      <div style="color:#94a3b8;margin-top:4px">Brightness: ${bright}K</div>
+      <div style="color:#94a3b8">Time: ${p.acq_time||'—'} UTC</div>
+      <div style="color:#94a3b8">Confidence: ${p.confidence||'—'}</div>
+    </div>`).addTo(firmsLayer);
+  });
+}
+
+function toggleFIRMS(btn) {
+  firmsVisible = !firmsVisible;
+  if (firmsVisible) {
+    firmsLayer.addTo(map);
+    loadFIRMS();
+    btn.classList.add('active');
+    btn.style.borderColor = '#ff6600';
+    btn.style.color = '#ff6600';
+  } else {
+    map.removeLayer(firmsLayer);
+    btn.classList.remove('active');
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  }
+}
 function getAgeHours(ts){
   if(!ts) return 9999;
   try{return(Date.now()-new Date(ts).getTime())/3600000}catch{return 9999}
