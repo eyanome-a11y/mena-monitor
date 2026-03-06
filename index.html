@@ -260,14 +260,7 @@ function toggleShips(btn) {
   if (shipsVisible) {
     shipsLayer.addTo(map);
     btn.style.borderColor='#34d399'; btn.style.color='#34d399';
-    shipsSocket = new WebSocket("wss://stream.aisstream.io/v0/stream");
-    shipsSocket.onopen = () => {
-      shipsSocket.send(JSON.stringify({
-        APIKey: "d06c0bd06fcbe6ee82139b703211bdaf10707c31",
-        BoundingBoxes: [[[12,25],[42,65]]],
-        FilterMessageTypes: ["PositionReport"]
-      }));
-    };
+    shipsSocket = new WebSocket("wss://function-bun-production-7822.up.railway.app");
     shipsSocket.onmessage = (evt) => {
       const data = JSON.parse(evt.data);
       const meta = data.MetaData || {};
