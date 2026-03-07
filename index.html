@@ -10,8 +10,6 @@
     @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
     *{margin:0;padding:0;box-sizing:border-box}
     body{background:#060910;color:#e2e8f0;font-family:'Space Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden}
-
-    /* HEADER */
     #header{background:#0d1117;border-bottom:1px solid #1e293b;padding:8px 20px;display:flex;align-items:center;justify-content:space-between;z-index:1000;flex-shrink:0}
     #header h1{font-size:13px;font-weight:700;letter-spacing:3px;color:#fff}
     #header h1 span{color:#f97316}
@@ -19,14 +17,8 @@
     .stat{color:#475569}.stat b{color:#e2e8f0}
     .pulse{display:inline-block;width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 8px #34d399;animation:pulse 1.5s infinite;margin-right:5px}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
-
-    /* LAYOUT */
     #main{display:flex;flex:1;overflow:hidden}
-
-    /* RSS PANEL (left) */
-    #rss-panel{width:280px;background:#0d1117;border-right:1px solid #1e293b;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;transition:width .2s}
-    #rss-panel.collapsed{width:32px}
-    #rss-toggle{position:absolute;left:0;top:50%;transform:translateY(-50%);z-index:500;background:#0d1117;border:1px solid #1e293b;border-left:none;color:#475569;padding:8px 4px;cursor:pointer;font-size:10px;border-radius:0 4px 4px 0;writing-mode:vertical-rl}
+    #rss-panel{width:280px;background:#0d1117;border-right:1px solid #1e293b;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
     #rss-header{padding:10px 12px;border-bottom:1px solid #1e293b;font-size:10px;letter-spacing:2px;color:#a78bfa;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
     #rss-source-tabs{display:flex;gap:3px;padding:6px 8px;border-bottom:1px solid #1e293b;flex-wrap:wrap;flex-shrink:0}
     .rss-tab{background:#0f172a;border:1px solid #1e293b;color:#475569;padding:2px 6px;border-radius:3px;cursor:pointer;font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1px;transition:all .15s}
@@ -38,19 +30,14 @@
     #rss-list::-webkit-scrollbar-thumb{background:#1e293b;border-radius:2px}
     .rss-card{background:#060910;border:1px solid #1e293b;border-left:2px solid #a78bfa;border-radius:5px;padding:7px 9px;margin-bottom:4px;cursor:pointer;transition:all .15s}
     .rss-card:hover{background:#0f172a;border-color:#334155}
-    .rss-card.analyzing{border-left-color:#f97316;opacity:.7}
-    .rss-source{font-size:8px;color:#a78bfa;letter-spacing:1px;margin-bottom:3px}
+    .rss-card.analyzing{border-left-color:#f97316;opacity:.8}
+    .rss-source{font-size:8px;letter-spacing:1px;margin-bottom:3px}
     .rss-title{font-size:9px;color:#94a3b8;line-height:1.4;margin-bottom:3px}
     .rss-time{font-size:8px;color:#334155}
     .rss-analysis{margin-top:6px;padding-top:6px;border-top:1px solid #1e293b;font-size:9px;color:#64748b;line-height:1.5;display:none}
     .rss-analysis.visible{display:block}
-    .rss-analysis .analysis-label{font-size:8px;letter-spacing:1px;color:#f97316;margin-bottom:3px}
-    #rss-loading{padding:20px;text-align:center;font-size:9px;color:#475569;letter-spacing:2px}
-
-    /* MAP */
+    .analysis-label{font-size:8px;letter-spacing:1px;color:#f97316;margin-bottom:4px}
     #map{flex:1;z-index:1;position:relative}
-
-    /* RIGHT SIDEBAR */
     #sidebar{width:290px;background:#0d1117;border-left:1px solid #1e293b;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
     #sidebar-header{padding:10px 16px;border-bottom:1px solid #1e293b;font-size:10px;letter-spacing:2px;color:#475569;display:flex;justify-content:space-between;align-items:center}
     .filter-row{padding:7px 16px;border-bottom:1px solid #1e293b;display:flex;flex-wrap:wrap;gap:4px}
@@ -85,8 +72,6 @@
     #legend{padding:8px 16px;border-top:1px solid #1e293b;display:flex;flex-wrap:wrap;gap:7px}
     .legend-item{display:flex;align-items:center;gap:4px;font-size:9px;color:#64748b}
     .legend-dot{width:7px;height:7px;border-radius:50%}
-
-    /* POPUPS */
     .leaflet-popup-content-wrapper{background:#0d1117!important;border:1px solid #1e293b!important;border-radius:8px!important;box-shadow:0 0 20px rgba(0,0,0,.6)!important}
     .leaflet-popup-tip{background:#0d1117!important}
     .leaflet-popup-content{color:#e2e8f0!important;font-family:'Space Mono',monospace!important;font-size:11px!important;margin:12px!important;min-width:200px;max-width:260px}
@@ -98,19 +83,15 @@
     .popup-label{font-size:9px;color:#475569;letter-spacing:1px}
     .popup-value{font-size:10px;color:#94a3b8}
     .popup-summary{padding-top:8px;border-top:1px solid #1e293b;font-size:10px;color:#64748b;line-height:1.5}
-
-    /* MAP CONTROLS */
     #map-controls{position:absolute;bottom:30px;right:10px;z-index:1000;display:flex;flex-direction:column;gap:4px}
     .map-btn{background:#0d1117;border:1px solid #1e293b;color:#64748b;padding:6px 12px;border-radius:4px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;transition:all .15s;text-align:left;white-space:nowrap}
     .map-btn:hover{border-color:#334155;color:#94a3b8}
-
     #loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2000;text-align:center;font-size:10px;letter-spacing:2px;color:#475569}
     .spinner{width:28px;height:28px;border:2px solid #1e293b;border-top-color:#f97316;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 8px}
     @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
-
 <div id="header">
   <h1>MENA <span>MONITOR</span> · GEOINTEL</h1>
   <div class="header-stats">
@@ -122,10 +103,7 @@
     <div class="stat">UPDATED: <b id="stat-time">—</b></div>
   </div>
 </div>
-
 <div id="main">
-
-  <!-- RSS INTEL FEED (left) -->
   <div id="rss-panel">
     <div id="rss-header">
       <span>◈ INTEL FEED</span>
@@ -139,10 +117,9 @@
       <button class="rss-tab" onclick="loadRSS('isw',this)">ISW</button>
       <button class="rss-tab" onclick="loadRSS('bellingcat',this)">BCAT</button>
     </div>
-    <div id="rss-list"><div id="rss-loading">◌ LOADING FEED...</div></div>
+    <div id="rss-list"><div style="padding:16px;font-size:9px;color:#475569;letter-spacing:1px">◌ LOADING FEED...</div></div>
   </div>
 
-  <!-- MAP -->
   <div id="map">
     <div id="loading"><div class="spinner"></div>LOADING INTEL...</div>
     <div id="map-controls">
@@ -153,7 +130,6 @@
     </div>
   </div>
 
-  <!-- RIGHT SIDEBAR -->
   <div id="sidebar">
     <div id="sidebar-header">
       <span>◈ LIVE EVENTS FEED</span>
@@ -202,7 +178,6 @@ const API_URL="https://function-bun-production-7822.up.railway.app/api/events";
 const TOPIC_COLORS={military:"#ef4444",diplomacy:"#8b5cf6",humanitarian:"#06b6d4",politics:"#f59e0b",economy:"#10b981",social:"#ec4899",other:"#64748b"};
 const URGENCY_SIZES={high:14,medium:10,low:7};
 const THEATER_COLORS={iran:"#f97316",syria:"#06b6d4"};
-
 let map,allEvents=[],markers=[],selectedIdx=null;
 let currentTopic='all',currentHours=0,currentTheater='all',timelineHours=0;
 
@@ -210,118 +185,130 @@ map=L.map('map',{zoomControl:false}).setView([33.0,42.0],5);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:18}).addTo(map);
 L.control.zoom({position:'bottomright'}).addTo(map);
 
-// ── RSS INTEL FEED ──────────────────────────────────────────────────
-const RSS_SOURCES = {
-  aljazeera: { name:'Al Jazeera', url:'https://www.aljazeera.com/xml/rss/all.xml', color:'#f97316' },
-  reuters:   { name:'Reuters', url:'https://feeds.reuters.com/reuters/topNews', color:'#ef4444' },
-  bbc:       { name:'BBC Arabic', url:'http://feeds.bbci.co.uk/arabic/rss.xml', color:'#06b6d4' },
-  mee:       { name:'Middle East Eye', url:'https://www.middleeasteye.net/rss', color:'#34d399' },
-  isw:       { name:'ISW', url:'https://www.understandingwar.org/rss.xml', color:'#8b5cf6' },
-  bellingcat:{ name:'Bellingcat', url:'https://www.bellingcat.com/feed/', color:'#a78bfa' },
+// ── RSS INTEL FEED ───────────────────────────────────────────────────
+const RSS_SOURCES={
+  aljazeera:{name:'Al Jazeera',url:'https://www.aljazeera.com/xml/rss/all.xml',color:'#f97316'},
+  reuters:  {name:'Reuters',url:'https://feeds.reuters.com/reuters/topNews',color:'#ef4444'},
+  bbc:      {name:'BBC Arabic',url:'http://feeds.bbci.co.uk/arabic/rss.xml',color:'#06b6d4'},
+  mee:      {name:'Middle East Eye',url:'https://www.middleeasteye.net/rss',color:'#34d399'},
+  isw:      {name:'ISW',url:'https://www.understandingwar.org/rss.xml',color:'#8b5cf6'},
+  bellingcat:{name:'Bellingcat',url:'https://www.bellingcat.com/feed/',color:'#a78bfa'},
 };
-
-let currentRSSSource = 'aljazeera';
-let rssAnalysisCache = {};
+let currentRSSSource='aljazeera';
+let rssAnalysisCache={};
 
 async function loadRSS(sourceKey, btn) {
-  currentRSSSource = sourceKey;
+  currentRSSSource=sourceKey;
   document.querySelectorAll('.rss-tab').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
-  document.getElementById('rss-list').innerHTML='<div id="rss-loading">◌ LOADING FEED...</div>';
+  document.getElementById('rss-list').innerHTML='<div style="padding:16px;font-size:9px;color:#475569;letter-spacing:1px">◌ LOADING FEED...</div>';
 
-  const source = RSS_SOURCES[sourceKey];
-  const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}&count=20`;
+  const source=RSS_SOURCES[sourceKey];
+  const proxyUrl=`https://api.allorigins.win/get?url=${encodeURIComponent(source.url)}`;
 
   try {
-    const res = await fetch(proxyUrl);
-    const data = await res.json();
-    if(data.status !== 'ok' || !data.items?.length) {
-      document.getElementById('rss-list').innerHTML='<div style="padding:16px;font-size:9px;color:#475569;letter-spacing:1px">NO FEED DATA AVAILABLE</div>';
+    const res=await fetch(proxyUrl);
+    const data=await res.json();
+    if(!data.contents) throw new Error('No content');
+
+    const parser=new DOMParser();
+    const xml=parser.parseFromString(data.contents,'text/xml');
+    const items=Array.from(xml.querySelectorAll('item')).slice(0,20).map(item=>{
+      const getText=tag=>item.querySelector(tag)?.textContent||'';
+      return {
+        title: getText('title'),
+        link:  getText('link'),
+        pubDate: getText('pubDate'),
+        description: getText('description').replace(/<[^>]+>/g,'').slice(0,600),
+      };
+    });
+
+    if(!items.length) {
+      document.getElementById('rss-list').innerHTML='<div style="padding:16px;font-size:9px;color:#475569">NO ITEMS FOUND</div>';
       return;
     }
-    document.getElementById('rss-count').textContent = data.items.length + ' items';
-    document.getElementById('rss-list').innerHTML = data.items.map((item,i) => {
-      const pubDate = item.pubDate ? new Date(item.pubDate).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
-      const cached = rssAnalysisCache[item.link];
-      return `<div class="rss-card ${cached?'':''}` + `" id="rss-card-${i}" onclick="analyzeRSS(${i}, this)">
+
+    window._rssItems=items;
+    document.getElementById('rss-count').textContent=items.length+' items';
+
+    document.getElementById('rss-list').innerHTML=items.map((item,i)=>{
+      const pubDate=item.pubDate?new Date(item.pubDate).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'—';
+      const cached=rssAnalysisCache[item.link];
+      return `<div class="rss-card" id="rss-card-${i}" onclick="analyzeRSS(${i},this)">
         <div class="rss-source" style="color:${source.color}">${source.name.toUpperCase()}</div>
         <div class="rss-title">${item.title||'—'}</div>
         <div class="rss-time">${pubDate}</div>
         <div class="rss-analysis ${cached?'visible':''}" id="rss-analysis-${i}">
-          ${cached ? `<div class="analysis-label">◈ CLAUDE ANALYSIS</div>${cached}` : ''}
+          ${cached?`<div class="analysis-label">◈ CLAUDE ANALYSIS</div>${cached}`:''}
         </div>
       </div>`;
     }).join('');
-    // store items globally for analysis
-    window._rssItems = data.items;
+
   } catch(e) {
-    document.getElementById('rss-list').innerHTML=`<div style="padding:16px;font-size:9px;color:#ef4444;letter-spacing:1px">FEED ERROR — CHECK CONSOLE</div>`;
+    document.getElementById('rss-list').innerHTML=`<div style="padding:16px;font-size:9px;color:#ef4444;letter-spacing:1px">FEED ERROR — TRY ANOTHER SOURCE</div>`;
     console.log('RSS error:',e);
   }
 }
 
 async function analyzeRSS(idx, cardEl) {
-  const item = window._rssItems?.[idx];
+  const item=window._rssItems?.[idx];
   if(!item) return;
-  const analysisEl = document.getElementById(`rss-analysis-${idx}`);
+  const analysisEl=document.getElementById(`rss-analysis-${idx}`);
 
-  // Toggle off if already analyzed
   if(analysisEl.classList.contains('visible')) {
     analysisEl.classList.remove('visible');
     return;
   }
-
-  // Show cached
   if(rssAnalysisCache[item.link]) {
-    analysisEl.innerHTML = `<div class="analysis-label">◈ CLAUDE ANALYSIS</div>${rssAnalysisCache[item.link]}`;
+    analysisEl.innerHTML=`<div class="analysis-label">◈ CLAUDE ANALYSIS</div>${rssAnalysisCache[item.link]}`;
     analysisEl.classList.add('visible');
     return;
   }
 
   cardEl.classList.add('analyzing');
-  analysisEl.innerHTML = '<div style="color:#475569;font-size:9px">◌ ANALYZING...</div>';
+  analysisEl.innerHTML='<div style="color:#475569;font-size:9px;letter-spacing:1px">◌ ANALYZING...</div>';
   analysisEl.classList.add('visible');
 
-  const content = `Title: ${item.title}\n\nDescription: ${(item.description||'').replace(/<[^>]+>/g,'').slice(0,500)}`;
+  const content=`Title: ${item.title}\n\nDescription: ${item.description}`;
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
+      body:JSON.stringify({
         model:"claude-sonnet-4-20250514",
         max_tokens:1000,
-        system:`You are an intelligence analyst specializing in Middle East geopolitics. Analyze news items and provide a structured brief in English regardless of the original language. Format your response as:
+        system:`You are an intelligence analyst specializing in Middle East geopolitics. Analyze news items and respond ONLY in English regardless of input language. Format your response exactly as:
 TOPIC: [military/diplomacy/politics/humanitarian/other]
-URGENCY: [high/medium/low]  
+URGENCY: [high/medium/low]
 LOCATION: [specific country or city]
 ACTORS: [key parties involved]
-SUMMARY: [2-3 sentence intel brief in English]
+SUMMARY: [2-3 sentence intel brief]
 SIGNIFICANCE: [1 sentence on strategic importance]`,
         messages:[{role:"user",content:`Analyze this news item:\n\n${content}`}]
       })
     });
-    const data = await res.json();
-    const text = data.content?.[0]?.text || 'Analysis unavailable';
-    const formatted = text.split('\n').filter(l=>l.trim()).map(l=>{
-      const parts = l.split(':');
-      if(parts.length>=2){
-        const label=parts[0].trim();
-        const value=parts.slice(1).join(':').trim();
-        const labelColor = label==='URGENCY'&&value.toLowerCase()==='high'?'#ef4444':label==='URGENCY'&&value.toLowerCase()==='medium'?'#f59e0b':'#a78bfa';
-        return `<div style="margin-bottom:3px"><span style="color:${labelColor};font-size:8px;letter-spacing:1px">${label}:</span> <span style="color:#94a3b8;font-size:9px">${value}</span></div>`;
+    const data=await res.json();
+    const text=data.content?.[0]?.text||'';
+    const formatted=text.split('\n').filter(l=>l.trim()).map(l=>{
+      const colon=l.indexOf(':');
+      if(colon>0){
+        const label=l.slice(0,colon).trim();
+        const value=l.slice(colon+1).trim();
+        const lc=label==='URGENCY'&&value.toLowerCase()==='high'?'#ef4444':label==='URGENCY'&&value.toLowerCase()==='medium'?'#f59e0b':'#a78bfa';
+        return `<div style="margin-bottom:4px"><span style="color:${lc};font-size:8px;letter-spacing:1px">${label}:</span> <span style="color:#94a3b8;font-size:9px">${value}</span></div>`;
       }
       return `<div style="color:#64748b;font-size:9px;margin-bottom:2px">${l}</div>`;
     }).join('');
-    rssAnalysisCache[item.link] = formatted;
-    analysisEl.innerHTML = `<div class="analysis-label">◈ CLAUDE ANALYSIS</div>${formatted}`;
+    rssAnalysisCache[item.link]=formatted;
+    analysisEl.innerHTML=`<div class="analysis-label">◈ CLAUDE ANALYSIS</div>${formatted}`;
   } catch(e) {
-    analysisEl.innerHTML = '<div style="color:#ef4444;font-size:9px">Analysis failed</div>';
+    analysisEl.innerHTML='<div style="color:#ef4444;font-size:9px">Analysis failed</div>';
   }
   cardEl.classList.remove('analyzing');
 }
 
-// ── SATELLITE ───────────────────────────────────────────────────────
+// ── SATELLITE ────────────────────────────────────────────────────────
 let firmsLayer=L.layerGroup(),firmsVisible=false;
 async function loadFIRMS(){
   try{
@@ -347,7 +334,7 @@ function toggleFIRMS(btn){
   else{map.removeLayer(firmsLayer);btn.style.borderColor='';btn.style.color='';}
 }
 
-// ── FLIGHTS ─────────────────────────────────────────────────────────
+// ── FLIGHTS ──────────────────────────────────────────────────────────
 let flightsLayer=L.layerGroup(),flightsVisible=false,flightsInterval=null;
 async function loadFlights(){
   try{
@@ -368,7 +355,7 @@ function toggleFlights(btn){
   else{map.removeLayer(flightsLayer);clearInterval(flightsInterval);btn.style.borderColor='';btn.style.color='';}
 }
 
-// ── SHIPS ───────────────────────────────────────────────────────────
+// ── SHIPS ────────────────────────────────────────────────────────────
 let shipsLayer=L.layerGroup(),shipsVisible=false,shipsSocket=null;
 function toggleShips(btn){
   shipsVisible=!shipsVisible;
@@ -397,7 +384,7 @@ function toggleShips(btn){
   }
 }
 
-// ── DESALINATION ────────────────────────────────────────────────────
+// ── DESALINATION ─────────────────────────────────────────────────────
 const DESAL_PLANTS=[
   {name:"Ras Al-Khair",country:"Saudi Arabia",lat:27.0833,lon:49.4167,capacity:1025000,dependency:70,alternative:"Fossil aquifers (30-50yr remaining)",risk:"CRITICAL"},
   {name:"Jubail 1 & 2",country:"Saudi Arabia",lat:27.0047,lon:49.6594,capacity:800000,dependency:70,alternative:"Fossil aquifers (30-50yr remaining)",risk:"CRITICAL"},
@@ -443,7 +430,7 @@ function toggleDesal(btn){
   else{map.removeLayer(desalLayer);btn.style.borderColor='';btn.style.color='';}
 }
 
-// ── EVENTS & MAP ─────────────────────────────────────────────────────
+// ── EVENTS ───────────────────────────────────────────────────────────
 function getAgeHours(ts){if(!ts)return 9999;try{return(Date.now()-new Date(ts).getTime())/3600000}catch{return 9999}}
 function getOpacity(ts){const h=getAgeHours(ts);if(h<1)return 1;if(h<6)return 0.85;if(h<24)return 0.65;if(h<72)return 0.4;return 0.25;}
 function createIcon(e){
@@ -541,11 +528,10 @@ async function loadEvents(){
   }
 }
 
-// Init
 loadEvents();
 setInterval(loadEvents,120000);
-loadRSS('aljazeera', document.querySelector('.rss-tab'));
-setInterval(()=>loadRSS(currentRSSSource,null),300000); // refresh RSS every 5min
+loadRSS('aljazeera',document.querySelector('.rss-tab'));
+setInterval(()=>loadRSS(currentRSSSource,null),300000);
 </script>
 </body>
 </html>
