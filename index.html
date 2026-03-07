@@ -106,6 +106,7 @@
       <button class="filter-btn" onclick="toggleFIRMS(this)" style="background:#0d1117;padding:6px 10px;font-size:10px">🛰️ SATELLITE</button>
       <button class="filter-btn" onclick="toggleFlights(this)" style="background:#0d1117;padding:6px 10px;font-size:10px">✈ FLIGHTS</button>
       <button class="filter-btn" onclick="toggleShips(this)" style="background:#0d1117;padding:6px 10px;font-size:10px">🚢 SHIPS</button>
+      <button class="filter-btn" onclick="toggleDesal(this)" style="background:#0d1117;padding:6px 10px;font-size:10px">💧 DESAL</button>
     </div>
   </div>
 
@@ -238,6 +239,71 @@ async function loadFlights() {
     });
   } catch(e) { console.log('Flights error:', e); }
 }
+// Desalination Plants
+const DESAL_PLANTS = [
+  // Saudi Arabia
+  {name:"Ras Al-Khair",country:"Saudi Arabia",lat:27.0833,lon:49.4167,capacity:1025000,dependency:70,alternative:"Fossil aquifers (30-50yr remaining)",risk:"CRITICAL"},
+  {name:"Jubail 1 & 2",country:"Saudi Arabia",lat:27.0047,lon:49.6594,capacity:800000,dependency:70,alternative:"Fossil aquifers (30-50yr remaining)",risk:"CRITICAL"},
+  {name:"Shoaiba",country:"Saudi Arabia",lat:21.0833,lon:39.1167,capacity:600000,dependency:70,alternative:"Limited groundwater",risk:"HIGH"},
+  {name:"Yanbu",country:"Saudi Arabia",lat:24.0875,lon:38.0583,capacity:550000,dependency:70,alternative:"Limited groundwater",risk:"HIGH"},
+  {name:"Jeddah",country:"Saudi Arabia",lat:21.4858,lon:39.1925,capacity:400000,dependency:70,alternative:"None viable at scale",risk:"HIGH"},
+  // UAE
+  {name:"Taweelah",country:"UAE",lat:24.5167,lon:54.7,capacity:909000,dependency:99,alternative:"NONE — total dependence",risk:"CRITICAL"},
+  {name:"Jebel Ali",country:"UAE",lat:24.9833,lon:55.05,capacity:636000,dependency:99,alternative:"NONE — total dependence",risk:"CRITICAL"},
+  {name:"Fujairah 1 & 2",country:"UAE",lat:25.1167,lon:56.3333,capacity:591000,dependency:99,alternative:"NONE — total dependence",risk:"CRITICAL"},
+  // Kuwait
+  {name:"Az-Zour North",country:"Kuwait",lat:28.75,lon:48.3667,capacity:567000,dependency:100,alternative:"NONE — zero groundwater",risk:"CRITICAL"},
+  {name:"Doha East & West",country:"Kuwait",lat:29.4333,lon:47.9667,capacity:400000,dependency:100,alternative:"NONE — zero groundwater",risk:"CRITICAL"},
+  // Qatar
+  {name:"Ras Laffan",country:"Qatar",lat:25.8833,lon:51.55,capacity:600000,dependency:99,alternative:"NONE — fossil aquifers <5yr",risk:"CRITICAL"},
+  {name:"Al-Kharaana",country:"Qatar",lat:25.25,lon:51.3,capacity:282000,dependency:99,alternative:"NONE — fossil aquifers <5yr",risk:"CRITICAL"},
+  // Bahrain
+  {name:"Al-Hidd",country:"Bahrain",lat:26.2333,lon:50.65,capacity:300000,dependency:97,alternative:"NONE — island state",risk:"CRITICAL"},
+  {name:"Sitra",country:"Bahrain",lat:26.15,lon:50.6167,capacity:180000,dependency:97,alternative:"NONE — island state",risk:"CRITICAL"},
+  // Oman
+  {name:"Barka 1-4",country:"Oman",lat:23.7,lon:57.9,capacity:490000,dependency:80,alternative:"Limited groundwater",risk:"HIGH"},
+  {name:"Ghubrah",country:"Oman",lat:23.6167,lon:58.5333,capacity:340000,dependency:80,alternative:"Limited groundwater",risk:"HIGH"},
+];
+
+let desalLayer = L.layerGroup();
+let desalVisible = false;
+
+function loadDesal() {
+  desalLayer.clearLayers();
+  DESAL_PLANTS.forEach(p => {
+    const riskColor = p.risk==='CRITICAL'?'#ef4444':'#f59e0b';
+    const icon = L.divIcon({
+      className:'',
+      html:`<div style="font-size:16px;filter:drop-shadow(0 0 4px ${riskColor})">💧</div>`,
+      iconSize:[16,16],iconAnchor:[8,8]
+    });
+    L.marker([p.lat,p.lon],{icon}).bindPopup(`
+      <div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0;min-width:220px">
+        <div style="color:${riskColor};font-weight:700;letter-spacing:2px;margin-bottom:2px">⚠ ${p.risk} INFRASTRUCTURE</div>
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:6px">💧 ${p.name}</div>
+        <div style="display:grid;grid-template-columns:100px 1fr;gap:3px 6px;margin-bottom:8px">
+          <span style="color:#475569">COUNTRY</span><span style="color:#94a3b8">${p.country}</span>
+          <span style="color:#475569">CAPACITY</span><span style="color:#94a3b8">${(p.capacity/1000).toFixed(0)}K m³/day</span>
+          <span style="color:#475569">DEPENDENCY</span><span style="color:${riskColor}">${p.dependency}% national supply</span>
+        </div>
+        <div style="padding-top:6px;border-top:1px solid #1e293b">
+          <div style="color:#475569;font-size:9px;letter-spacing:1px;margin-bottom:3px">IF DESTROYED — ALTERNATIVE:</div>
+          <div style="color:#ef4444;font-size:10px;line-height:1.4">${p.alternative}</div>
+        </div>
+      </div>`,{maxWidth:280}).addTo(desalLayer);
+  });
+}
+
+function toggleDesal(btn) {
+  desalVisible = !desalVisible;
+  if (desalVisible) {
+    desalLayer.addTo(map); loadDesal();
+    btn.style.borderColor='#06b6d4'; btn.style.color='#06b6d4';
+  } else {
+    map.removeLayer(desalLayer);
+    btn.style.borderColor=''; btn.style.color='';
+  }
+}  
 function toggleFlights(btn) {
   flightsVisible = !flightsVisible;
   if (flightsVisible) {
