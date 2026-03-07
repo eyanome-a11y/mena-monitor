@@ -300,13 +300,13 @@ function toggleFIRMS(btn){
 let flightsLayer=L.layerGroup(),flightsVisible=false,flightsInterval=null;
 async function loadFlights(){
   try{
-    const res=await fetch('https://opensky-network.org/api/states/all?lamin=12&lomin=25&lamax=42&lomax=65');
+    const res=await fetch('https://function-bun-production-7822.up.railway.app/api/flights');
     const data=await res.json();
     flightsLayer.clearLayers();
-    (data.states||[]).filter(s=>s[5]&&s[6]).forEach(s=>{
-      const lat=s[6],lon=s[5],callsign=(s[1]||'').trim()||'Unknown',country=s[2]||'—',heading=s[10]||0,alt=s[7]?Math.round(s[7])+'m':'—';
+    (data.aircraft||[]).forEach(a=>{
+      const lat=a.lat,lon=a.lon,callsign=a.callsign||'Unknown',heading=a.heading||0,alt=a.alt?a.alt+'ft':'—';
       L.marker([lat,lon],{icon:L.divIcon({className:'',html:`<div style="color:#60a5fa;font-size:14px;transform:rotate(${heading}deg)">✈</div>`,iconSize:[14,14],iconAnchor:[7,7]})})
-        .bindPopup(`<div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0"><div style="color:#60a5fa;font-weight:700">✈ ${callsign}</div><div style="color:#94a3b8;margin-top:4px">Country: ${country}</div><div style="color:#94a3b8">Alt: ${alt}</div></div>`)
+        .bindPopup(`<div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0"><div style="color:#60a5fa;font-weight:700">✈ ${callsign}</div><div style="color:#94a3b8;margin-top:4px">Reg: ${a.country}</div><div style="color:#94a3b8">Alt: ${alt}</div></div>`)
         .addTo(flightsLayer);
     });
   }catch(e){console.log('Flights:',e);}
