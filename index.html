@@ -18,26 +18,32 @@
     .pulse{display:inline-block;width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 8px #34d399;animation:pulse 1.5s infinite;margin-right:5px}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
     #main{display:flex;flex:1;overflow:hidden}
-    #rss-panel{width:280px;background:#0d1117;border-right:1px solid #1e293b;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
-    #rss-header{padding:10px 12px;border-bottom:1px solid #1e293b;font-size:10px;letter-spacing:2px;color:#a78bfa;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
-    #rss-source-tabs{display:flex;gap:3px;padding:6px 8px;border-bottom:1px solid #1e293b;flex-wrap:wrap;flex-shrink:0}
+
+    /* RSS PANEL */
+    #rss-panel{width:270px;background:#0d1117;border-right:1px solid #1e293b;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+    #rss-header{padding:8px 12px;border-bottom:1px solid #1e293b;font-size:10px;letter-spacing:2px;color:#a78bfa;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+    #rss-source-tabs{display:flex;gap:3px;padding:5px 8px;border-bottom:1px solid #1e293b;flex-wrap:wrap;flex-shrink:0}
     .rss-tab{background:#0f172a;border:1px solid #1e293b;color:#475569;padding:2px 6px;border-radius:3px;cursor:pointer;font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1px;transition:all .15s}
     .rss-tab:hover{border-color:#334155;color:#64748b}
-    .rss-tab.active{background:#a78bfa22;border-color:#a78bfa;color:#a78bfa}
-    #rss-list{flex:1;overflow-y:auto;padding:6px}
+    .rss-tab.active{border-color:#a78bfa;color:#a78bfa;background:#a78bfa18}
+    #rss-list{flex:1;overflow-y:auto;padding:5px}
     #rss-list::-webkit-scrollbar{width:3px}
     #rss-list::-webkit-scrollbar-track{background:#0d1117}
     #rss-list::-webkit-scrollbar-thumb{background:#1e293b;border-radius:2px}
-    .rss-card{background:#060910;border:1px solid #1e293b;border-left:2px solid #a78bfa;border-radius:5px;padding:7px 9px;margin-bottom:4px;cursor:pointer;transition:all .15s}
+    .rss-card{background:#060910;border:1px solid #1e293b;border-radius:4px;padding:7px 9px;margin-bottom:4px;cursor:pointer;transition:all .15s;text-decoration:none;display:block}
     .rss-card:hover{background:#0f172a;border-color:#334155}
-    .rss-card.analyzing{border-left-color:#f97316;opacity:.8}
-    .rss-source{font-size:8px;letter-spacing:1px;margin-bottom:3px}
-    .rss-title{font-size:9px;color:#94a3b8;line-height:1.4;margin-bottom:3px}
-    .rss-time{font-size:8px;color:#334155}
-    .rss-analysis{margin-top:6px;padding-top:6px;border-top:1px solid #1e293b;font-size:9px;color:#64748b;line-height:1.5;display:none}
-    .rss-analysis.visible{display:block}
-    .analysis-label{font-size:8px;letter-spacing:1px;color:#f97316;margin-bottom:4px}
+    .rss-source-tag{font-size:8px;letter-spacing:1px;margin-bottom:3px;font-weight:700}
+    .rss-title{font-size:9px;color:#94a3b8;line-height:1.45}
+    .rss-time{font-size:8px;color:#334155;margin-top:3px}
+    #rss-status{padding:16px;font-size:9px;color:#475569;letter-spacing:1px;text-align:center}
+
+    /* MAP */
     #map{flex:1;z-index:1;position:relative}
+    #map-controls{position:absolute;bottom:30px;right:10px;z-index:1000;display:flex;flex-direction:column;gap:4px}
+    .map-btn{background:#0d1117;border:1px solid #1e293b;color:#64748b;padding:6px 12px;border-radius:4px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;transition:all .15s;text-align:left;white-space:nowrap}
+    .map-btn:hover{border-color:#334155;color:#94a3b8}
+
+    /* RIGHT SIDEBAR */
     #sidebar{width:290px;background:#0d1117;border-left:1px solid #1e293b;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
     #sidebar-header{padding:10px 16px;border-bottom:1px solid #1e293b;font-size:10px;letter-spacing:2px;color:#475569;display:flex;justify-content:space-between;align-items:center}
     .filter-row{padding:7px 16px;border-bottom:1px solid #1e293b;display:flex;flex-wrap:wrap;gap:4px}
@@ -72,6 +78,8 @@
     #legend{padding:8px 16px;border-top:1px solid #1e293b;display:flex;flex-wrap:wrap;gap:7px}
     .legend-item{display:flex;align-items:center;gap:4px;font-size:9px;color:#64748b}
     .legend-dot{width:7px;height:7px;border-radius:50%}
+
+    /* POPUPS */
     .leaflet-popup-content-wrapper{background:#0d1117!important;border:1px solid #1e293b!important;border-radius:8px!important;box-shadow:0 0 20px rgba(0,0,0,.6)!important}
     .leaflet-popup-tip{background:#0d1117!important}
     .leaflet-popup-content{color:#e2e8f0!important;font-family:'Space Mono',monospace!important;font-size:11px!important;margin:12px!important;min-width:200px;max-width:260px}
@@ -83,9 +91,7 @@
     .popup-label{font-size:9px;color:#475569;letter-spacing:1px}
     .popup-value{font-size:10px;color:#94a3b8}
     .popup-summary{padding-top:8px;border-top:1px solid #1e293b;font-size:10px;color:#64748b;line-height:1.5}
-    #map-controls{position:absolute;bottom:30px;right:10px;z-index:1000;display:flex;flex-direction:column;gap:4px}
-    .map-btn{background:#0d1117;border:1px solid #1e293b;color:#64748b;padding:6px 12px;border-radius:4px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;transition:all .15s;text-align:left;white-space:nowrap}
-    .map-btn:hover{border-color:#334155;color:#94a3b8}
+
     #loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2000;text-align:center;font-size:10px;letter-spacing:2px;color:#475569}
     .spinner{width:28px;height:28px;border:2px solid #1e293b;border-top-color:#f97316;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 8px}
     @keyframes spin{to{transform:rotate(360deg)}}
@@ -103,23 +109,27 @@
     <div class="stat">UPDATED: <b id="stat-time">—</b></div>
   </div>
 </div>
+
 <div id="main">
+  <!-- RSS INTEL FEED -->
   <div id="rss-panel">
     <div id="rss-header">
       <span>◈ INTEL FEED</span>
       <span id="rss-count" style="color:#a78bfa;font-size:9px">—</span>
     </div>
     <div id="rss-source-tabs">
-      <button class="rss-tab active" onclick="loadRSS('aljazeera',this)">AJA</button>
+      <button class="rss-tab active" onclick="loadRSS('aje',this)">AJE</button>
       <button class="rss-tab" onclick="loadRSS('reuters',this)">REUTERS</button>
       <button class="rss-tab" onclick="loadRSS('bbc',this)">BBC</button>
-      <button class="rss-tab" onclick="loadRSS('mee',this)">MEE</button>
       <button class="rss-tab" onclick="loadRSS('isw',this)">ISW</button>
       <button class="rss-tab" onclick="loadRSS('bellingcat',this)">BCAT</button>
+      <button class="rss-tab" onclick="loadRSS('mee',this)">MEE</button>
+      <button class="rss-tab" onclick="loadRSS('cradle',this)">CRADLE</button>
     </div>
-    <div id="rss-list"><div style="padding:16px;font-size:9px;color:#475569;letter-spacing:1px">◌ LOADING FEED...</div></div>
+    <div id="rss-list"><div id="rss-status">◌ LOADING...</div></div>
   </div>
 
+  <!-- MAP -->
   <div id="map">
     <div id="loading"><div class="spinner"></div>LOADING INTEL...</div>
     <div id="map-controls">
@@ -130,6 +140,7 @@
     </div>
   </div>
 
+  <!-- RIGHT SIDEBAR -->
   <div id="sidebar">
     <div id="sidebar-header">
       <span>◈ LIVE EVENTS FEED</span>
@@ -187,125 +198,98 @@ L.control.zoom({position:'bottomright'}).addTo(map);
 
 // ── RSS INTEL FEED ───────────────────────────────────────────────────
 const RSS_SOURCES={
-  aljazeera:{name:'Al Jazeera',url:'https://www.aljazeera.com/xml/rss/all.xml',color:'#f97316'},
-  reuters:  {name:'Reuters',url:'https://feeds.reuters.com/reuters/topNews',color:'#ef4444'},
-  bbc:      {name:'BBC Arabic',url:'http://feeds.bbci.co.uk/arabic/rss.xml',color:'#06b6d4'},
-  mee:      {name:'Middle East Eye',url:'https://www.middleeasteye.net/rss',color:'#34d399'},
-  isw:      {name:'ISW',url:'https://www.understandingwar.org/rss.xml',color:'#8b5cf6'},
-  bellingcat:{name:'Bellingcat',url:'https://www.bellingcat.com/feed/',color:'#a78bfa'},
+  aje:       {name:'Al Jazeera Eng', url:'https://www.aljazeera.com/xml/rss/all.xml',        color:'#f97316'},
+  reuters:   {name:'Reuters',        url:'https://feeds.reuters.com/reuters/topNews',          color:'#ef4444'},
+  bbc:       {name:'BBC Mid East',   url:'http://feeds.bbci.co.uk/news/world/middle_east/rss.xml', color:'#06b6d4'},
+  isw:       {name:'ISW',            url:'https://www.understandingwar.org/rss.xml',           color:'#8b5cf6'},
+  bellingcat:{name:'Bellingcat',     url:'https://www.bellingcat.com/feed/',                  color:'#a78bfa'},
+  mee:       {name:'Mid East Eye',   url:'https://www.middleeasteye.net/rss',                 color:'#34d399'},
+  cradle:    {name:'The Cradle',     url:'https://thecradle.co/feed',                         color:'#f59e0b'},
 };
-let currentRSSSource='aljazeera';
-let rssAnalysisCache={};
+
+let currentRSSSource='aje';
+
+async function fetchWithFallback(url) {
+  const proxies=[
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+  ];
+  for(const proxy of proxies){
+    try{
+      const res=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
+      if(!res.ok) continue;
+      const data=await res.json();
+      // allorigins wraps in .contents, corsproxy returns raw text
+      const text=data.contents||await res.text();
+      if(text&&text.length>100) return text;
+    }catch(e){ continue; }
+  }
+  // last resort: direct (may fail due to CORS but worth trying)
+  try{
+    const res=await fetch(url,{signal:AbortSignal.timeout(8000)});
+    return await res.text();
+  }catch(e){ return null; }
+}
+
+// corsproxy returns text directly, need to handle both
+async function fetchRSSText(url) {
+  const proxies=[
+    {url:`https://corsproxy.io/?${encodeURIComponent(url)}`, isJson:false},
+    {url:`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, isJson:true},
+  ];
+  for(const p of proxies){
+    try{
+      const res=await fetch(p.url,{signal:AbortSignal.timeout(10000)});
+      if(!res.ok) continue;
+      let text;
+      if(p.isJson){
+        const data=await res.json();
+        text=data.contents;
+      } else {
+        text=await res.text();
+      }
+      if(text&&text.includes('<item>')) return text;
+    }catch(e){ continue; }
+  }
+  return null;
+}
 
 async function loadRSS(sourceKey, btn) {
   currentRSSSource=sourceKey;
   document.querySelectorAll('.rss-tab').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
-  document.getElementById('rss-list').innerHTML='<div style="padding:16px;font-size:9px;color:#475569;letter-spacing:1px">◌ LOADING FEED...</div>';
+  document.getElementById('rss-list').innerHTML='<div id="rss-status">◌ LOADING FEED...</div>';
 
   const source=RSS_SOURCES[sourceKey];
-  const proxyUrl=`https://api.allorigins.win/get?url=${encodeURIComponent(source.url)}`;
+  const text=await fetchRSSText(source.url);
 
-  try {
-    const res=await fetch(proxyUrl);
-    const data=await res.json();
-    if(!data.contents) throw new Error('No content');
-
-    const parser=new DOMParser();
-    const xml=parser.parseFromString(data.contents,'text/xml');
-    const items=Array.from(xml.querySelectorAll('item')).slice(0,20).map(item=>{
-      const getText=tag=>item.querySelector(tag)?.textContent||'';
-      return {
-        title: getText('title'),
-        link:  getText('link'),
-        pubDate: getText('pubDate'),
-        description: getText('description').replace(/<[^>]+>/g,'').slice(0,600),
-      };
-    });
-
-    if(!items.length) {
-      document.getElementById('rss-list').innerHTML='<div style="padding:16px;font-size:9px;color:#475569">NO ITEMS FOUND</div>';
-      return;
-    }
-
-    window._rssItems=items;
-    document.getElementById('rss-count').textContent=items.length+' items';
-
-    document.getElementById('rss-list').innerHTML=items.map((item,i)=>{
-      const pubDate=item.pubDate?new Date(item.pubDate).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'—';
-      const cached=rssAnalysisCache[item.link];
-      return `<div class="rss-card" id="rss-card-${i}" onclick="analyzeRSS(${i},this)">
-        <div class="rss-source" style="color:${source.color}">${source.name.toUpperCase()}</div>
-        <div class="rss-title">${item.title||'—'}</div>
-        <div class="rss-time">${pubDate}</div>
-        <div class="rss-analysis ${cached?'visible':''}" id="rss-analysis-${i}">
-          ${cached?`<div class="analysis-label">◈ CLAUDE ANALYSIS</div>${cached}`:''}
-        </div>
-      </div>`;
-    }).join('');
-
-  } catch(e) {
-    document.getElementById('rss-list').innerHTML=`<div style="padding:16px;font-size:9px;color:#ef4444;letter-spacing:1px">FEED ERROR — TRY ANOTHER SOURCE</div>`;
-    console.log('RSS error:',e);
-  }
-}
-
-async function analyzeRSS(idx, cardEl) {
-  const item=window._rssItems?.[idx];
-  if(!item) return;
-  const analysisEl=document.getElementById(`rss-analysis-${idx}`);
-
-  if(analysisEl.classList.contains('visible')) {
-    analysisEl.classList.remove('visible');
-    return;
-  }
-  if(rssAnalysisCache[item.link]) {
-    analysisEl.innerHTML=`<div class="analysis-label">◈ CLAUDE ANALYSIS</div>${rssAnalysisCache[item.link]}`;
-    analysisEl.classList.add('visible');
+  if(!text){
+    document.getElementById('rss-list').innerHTML=`<div id="rss-status" style="color:#ef4444">FEED UNAVAILABLE</div>`;
     return;
   }
 
-  cardEl.classList.add('analyzing');
-  analysisEl.innerHTML='<div style="color:#475569;font-size:9px;letter-spacing:1px">◌ ANALYZING...</div>';
-  analysisEl.classList.add('visible');
+  const parser=new DOMParser();
+  const xml=parser.parseFromString(text,'text/xml');
+  const items=Array.from(xml.querySelectorAll('item')).slice(0,25);
 
-  const content=`Title: ${item.title}\n\nDescription: ${item.description}`;
-
-  try {
-    const res=await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model:"claude-sonnet-4-20250514",
-        max_tokens:1000,
-        system:`You are an intelligence analyst specializing in Middle East geopolitics. Analyze news items and respond ONLY in English regardless of input language. Format your response exactly as:
-TOPIC: [military/diplomacy/politics/humanitarian/other]
-URGENCY: [high/medium/low]
-LOCATION: [specific country or city]
-ACTORS: [key parties involved]
-SUMMARY: [2-3 sentence intel brief]
-SIGNIFICANCE: [1 sentence on strategic importance]`,
-        messages:[{role:"user",content:`Analyze this news item:\n\n${content}`}]
-      })
-    });
-    const data=await res.json();
-    const text=data.content?.[0]?.text||'';
-    const formatted=text.split('\n').filter(l=>l.trim()).map(l=>{
-      const colon=l.indexOf(':');
-      if(colon>0){
-        const label=l.slice(0,colon).trim();
-        const value=l.slice(colon+1).trim();
-        const lc=label==='URGENCY'&&value.toLowerCase()==='high'?'#ef4444':label==='URGENCY'&&value.toLowerCase()==='medium'?'#f59e0b':'#a78bfa';
-        return `<div style="margin-bottom:4px"><span style="color:${lc};font-size:8px;letter-spacing:1px">${label}:</span> <span style="color:#94a3b8;font-size:9px">${value}</span></div>`;
-      }
-      return `<div style="color:#64748b;font-size:9px;margin-bottom:2px">${l}</div>`;
-    }).join('');
-    rssAnalysisCache[item.link]=formatted;
-    analysisEl.innerHTML=`<div class="analysis-label">◈ CLAUDE ANALYSIS</div>${formatted}`;
-  } catch(e) {
-    analysisEl.innerHTML='<div style="color:#ef4444;font-size:9px">Analysis failed</div>';
+  if(!items.length){
+    document.getElementById('rss-list').innerHTML=`<div id="rss-status">NO ITEMS FOUND</div>`;
+    return;
   }
-  cardEl.classList.remove('analyzing');
+
+  document.getElementById('rss-count').textContent=items.length+' items';
+
+  document.getElementById('rss-list').innerHTML=items.map(item=>{
+    const title=item.querySelector('title')?.textContent?.trim()||'—';
+    const link=item.querySelector('link')?.textContent?.trim()||'#';
+    const pubDate=item.querySelector('pubDate')?.textContent||'';
+    const timeStr=pubDate?new Date(pubDate).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'—';
+    return `<a class="rss-card" href="${link}" target="_blank" rel="noopener">
+      <div class="rss-source-tag" style="color:${source.color}">${source.name.toUpperCase()}</div>
+      <div class="rss-title">${title}</div>
+      <div class="rss-time">${timeStr}</div>
+    </a>`;
+  }).join('');
 }
 
 // ── SATELLITE ────────────────────────────────────────────────────────
@@ -530,7 +514,7 @@ async function loadEvents(){
 
 loadEvents();
 setInterval(loadEvents,120000);
-loadRSS('aljazeera',document.querySelector('.rss-tab'));
+loadRSS('aje', document.querySelector('.rss-tab'));
 setInterval(()=>loadRSS(currentRSSSource,null),300000);
 </script>
 </body>
