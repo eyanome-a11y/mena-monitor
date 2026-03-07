@@ -209,48 +209,38 @@ const RSS_SOURCES={
 
 let currentRSSSource='aje';
 
-async function fetchWithFallback(url) {
-  const proxies=[
-    `https://corsproxy.io/?${encodeURIComponent(url)}`,
-    `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-  ];
-  for(const proxy of proxies){
-    try{
-      const res=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
-      if(!res.ok) continue;
-      const data=await res.json();
-      // allorigins wraps in .contents, corsproxy returns raw text
-      const text=data.contents||await res.text();
-      if(text&&text.length>100) return text;
-    }catch(e){ continue; }
-  }
-  // last resort: direct (may fail due to CORS but worth trying)
+async function fetchRSSItems(url) {
+  // rss2json.com — most reliable free RSS-to-JSON proxy
   try{
-    const res=await fetch(url,{signal:AbortSignal.timeout(8000)});
-    return await res.text();
-  }catch(e){ return null; }
-}
-
-// corsproxy returns text directly, need to handle both
-async function fetchRSSText(url) {
-  const proxies=[
-    {url:`https://corsproxy.io/?${encodeURIComponent(url)}`, isJson:false},
-    {url:`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, isJson:true},
-  ];
-  for(const p of proxies){
-    try{
-      const res=await fetch(p.url,{signal:AbortSignal.timeout(10000)});
-      if(!res.ok) continue;
-      let text;
-      if(p.isJson){
-        const data=await res.json();
-        text=data.contents;
-      } else {
-        text=await res.text();
-      }
-      if(text&&text.includes('<item>')) return text;
-    }catch(e){ continue; }
-  }
+    const apiUrl=`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=25`;
+    const res=await fetch(apiUrl,{signal:AbortSignal.timeout(10000)});
+    const data=await res.json();
+    if(data.status==='ok'&&data.items?.length){
+      return data.items.map(item=>({
+        title: item.title||'—',
+        link:  item.link||'#',
+        pubDate: item.pubDate||'',
+        description: (item.description||'').replace(/<[^>]+>/g,'').slice(0,300),
+      }));
+    }
+  }catch(e){}
+  // fallback: allorigins + XML parse
+  try{
+    const proxyUrl=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const res=await fetch(proxyUrl,{signal:AbortSignal.timeout(10000)});
+    const data=await res.json();
+    if(!data.contents) return null;
+    const parser=new DOMParser();
+    const xml=parser.parseFromString(data.contents,'text/xml');
+    const nodes=Array.from(xml.querySelectorAll('item')).slice(0,25);
+    if(!nodes.length) return null;
+    return nodes.map(item=>({
+      title: item.querySelector('title')?.textContent?.trim()||'—',
+      link:  item.querySelector('link')?.textContent?.trim()||'#',
+      pubDate: item.querySelector('pubDate')?.textContent||'',
+      description: '',
+    }));
+  }catch(e){}
   return null;
 }
 
@@ -261,32 +251,20 @@ async function loadRSS(sourceKey, btn) {
   document.getElementById('rss-list').innerHTML='<div id="rss-status">◌ LOADING FEED...</div>';
 
   const source=RSS_SOURCES[sourceKey];
-  const text=await fetchRSSText(source.url);
+  const items=await fetchRSSItems(source.url);
 
-  if(!text){
+  if(!items||!items.length){
     document.getElementById('rss-list').innerHTML=`<div id="rss-status" style="color:#ef4444">FEED UNAVAILABLE</div>`;
-    return;
-  }
-
-  const parser=new DOMParser();
-  const xml=parser.parseFromString(text,'text/xml');
-  const items=Array.from(xml.querySelectorAll('item')).slice(0,25);
-
-  if(!items.length){
-    document.getElementById('rss-list').innerHTML=`<div id="rss-status">NO ITEMS FOUND</div>`;
     return;
   }
 
   document.getElementById('rss-count').textContent=items.length+' items';
 
   document.getElementById('rss-list').innerHTML=items.map(item=>{
-    const title=item.querySelector('title')?.textContent?.trim()||'—';
-    const link=item.querySelector('link')?.textContent?.trim()||'#';
-    const pubDate=item.querySelector('pubDate')?.textContent||'';
-    const timeStr=pubDate?new Date(pubDate).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'—';
-    return `<a class="rss-card" href="${link}" target="_blank" rel="noopener">
+    const timeStr=item.pubDate?new Date(item.pubDate).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'—';
+    return `<a class="rss-card" href="${item.link}" target="_blank" rel="noopener">
       <div class="rss-source-tag" style="color:${source.color}">${source.name.toUpperCase()}</div>
-      <div class="rss-title">${title}</div>
+      <div class="rss-title">${item.title}</div>
       <div class="rss-time">${timeStr}</div>
     </a>`;
   }).join('');
