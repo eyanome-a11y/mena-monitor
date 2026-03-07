@@ -10,7 +10,6 @@
     @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
     *{margin:0;padding:0;box-sizing:border-box}
     body{background:#060910;color:#e2e8f0;font-family:'Space Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden}
-
     #header{background:#0d1117;border-bottom:1px solid #1e293b;padding:8px 20px;display:flex;align-items:center;justify-content:space-between;z-index:1000;flex-shrink:0}
     #header h1{font-size:13px;font-weight:700;letter-spacing:3px;color:#fff}
     #header h1 span{color:#f97316}
@@ -18,16 +17,11 @@
     .stat{color:#475569}.stat b{color:#e2e8f0}
     .pulse{display:inline-block;width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 8px #34d399;animation:pulse 1.5s infinite;margin-right:5px}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
-
     #main{display:flex;flex:1;overflow:hidden}
     #map{flex:1;z-index:1;position:relative}
-
     #sidebar{width:300px;background:#0d1117;border-left:1px solid #1e293b;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
-
     #sidebar-header{padding:10px 16px;border-bottom:1px solid #1e293b;font-size:10px;letter-spacing:2px;color:#475569;display:flex;justify-content:space-between;align-items:center}
-
     .filter-row{padding:7px 16px;border-bottom:1px solid #1e293b;display:flex;flex-wrap:wrap;gap:4px}
-
     .filter-btn{background:#0f172a;border:1px solid #1e293b;color:#64748b;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;transition:all .15s}
     .filter-btn:hover{border-color:#334155;color:#94a3b8}
     .filter-btn.active{background:#f9731622;border-color:#f97316;color:#f97316}
@@ -35,41 +29,34 @@
     .filter-btn.theater-iran.active{background:#f9731622;border-color:#f97316;color:#f97316}
     .filter-btn.theater-syria.active{background:#06b6d422;border-color:#06b6d4;color:#06b6d4}
     .filter-btn.theater-all.active{background:#34d39922;border-color:#34d399;color:#34d399}
-
     #timeline-box{padding:8px 16px;border-bottom:1px solid #1e293b}
     #timeline-box .tl-label{font-size:9px;color:#475569;letter-spacing:2px;margin-bottom:5px}
     #timeline-slider{width:100%;accent-color:#f97316;cursor:pointer}
     #timeline-ticks{display:flex;justify-content:space-between;font-size:8px;color:#475569;margin-top:2px}
     #timeline-ticks span{color:#f97316;font-weight:700}
-
     #events-list{flex:1;overflow-y:auto;padding:6px}
     #events-list::-webkit-scrollbar{width:3px}
     #events-list::-webkit-scrollbar-track{background:#0d1117}
     #events-list::-webkit-scrollbar-thumb{background:#1e293b;border-radius:2px}
-
     .event-card{background:#060910;border:1px solid #1e293b;border-left:2px solid transparent;border-radius:6px;padding:8px 10px;margin-bottom:5px;cursor:pointer;transition:all .15s}
     .event-card:hover{border-color:#334155;background:#0f172a}
     .event-card.selected{border-color:#f97316;background:#f9731608}
     .event-card.high-urgency{border-left-color:#ef4444}
     .event-card.medium-urgency{border-left-color:#f59e0b}
     .event-card.low-urgency{border-left-color:#3b82f6}
-
     .event-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
     .event-topic{font-size:9px;letter-spacing:1px;padding:2px 5px;border-radius:3px;font-weight:700}
     .event-theater{font-size:8px;padding:1px 4px;border-radius:3px;letter-spacing:1px}
     .event-time{font-size:9px;color:#475569}
     .event-location{font-size:10px;color:#94a3b8;margin-bottom:3px}
     .event-summary{font-size:10px;color:#64748b;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-
     #legend{padding:8px 16px;border-top:1px solid #1e293b;display:flex;flex-wrap:wrap;gap:7px}
     .legend-item{display:flex;align-items:center;gap:4px;font-size:9px;color:#64748b}
     .legend-dot{width:7px;height:7px;border-radius:50%}
-
     .leaflet-popup-content-wrapper{background:#0d1117!important;border:1px solid #1e293b!important;border-radius:8px!important;box-shadow:0 0 20px rgba(0,0,0,.6)!important}
     .leaflet-popup-tip{background:#0d1117!important}
     .leaflet-popup-content{color:#e2e8f0!important;font-family:'Space Mono',monospace!important;font-size:11px!important;margin:12px!important;min-width:200px;max-width:260px}
     .leaflet-popup-close-button{color:#475569!important}
-
     .popup-theater{font-size:8px;letter-spacing:2px;margin-bottom:2px}
     .popup-topic{font-size:9px;letter-spacing:2px;font-weight:700;margin-bottom:3px}
     .popup-location{font-size:13px;color:#e2e8f0;font-weight:700;margin-bottom:8px}
@@ -77,16 +64,15 @@
     .popup-label{font-size:9px;color:#475569;letter-spacing:1px}
     .popup-value{font-size:10px;color:#94a3b8}
     .popup-summary{padding-top:8px;border-top:1px solid #1e293b;font-size:10px;color:#64748b;line-height:1.5}
-
-    #map-controls{position:absolute;bottom:80px;right:10px;z-index:1000;display:flex;flex-direction:column;gap:4px}
-
+    #map-controls{position:absolute;bottom:30px;right:10px;z-index:1000;display:flex;flex-direction:column;gap:4px}
+    .map-btn{background:#0d1117;border:1px solid #1e293b;color:#64748b;padding:6px 12px;border-radius:4px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;transition:all .15s;text-align:left;white-space:nowrap}
+    .map-btn:hover{border-color:#334155;color:#94a3b8}
     #loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2000;text-align:center;font-size:10px;letter-spacing:2px;color:#475569}
     .spinner{width:28px;height:28px;border:2px solid #1e293b;border-top-color:#f97316;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 8px}
     @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
-
 <div id="header">
   <h1>MENA <span>MONITOR</span> · GEOINTEL</h1>
   <div class="header-stats">
@@ -98,32 +84,26 @@
     <div class="stat">UPDATED: <b id="stat-time">—</b></div>
   </div>
 </div>
-
 <div id="main">
   <div id="map">
     <div id="loading"><div class="spinner"></div>LOADING INTEL...</div>
     <div id="map-controls">
-      <button class="filter-btn" onclick="toggleFIRMS(this)" style="background:#0d1117;padding:6px 10px;font-size:10px">🛰️ SATELLITE</button>
-      <button class="filter-btn" onclick="toggleFlights(this)" style="background:#0d1117;padding:6px 10px;font-size:10px">✈ FLIGHTS</button>
-      <button class="filter-btn" onclick="toggleShips(this)" style="background:#0d1117;padding:6px 10px;font-size:10px">🚢 SHIPS</button>
-      <button class="filter-btn" onclick="toggleDesal(this)" style="background:#0d1117;padding:6px 10px;font-size:10px">💧 DESAL</button>
+      <button class="map-btn" onclick="toggleFIRMS(this)">🛰️ SATELLITE</button>
+      <button class="map-btn" onclick="toggleFlights(this)">✈ FLIGHTS</button>
+      <button class="map-btn" onclick="toggleShips(this)">🚢 SHIPS</button>
+      <button class="map-btn" onclick="toggleDesal(this)">💧 DESAL</button>
     </div>
   </div>
-
   <div id="sidebar">
     <div id="sidebar-header">
       <span>◈ LIVE EVENTS FEED</span>
       <span id="event-count" style="color:#f97316">—</span>
     </div>
-
-    <!-- Theater filter -->
-    <div class="filter-row">
+    <div class="filter-row" id="theater-row">
       <button class="filter-btn theater-all active" onclick="setTheater('all',this)">🌍 ALL</button>
       <button class="filter-btn theater-iran" onclick="setTheater('iran',this)">⚔️ IRAN-ISRAEL</button>
       <button class="filter-btn theater-syria" onclick="setTheater('syria',this)">🇸🇾 SYRIA</button>
     </div>
-
-    <!-- Timeline slider -->
     <div id="timeline-box">
       <div class="tl-label">⏱ TIMELINE</div>
       <input type="range" id="timeline-slider" min="0" max="72" value="72" oninput="setTimeline(this.value)">
@@ -133,26 +113,20 @@
         <div>NOW</div>
       </div>
     </div>
-
-    <!-- Time filter -->
-    <div class="filter-row">
+    <div class="filter-row" id="time-row">
       <button class="filter-btn time-btn" onclick="setTimeFilter(6,this)">6H</button>
       <button class="filter-btn time-btn" onclick="setTimeFilter(24,this)">24H</button>
       <button class="filter-btn time-btn" onclick="setTimeFilter(72,this)">72H</button>
       <button class="filter-btn time-btn active" onclick="setTimeFilter(0,this)">ALL</button>
     </div>
-
-    <!-- Topic filter -->
-    <div class="filter-row">
+    <div class="filter-row" id="topic-row">
       <button class="filter-btn active" onclick="setTopicFilter('all',this)">ALL</button>
       <button class="filter-btn" onclick="setTopicFilter('military',this)">MILITARY</button>
       <button class="filter-btn" onclick="setTopicFilter('diplomacy',this)">DIPLOMACY</button>
       <button class="filter-btn" onclick="setTopicFilter('politics',this)">POLITICS</button>
       <button class="filter-btn" onclick="setTopicFilter('humanitarian',this)">HUMAN.</button>
     </div>
-
     <div id="events-list"></div>
-
     <div id="legend">
       <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>MILITARY</div>
       <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div>DIPLOMACY</div>
@@ -162,128 +136,127 @@
     </div>
   </div>
 </div>
-
 <script>
-const API_URL = "https://function-bun-production-7822.up.railway.app/api/events";
+const API_URL="https://function-bun-production-7822.up.railway.app/api/events";
+const TOPIC_COLORS={military:"#ef4444",diplomacy:"#8b5cf6",humanitarian:"#06b6d4",politics:"#f59e0b",economy:"#10b981",social:"#ec4899",other:"#64748b"};
+const URGENCY_SIZES={high:14,medium:10,low:7};
+const THEATER_COLORS={iran:"#f97316",syria:"#06b6d4"};
+let map,allEvents=[],markers=[],selectedIdx=null;
+let currentTopic='all',currentHours=0,currentTheater='all',timelineHours=0;
 
-const TOPIC_COLORS = {
-  military:"#ef4444", diplomacy:"#8b5cf6", humanitarian:"#06b6d4",
-  politics:"#f59e0b", economy:"#10b981", social:"#ec4899", other:"#64748b",
-};
-const URGENCY_SIZES = {high:14, medium:10, low:7};
-const THEATER_COLORS = {iran:"#f97316", syria:"#06b6d4"};
-
-let map, allEvents=[], markers=[], selectedIdx=null;
-let currentTopic='all', currentHours=0, currentTheater='all', timelineHours=0;
-
-map = L.map('map',{zoomControl:false}).setView([33.0,42.0],5);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
-  attribution:'© OpenStreetMap © CARTO', maxZoom:18,
-}).addTo(map);
+map=L.map('map',{zoomControl:false}).setView([33.0,42.0],5);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:18}).addTo(map);
 L.control.zoom({position:'bottomright'}).addTo(map);
 
-// FIRMS
-let firmsLayer = L.layerGroup();
-let firmsVisible = false;
-async function loadFIRMS() {
-  const res = await fetch('https://function-bun-production-7822.up.railway.app/api/firms');
-  const data = await res.json();
-  firmsLayer.clearLayers();
-  (data.points||[]).forEach(p => {
-    const lat = parseFloat(p.latitude), lon = parseFloat(p.longitude);
-    const bright = parseFloat(p.bright_ti4)||300;
-    const intensity = Math.min((bright-300)/100,1);
-    const size = 4+Math.round(intensity*6);
-    const color = intensity>0.6?'#ff2200':intensity>0.3?'#ff6600':'#ffaa00';
-    L.circleMarker([lat,lon],{radius:size,color:'transparent',fillColor:color,fillOpacity:0.7})
-      .bindPopup(`<div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0">
-        <div style="color:#ff6600;font-weight:700;letter-spacing:2px">🛰️ THERMAL DETECTION</div>
-        <div style="color:#94a3b8;margin-top:4px">Brightness: ${bright}K</div>
-        <div style="color:#94a3b8">Time: ${p.acq_time||'—'} UTC</div>
-        <div style="color:#94a3b8">Confidence: ${p.confidence||'—'}</div>
-      </div>`).addTo(firmsLayer);
-  });
+// SATELLITE
+let firmsLayer=L.layerGroup(),firmsVisible=false;
+async function loadFIRMS(){
+  try{
+    const res=await fetch('https://function-bun-production-7822.up.railway.app/api/firms');
+    const data=await res.json();
+    firmsLayer.clearLayers();
+    (data.points||[]).forEach(p=>{
+      const lat=parseFloat(p.latitude),lon=parseFloat(p.longitude);
+      if(isNaN(lat)||isNaN(lon))return;
+      const bright=parseFloat(p.bright_ti4)||300;
+      const intensity=Math.min((bright-300)/100,1);
+      const size=4+Math.round(intensity*6);
+      const color=intensity>0.6?'#ff2200':intensity>0.3?'#ff6600':'#ffaa00';
+      L.circleMarker([lat,lon],{radius:size,color:'transparent',fillColor:color,fillOpacity:0.7})
+        .bindPopup(`<div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0"><div style="color:#ff6600;font-weight:700">🛰️ THERMAL DETECTION</div><div style="color:#94a3b8;margin-top:4px">Brightness: ${bright}K</div><div style="color:#94a3b8">Time: ${p.acq_time||'—'} UTC</div><div style="color:#94a3b8">Confidence: ${p.confidence||'—'}</div></div>`)
+        .addTo(firmsLayer);
+    });
+  }catch(e){console.log('FIRMS error:',e);}
 }
-function toggleFIRMS(btn) {
-  firmsVisible = !firmsVisible;
-  if (firmsVisible) {
-    firmsLayer.addTo(map); loadFIRMS();
-    btn.style.borderColor='#ff6600'; btn.style.color='#ff6600';
-  } else {
-    map.removeLayer(firmsLayer);
-    btn.style.borderColor=''; btn.style.color='';
+function toggleFIRMS(btn){
+  firmsVisible=!firmsVisible;
+  if(firmsVisible){firmsLayer.addTo(map);loadFIRMS();btn.style.borderColor='#ff6600';btn.style.color='#ff6600';}
+  else{map.removeLayer(firmsLayer);btn.style.borderColor='';btn.style.color='';}
+}
+
+// FLIGHTS
+let flightsLayer=L.layerGroup(),flightsVisible=false,flightsInterval=null;
+async function loadFlights(){
+  try{
+    const res=await fetch('https://opensky-network.org/api/states/all?lamin=12&lomin=25&lamax=42&lomax=65');
+    const data=await res.json();
+    flightsLayer.clearLayers();
+    (data.states||[]).filter(s=>s[5]&&s[6]).forEach(s=>{
+      const lat=s[6],lon=s[5],callsign=(s[1]||'').trim()||'Unknown',country=s[2]||'—',heading=s[10]||0,alt=s[7]?Math.round(s[7])+'m':'—';
+      L.marker([lat,lon],{icon:L.divIcon({className:'',html:`<div style="color:#60a5fa;font-size:14px;transform:rotate(${heading}deg)">✈</div>`,iconSize:[14,14],iconAnchor:[7,7]})})
+        .bindPopup(`<div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0"><div style="color:#60a5fa;font-weight:700">✈ ${callsign}</div><div style="color:#94a3b8;margin-top:4px">Country: ${country}</div><div style="color:#94a3b8">Altitude: ${alt}</div></div>`)
+        .addTo(flightsLayer);
+    });
+  }catch(e){console.log('Flights error:',e);}
+}
+function toggleFlights(btn){
+  flightsVisible=!flightsVisible;
+  if(flightsVisible){flightsLayer.addTo(map);loadFlights();flightsInterval=setInterval(loadFlights,30000);btn.style.borderColor='#60a5fa';btn.style.color='#60a5fa';}
+  else{map.removeLayer(flightsLayer);clearInterval(flightsInterval);btn.style.borderColor='';btn.style.color='';}
+}
+
+// SHIPS
+let shipsLayer=L.layerGroup(),shipsVisible=false,shipsSocket=null;
+function toggleShips(btn){
+  shipsVisible=!shipsVisible;
+  if(shipsVisible){
+    shipsLayer.addTo(map);
+    btn.style.borderColor='#34d399';btn.style.color='#34d399';
+    try{
+      shipsSocket=new WebSocket("wss://function-bun-production-7822.up.railway.app");
+      shipsSocket.onmessage=(evt)=>{
+        try{
+          const data=JSON.parse(evt.data);
+          const meta=data.MetaData||{},msg=data.Message?.PositionReport||{};
+          const lat=meta.latitude||msg.Latitude,lon=meta.longitude||msg.Longitude;
+          if(!lat||!lon)return;
+          const name=(meta.ShipName||'Unknown').trim(),heading=msg.TrueHeading||msg.CourseOverGround||0,speed=msg.SpeedOverGround||0;
+          L.marker([lat,lon],{icon:L.divIcon({className:'',html:`<div style="color:#34d399;font-size:13px;transform:rotate(${heading}deg)">▲</div>`,iconSize:[13,13],iconAnchor:[6,6]})})
+            .bindPopup(`<div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0"><div style="color:#34d399;font-weight:700">🚢 ${name}</div><div style="color:#94a3b8;margin-top:4px">Speed: ${speed} kn | Heading: ${heading}°</div></div>`)
+            .addTo(shipsLayer);
+        }catch(e){}
+      };
+      shipsSocket.onerror=()=>{btn.textContent='🚢 SHIPS (offline)';};
+    }catch(e){console.log('Ships:',e);}
+  }else{
+    if(shipsSocket)shipsSocket.close();
+    map.removeLayer(shipsLayer);shipsLayer=L.layerGroup();
+    btn.style.borderColor='';btn.style.color='';btn.textContent='🚢 SHIPS';
   }
 }
 
-// Flights
-let flightsLayer = L.layerGroup();
-let flightsVisible = false;
-let flightsInterval = null;
-async function loadFlights() {
-  try {
-    const res = await fetch('https://opensky-network.org/api/states/all?lamin=12&lomin=25&lamax=42&lomax=65');
-    const data = await res.json();
-    flightsLayer.clearLayers();
-    (data.states||[]).filter(s=>s[5]&&s[6]).forEach(s => {
-      const lat=s[6], lon=s[5], callsign=(s[1]||'').trim()||'Unknown';
-      const country=s[2]||'—', heading=s[10]||0, alt=s[7]?Math.round(s[7])+'m':'—';
-      L.marker([lat,lon],{icon:L.divIcon({
-        className:'',
-        html:`<div style="color:#60a5fa;font-size:14px;transform:rotate(${heading}deg)">✈</div>`,
-        iconSize:[14,14],iconAnchor:[7,7]
-      })}).bindPopup(`<div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0">
-        <div style="color:#60a5fa;font-weight:700;letter-spacing:2px">✈ ${callsign}</div>
-        <div style="color:#94a3b8;margin-top:4px">Country: ${country}</div>
-        <div style="color:#94a3b8">Altitude: ${alt}</div>
-      </div>`).addTo(flightsLayer);
-    });
-  } catch(e) { console.log('Flights error:', e); }
-}
-// Desalination Plants
-const DESAL_PLANTS = [
-  // Saudi Arabia
+// DESALINATION
+const DESAL_PLANTS=[
   {name:"Ras Al-Khair",country:"Saudi Arabia",lat:27.0833,lon:49.4167,capacity:1025000,dependency:70,alternative:"Fossil aquifers (30-50yr remaining)",risk:"CRITICAL"},
   {name:"Jubail 1 & 2",country:"Saudi Arabia",lat:27.0047,lon:49.6594,capacity:800000,dependency:70,alternative:"Fossil aquifers (30-50yr remaining)",risk:"CRITICAL"},
   {name:"Shoaiba",country:"Saudi Arabia",lat:21.0833,lon:39.1167,capacity:600000,dependency:70,alternative:"Limited groundwater",risk:"HIGH"},
   {name:"Yanbu",country:"Saudi Arabia",lat:24.0875,lon:38.0583,capacity:550000,dependency:70,alternative:"Limited groundwater",risk:"HIGH"},
   {name:"Jeddah",country:"Saudi Arabia",lat:21.4858,lon:39.1925,capacity:400000,dependency:70,alternative:"None viable at scale",risk:"HIGH"},
-  // UAE
   {name:"Taweelah",country:"UAE",lat:24.5167,lon:54.7,capacity:909000,dependency:99,alternative:"NONE — total dependence",risk:"CRITICAL"},
   {name:"Jebel Ali",country:"UAE",lat:24.9833,lon:55.05,capacity:636000,dependency:99,alternative:"NONE — total dependence",risk:"CRITICAL"},
   {name:"Fujairah 1 & 2",country:"UAE",lat:25.1167,lon:56.3333,capacity:591000,dependency:99,alternative:"NONE — total dependence",risk:"CRITICAL"},
-  // Kuwait
   {name:"Az-Zour North",country:"Kuwait",lat:28.75,lon:48.3667,capacity:567000,dependency:100,alternative:"NONE — zero groundwater",risk:"CRITICAL"},
   {name:"Doha East & West",country:"Kuwait",lat:29.4333,lon:47.9667,capacity:400000,dependency:100,alternative:"NONE — zero groundwater",risk:"CRITICAL"},
-  // Qatar
   {name:"Ras Laffan",country:"Qatar",lat:25.8833,lon:51.55,capacity:600000,dependency:99,alternative:"NONE — fossil aquifers <5yr",risk:"CRITICAL"},
   {name:"Al-Kharaana",country:"Qatar",lat:25.25,lon:51.3,capacity:282000,dependency:99,alternative:"NONE — fossil aquifers <5yr",risk:"CRITICAL"},
-  // Bahrain
   {name:"Al-Hidd",country:"Bahrain",lat:26.2333,lon:50.65,capacity:300000,dependency:97,alternative:"NONE — island state",risk:"CRITICAL"},
   {name:"Sitra",country:"Bahrain",lat:26.15,lon:50.6167,capacity:180000,dependency:97,alternative:"NONE — island state",risk:"CRITICAL"},
-  // Oman
   {name:"Barka 1-4",country:"Oman",lat:23.7,lon:57.9,capacity:490000,dependency:80,alternative:"Limited groundwater",risk:"HIGH"},
   {name:"Ghubrah",country:"Oman",lat:23.6167,lon:58.5333,capacity:340000,dependency:80,alternative:"Limited groundwater",risk:"HIGH"},
 ];
-
-let desalLayer = L.layerGroup();
-let desalVisible = false;
-function loadDesal() {
+let desalLayer=L.layerGroup(),desalVisible=false;
+function loadDesal(){
   desalLayer.clearLayers();
-  DESAL_PLANTS.forEach(p => {
-    const riskColor = p.risk==='CRITICAL'?'#ef4444':'#f59e0b';
-    const icon = L.divIcon({
-      className:'',
-      html:`<div style="font-size:16px;filter:drop-shadow(0 0 4px ${riskColor})">💧</div>`,
-      iconSize:[16,16],iconAnchor:[8,8]
-    });
-    L.marker([p.lat,p.lon],{icon}).bindPopup(`
-      <div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0;min-width:220px">
-        <div style="color:${riskColor};font-weight:700;letter-spacing:2px;margin-bottom:2px">⚠ ${p.risk} INFRASTRUCTURE</div>
+  DESAL_PLANTS.forEach(p=>{
+    const rc=p.risk==='CRITICAL'?'#ef4444':'#f59e0b';
+    L.marker([p.lat,p.lon],{icon:L.divIcon({className:'',html:`<div style="font-size:18px;filter:drop-shadow(0 0 5px ${rc})">💧</div>`,iconSize:[18,18],iconAnchor:[9,9]})})
+      .bindPopup(`<div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0;min-width:220px">
+        <div style="color:${rc};font-weight:700;letter-spacing:2px;margin-bottom:2px">⚠ ${p.risk} INFRASTRUCTURE</div>
         <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:6px">💧 ${p.name}</div>
         <div style="display:grid;grid-template-columns:100px 1fr;gap:3px 6px;margin-bottom:8px">
           <span style="color:#475569">COUNTRY</span><span style="color:#94a3b8">${p.country}</span>
           <span style="color:#475569">CAPACITY</span><span style="color:#94a3b8">${(p.capacity/1000).toFixed(0)}K m³/day</span>
-          <span style="color:#475569">DEPENDENCY</span><span style="color:${riskColor}">${p.dependency}% national supply</span>
+          <span style="color:#475569">DEPENDENCY</span><span style="color:${rc}">${p.dependency}% national supply</span>
         </div>
         <div style="padding-top:6px;border-top:1px solid #1e293b">
           <div style="color:#475569;font-size:9px;letter-spacing:1px;margin-bottom:3px">IF DESTROYED — ALTERNATIVE:</div>
@@ -292,111 +265,23 @@ function loadDesal() {
       </div>`,{maxWidth:280}).addTo(desalLayer);
   });
 }
-
-function toggleDesal(btn) {
-  desalVisible = !desalVisible;
-  if (desalVisible) {
-    desalLayer.addTo(map); loadDesal();
-    btn.style.borderColor='#06b6d4'; btn.style.color='#06b6d4';
-  } else {
-    map.removeLayer(desalLayer);
-    btn.style.borderColor=''; btn.style.color='';
-  }
-}  
-function toggleFlights(btn) {
-  flightsVisible = !flightsVisible;
-  if (flightsVisible) {
-    flightsLayer.addTo(map); loadFlights();
-    flightsInterval = setInterval(loadFlights, 30000);
-    btn.style.borderColor='#60a5fa'; btn.style.color='#60a5fa';
-  } else {
-    map.removeLayer(flightsLayer);
-    clearInterval(flightsInterval);
-    btn.style.borderColor=''; btn.style.color='';
-  }
-}
-// AIS Ships
-let shipsLayer = L.layerGroup();
-let shipsVisible = false;
-let shipsSocket = null;
-
-function toggleShips(btn) {
-  shipsVisible = !shipsVisible;
-  if (shipsVisible) {
-    shipsLayer.addTo(map);
-    btn.style.borderColor='#34d399'; btn.style.color='#34d399';
-    shipsSocket = new WebSocket("wss://function-bun-production-7822.up.railway.app");
-    shipsSocket.onmessage = (evt) => {
-      const data = JSON.parse(evt.data);
-      const meta = data.MetaData || {};
-      const msg = data.Message?.PositionReport || {};
-      const lat = meta.latitude || msg.Latitude;
-      const lon = meta.longitude || msg.Longitude;
-      const name = (meta.ShipName||'Unknown').trim();
-      const heading = msg.TrueHeading||msg.CourseOverGround||0;
-      const speed = msg.SpeedOverGround||0;
-      const mmsi = meta.MMSI||'—';
-      if(!lat||!lon) return;
-      const icon = L.divIcon({
-        className:'',
-        html:`<div style="color:#34d399;font-size:13px;transform:rotate(${heading}deg)">▲</div>`,
-        iconSize:[13,13],iconAnchor:[6,6]
-      });
-      L.marker([lat,lon],{icon}).bindPopup(`
-        <div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0">
-          <div style="color:#34d399;font-weight:700;letter-spacing:2px">🚢 ${name}</div>
-          <div style="color:#94a3b8;margin-top:4px">MMSI: ${mmsi}</div>
-          <div style="color:#94a3b8">Speed: ${speed} kn</div>
-          <div style="color:#94a3b8">Heading: ${heading}°</div>
-        </div>`).addTo(shipsLayer);
-    };
-  } else {
-    if(shipsSocket) shipsSocket.close();
-    map.removeLayer(shipsLayer);
-    shipsLayer = L.layerGroup();
-    btn.style.borderColor=''; btn.style.color='';
-  }
-}
-function getAgeHours(ts) {
-  if(!ts) return 9999;
-  try{return(Date.now()-new Date(ts).getTime())/3600000}catch{return 9999}
+function toggleDesal(btn){
+  desalVisible=!desalVisible;
+  if(desalVisible){desalLayer.addTo(map);loadDesal();btn.style.borderColor='#06b6d4';btn.style.color='#06b6d4';}
+  else{map.removeLayer(desalLayer);btn.style.borderColor='';btn.style.color='';}
 }
 
-function getOpacity(ts) {
-  const h=getAgeHours(ts);
-  if(h<1) return 1.0;
-  if(h<6) return 0.85;
-  if(h<24) return 0.65;
-  if(h<72) return 0.4;
-  return 0.25;
+// EVENTS
+function getAgeHours(ts){if(!ts)return 9999;try{return(Date.now()-new Date(ts).getTime())/3600000}catch{return 9999}}
+function getOpacity(ts){const h=getAgeHours(ts);if(h<1)return 1;if(h<6)return 0.85;if(h<24)return 0.65;if(h<72)return 0.4;return 0.25;}
+function createIcon(e){
+  const color=TOPIC_COLORS[e.topic]||"#64748b",size=URGENCY_SIZES[e.urgency]||8,opacity=getOpacity(e.captured_at),ring=THEATER_COLORS[e.theater]||"#fff";
+  return L.divIcon({className:'',html:`<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};opacity:${opacity};box-shadow:0 0 ${size+2}px ${color};border:1.5px solid ${ring}"></div>`,iconSize:[size,size],iconAnchor:[size/2,size/2]});
 }
-
-function createIcon(event) {
-  const color=TOPIC_COLORS[event.topic]||"#64748b";
-  const size=URGENCY_SIZES[event.urgency]||8;
-  const opacity=getOpacity(event.captured_at);
-  const ring=THEATER_COLORS[event.theater]||"#ffffff";
-  return L.divIcon({
-    className:'',
-    html:`<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};opacity:${opacity};box-shadow:0 0 ${size+2}px ${color};border:1.5px solid ${ring};"></div>`,
-    iconSize:[size,size],iconAnchor:[size/2,size/2],
-  });
-}
-
-function formatTime(ts) {
-  if(!ts) return '—';
-  try{return new Date(ts).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}
-  catch{return ts.slice(0,16).replace('T',' ')}
-}
-
-function buildPopup(e) {
-  const color=TOPIC_COLORS[e.topic]||"#64748b";
-  const uc=e.urgency==='high'?'#ef4444':e.urgency==='medium'?'#f59e0b':'#3b82f6';
-  const sc=e.sentiment==='negative'?'#ef4444':e.sentiment==='positive'?'#34d399':'#94a3b8';
-  const tc=THEATER_COLORS[e.theater]||"#ffffff";
-  const theaterLabel=e.theater==='iran'?'IRAN-ISRAEL THEATER':'SYRIA THEATER';
-  return `
-    <div class="popup-theater" style="color:${tc}">${theaterLabel}</div>
+function formatTime(ts){if(!ts)return'—';try{return new Date(ts).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}catch{return ts.slice(0,16).replace('T',' ')}}
+function buildPopup(e){
+  const color=TOPIC_COLORS[e.topic]||"#64748b",uc=e.urgency==='high'?'#ef4444':e.urgency==='medium'?'#f59e0b':'#3b82f6',sc=e.sentiment==='negative'?'#ef4444':e.sentiment==='positive'?'#34d399':'#94a3b8',tc=THEATER_COLORS[e.theater]||"#fff";
+  return `<div class="popup-theater" style="color:${tc}">${e.theater==='iran'?'IRAN-ISRAEL THEATER':'SYRIA THEATER'}</div>
     <div class="popup-topic" style="color:${color}">${(e.topic||'EVENT').toUpperCase()}</div>
     <div class="popup-location">${e.location||'—'}</div>
     <div class="popup-grid">
@@ -405,51 +290,34 @@ function buildPopup(e) {
       <span class="popup-label">SENTIMENT</span><span class="popup-value" style="color:${sc}">${(e.sentiment||'—').toUpperCase()}</span>
       <span class="popup-label">BIAS</span><span class="popup-value">${e.source_bias||'—'}</span>
       <span class="popup-label">TIME</span><span class="popup-value">${formatTime(e.captured_at)}</span>
-    </div>
-    ${e.brief_summary?`<div class="popup-summary">${e.brief_summary}</div>`:''}
-  `;
+    </div>${e.brief_summary?`<div class="popup-summary">${e.brief_summary}</div>`:''}`;
 }
-
-function getFiltered() {
-  const now = Date.now();
-  return allEvents.filter(e => {
-    const topicOk = currentTopic==='all'||e.topic===currentTopic;
-    const theaterOk = currentTheater==='all'||e.theater===currentTheater;
-    const timeOk = currentHours===0||getAgeHours(e.captured_at)<=currentHours;
-    // Timeline: show events UP TO timelineHours ago (0 = now = all)
-    const tlOk = timelineHours===0 || getAgeHours(e.captured_at) >= timelineHours;
-    return topicOk && theaterOk && timeOk && tlOk;
+function getFiltered(){
+  return allEvents.filter(e=>{
+    return(currentTopic==='all'||e.topic===currentTopic)&&(currentTheater==='all'||e.theater===currentTheater)&&(currentHours===0||getAgeHours(e.captured_at)<=currentHours)&&(timelineHours===0||getAgeHours(e.captured_at)>=timelineHours);
   });
 }
-
-function renderMarkers() {
-  markers.forEach(m=>map.removeLayer(m));
-  markers=[];
-  getFiltered().forEach((e,i) => {
-    const lat=parseFloat(e.latitude), lon=parseFloat(e.longitude);
-    if(isNaN(lat)||isNaN(lon)) return;
+function renderMarkers(){
+  markers.forEach(m=>map.removeLayer(m));markers=[];
+  getFiltered().forEach((e,i)=>{
+    const lat=parseFloat(e.latitude),lon=parseFloat(e.longitude);
+    if(isNaN(lat)||isNaN(lon))return;
     const m=L.marker([lat,lon],{icon:createIcon(e)}).addTo(map).bindPopup(buildPopup(e),{maxWidth:280});
-    m.on('click',()=>{selectedIdx=i;renderSidebar()});
+    m.on('click',()=>{selectedIdx=i;renderSidebar();});
     markers.push(m);
   });
 }
-
-function renderSidebar() {
-  const filtered=getFiltered();
-  document.getElementById('event-count').textContent=filtered.length+' events';
-  if(!filtered.length) {
-    document.getElementById('events-list').innerHTML='<div style="padding:20px;text-align:center;font-size:10px;color:#475569;letter-spacing:2px;">NO EVENTS IN THIS RANGE</div>';
-    return;
-  }
-  document.getElementById('events-list').innerHTML=filtered.map((e,i) => {
-    const color=TOPIC_COLORS[e.topic]||"#64748b";
-    const tc=THEATER_COLORS[e.theater]||"#94a3b8";
-    const tLabel=e.theater==='iran'?'IRAN-ISRAEL':'SYRIA';
+function renderSidebar(){
+  const f=getFiltered();
+  document.getElementById('event-count').textContent=f.length+' events';
+  if(!f.length){document.getElementById('events-list').innerHTML='<div style="padding:20px;text-align:center;font-size:10px;color:#475569;letter-spacing:2px">NO EVENTS IN THIS RANGE</div>';return;}
+  document.getElementById('events-list').innerHTML=f.map((e,i)=>{
+    const color=TOPIC_COLORS[e.topic]||"#64748b",tc=THEATER_COLORS[e.theater]||"#94a3b8";
     return `<div class="event-card ${(e.urgency||'low')}-urgency ${selectedIdx===i?'selected':''}" onclick="selectEvent(${i})">
       <div class="event-meta">
         <div style="display:flex;gap:4px;align-items:center">
           <span class="event-topic" style="background:${color}22;color:${color}">${(e.topic||'other').toUpperCase()}</span>
-          <span class="event-theater" style="background:${tc}18;color:${tc}">${tLabel}</span>
+          <span class="event-theater" style="background:${tc}18;color:${tc}">${e.theater==='iran'?'IRAN-ISRAEL':'SYRIA'}</span>
         </div>
         <span class="event-time">${formatTime(e.captured_at)}</span>
       </div>
@@ -458,69 +326,50 @@ function renderSidebar() {
     </div>`;
   }).join('');
 }
-
-function selectEvent(i) {
-  selectedIdx=i;
-  const e=getFiltered()[i];
-  const lat=parseFloat(e.latitude), lon=parseFloat(e.longitude);
-  if(!isNaN(lat)&&!isNaN(lon)) {
-    map.setView([lat,lon],8,{animate:true});
-    if(markers[i]) markers[i].openPopup();
-  }
+function selectEvent(i){
+  selectedIdx=i;const e=getFiltered()[i];
+  const lat=parseFloat(e.latitude),lon=parseFloat(e.longitude);
+  if(!isNaN(lat)&&!isNaN(lon)){map.setView([lat,lon],8,{animate:true});if(markers[i])markers[i].openPopup();}
   renderSidebar();
 }
-
-function setTopicFilter(topic, btn) {
+function setTopicFilter(topic,btn){
   currentTopic=topic;
-  document.querySelectorAll('.filter-row:nth-child(5) .filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  selectedIdx=null; renderMarkers(); renderSidebar();
+  document.querySelectorAll('#topic-row .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');selectedIdx=null;renderMarkers();renderSidebar();
 }
-
-function setTimeFilter(hours, btn) {
+function setTimeFilter(hours,btn){
   currentHours=hours;
   document.querySelectorAll('.time-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  selectedIdx=null; renderMarkers(); renderSidebar();
+  btn.classList.add('active');selectedIdx=null;renderMarkers();renderSidebar();
 }
-
-function setTheater(theater, btn) {
+function setTheater(theater,btn){
   currentTheater=theater;
   document.querySelectorAll('.theater-all,.theater-iran,.theater-syria').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  selectedIdx=null; renderMarkers(); renderSidebar();
-  if(theater==='iran') map.setView([32,53],5,{animate:true});
-  else if(theater==='syria') map.setView([35,38],6,{animate:true});
+  btn.classList.add('active');selectedIdx=null;renderMarkers();renderSidebar();
+  if(theater==='iran')map.setView([32,53],5,{animate:true});
+  else if(theater==='syria')map.setView([35,38],6,{animate:true});
   else map.setView([33,42],5,{animate:true});
 }
-
-function setTimeline(val) {
-  const v = parseInt(val);
-  // val=72 → show all (now), val=0 → show only oldest
-  timelineHours = 72 - v;
-  const label = timelineHours === 0 ? 'NOW' : (72-v) + 'H AGO';
-  document.getElementById('timeline-label').textContent = v === 72 ? 'NOW' : (72-v)+'H AGO';
-  selectedIdx=null; renderMarkers(); renderSidebar();
+function setTimeline(val){
+  const v=parseInt(val);timelineHours=72-v;
+  document.getElementById('timeline-label').textContent=v===72?'NOW':(72-v)+'H AGO';
+  selectedIdx=null;renderMarkers();renderSidebar();
 }
-
-async function loadEvents() {
-  try {
-    const res=await fetch(API_URL);
-    const data=await res.json();
-    allEvents=data.events||[];
+async function loadEvents(){
+  try{
+    const res=await fetch(API_URL);const data=await res.json();allEvents=data.events||[];
     document.getElementById('loading').style.display='none';
     document.getElementById('stat-total').textContent=allEvents.length;
     document.getElementById('stat-high').textContent=allEvents.filter(e=>e.urgency==='high').length;
     document.getElementById('stat-iran').textContent=allEvents.filter(e=>e.theater==='iran').length;
     document.getElementById('stat-syria').textContent=allEvents.filter(e=>e.theater==='syria').length;
     document.getElementById('stat-time').textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-    renderMarkers(); renderSidebar();
-  } catch(err) {
-    document.getElementById('loading').innerHTML='<div style="color:#ef4444;font-size:10px;letter-spacing:2px;">CONNECTION ERROR — RETRYING...</div>';
+    renderMarkers();renderSidebar();
+  }catch(err){
+    document.getElementById('loading').innerHTML='<div style="color:#ef4444;font-size:10px;letter-spacing:2px">CONNECTION ERROR — RETRYING...</div>';
     setTimeout(loadEvents,5000);
   }
 }
-
 loadEvents();
 setInterval(loadEvents,120000);
 </script>
