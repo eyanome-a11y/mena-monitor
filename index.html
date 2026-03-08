@@ -308,7 +308,19 @@ async function loadFlights(){
     (data.aircraft||[]).forEach(a=>{
       const lat=a.lat,lon=a.lon,callsign=a.callsign||'Unknown',heading=a.heading||0,alt=a.alt?a.alt+'ft':'—';
       L.marker([lat,lon],{icon:L.divIcon({className:'',html:`<div style="color:#60a5fa;font-size:14px;transform:rotate(${heading}deg)">✈</div>`,iconSize:[14,14],iconAnchor:[7,7]})})
-        .bindPopup(`<div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0"><div style="color:#60a5fa;font-weight:700">✈ ${callsign}</div><div style="color:#94a3b8;margin-top:4px">Reg: ${a.country}</div><div style="color:#94a3b8">Alt: ${alt}</div></div>`)
+        .bindPopup(`<div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0">
+          <div style="color:#60a5fa;font-weight:700;font-size:12px;margin-bottom:6px">✈ ${callsign}</div>
+          <div style="display:grid;grid-template-columns:60px 1fr;gap:3px 6px;margin-bottom:8px">
+            <span style="color:#475569">REG</span><span style="color:#94a3b8">${a.country}</span>
+            <span style="color:#475569">ALT</span><span style="color:#94a3b8">${alt}</span>
+            <span style="color:#475569">HEADING</span><span style="color:#94a3b8">${heading}°</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">
+            <a href="https://globe.adsbexchange.com/?icao=${a.hex||''}" target="_blank" style="color:#60a5fa;font-size:9px;letter-spacing:1px;text-decoration:none;border:1px solid #60a5fa44;padding:2px 6px;border-radius:3px">ADSBX ↗</a>
+            <a href="https://flightaware.com/live/flight/${callsign}" target="_blank" style="color:#a78bfa;font-size:9px;letter-spacing:1px;text-decoration:none;border:1px solid #a78bfa44;padding:2px 6px;border-radius:3px">FLIGHTAWARE ↗</a>
+            <a href="https://www.flightradar24.com/${callsign}" target="_blank" style="color:#f97316;font-size:9px;letter-spacing:1px;text-decoration:none;border:1px solid #f9731644;padding:2px 6px;border-radius:3px">FR24 ↗</a>
+          </div>
+        </div>`)
         .addTo(flightsLayer);
     });
   }catch(e){console.log('Flights:',e);}
