@@ -198,49 +198,61 @@ L.control.zoom({position:'bottomright'}).addTo(map);
 
 // ── RSS INTEL FEED ───────────────────────────────────────────────────
 const RSS_SOURCES={
-  aje:       {name:'Al Jazeera Eng', url:'https://www.aljazeera.com/xml/rss/all.xml',        color:'#f97316'},
-  reuters:   {name:'Reuters',        url:'https://feeds.reuters.com/reuters/topNews',          color:'#ef4444'},
-  bbc:       {name:'BBC Mid East',   url:'http://feeds.bbci.co.uk/news/world/middle_east/rss.xml', color:'#06b6d4'},
-  isw:       {name:'ISW',            url:'https://www.understandingwar.org/rss.xml',           color:'#8b5cf6'},
-  bellingcat:{name:'Bellingcat',     url:'https://www.bellingcat.com/feed/',                  color:'#a78bfa'},
-  mee:       {name:'Mid East Eye',   url:'https://www.middleeasteye.net/rss',                 color:'#34d399'},
-  cradle:    {name:'The Cradle',     url:'https://thecradle.co/feed',                         color:'#f59e0b'},
+  aje:       {name:'Al Jazeera Eng', url:'https://www.aljazeera.com/xml/rss/all.xml',                          color:'#f97316'},
+  reuters:   {name:'Reuters',        url:'https://feeds.reuters.com/reuters/worldNews',                        color:'#ef4444'},
+  bbc:       {name:'BBC Mid East',   url:'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml',            color:'#06b6d4'},
+  isw:       {name:'ISW',            url:'https://www.understandingwar.org/rss.xml',                           color:'#8b5cf6'},
+  bellingcat:{name:'Bellingcat',     url:'https://www.bellingcat.com/feed/',                                   color:'#a78bfa'},
+  mee:       {name:'Mid East Eye',   url:'https://www.middleeasteye.net/rss',                                  color:'#34d399'},
+  cradle:    {name:'The Cradle',     url:'https://thecradle.co/feed',                                         color:'#f59e0b'},
 };
 
 let currentRSSSource='aje';
 
 async function fetchRSSItems(url) {
-  // rss2json.com — most reliable free RSS-to-JSON proxy
+  // Proxy 1: rss2json.com — best, returns clean JSON
   try{
-    const apiUrl=`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=25`;
-    const res=await fetch(apiUrl,{signal:AbortSignal.timeout(10000)});
+    const res=await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=25`,{signal:AbortSignal.timeout(10000)});
     const data=await res.json();
     if(data.status==='ok'&&data.items?.length){
       return data.items.map(item=>({
-        title: item.title||'—',
-        link:  item.link||'#',
+        title:(item.title||'—').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>'),
+        link: item.link||'#',
         pubDate: item.pubDate||'',
-        description: (item.description||'').replace(/<[^>]+>/g,'').slice(0,300),
       }));
     }
   }catch(e){}
-  // fallback: allorigins + XML parse
+
+  // Proxy 2: allorigins — parses XML manually
   try{
-    const proxyUrl=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    const res=await fetch(proxyUrl,{signal:AbortSignal.timeout(10000)});
+    const res=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,{signal:AbortSignal.timeout(10000)});
     const data=await res.json();
-    if(!data.contents) return null;
-    const parser=new DOMParser();
-    const xml=parser.parseFromString(data.contents,'text/xml');
-    const nodes=Array.from(xml.querySelectorAll('item')).slice(0,25);
-    if(!nodes.length) return null;
-    return nodes.map(item=>({
-      title: item.querySelector('title')?.textContent?.trim()||'—',
-      link:  item.querySelector('link')?.textContent?.trim()||'#',
-      pubDate: item.querySelector('pubDate')?.textContent||'',
-      description: '',
-    }));
+    if(data.contents){
+      const xml=new DOMParser().parseFromString(data.contents,'text/xml');
+      const nodes=Array.from(xml.querySelectorAll('item')).slice(0,25);
+      if(nodes.length) return nodes.map(item=>({
+        title:(item.querySelector('title')?.textContent||'—').replace(/&amp;/g,'&'),
+        link: item.querySelector('link')?.textContent?.trim()||'#',
+        pubDate: item.querySelector('pubDate')?.textContent||'',
+      }));
+    }
   }catch(e){}
+
+  // Proxy 3: corsproxy.io
+  try{
+    const res=await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`,{signal:AbortSignal.timeout(10000)});
+    const text=await res.text();
+    if(text.includes('<item>')){
+      const xml=new DOMParser().parseFromString(text,'text/xml');
+      const nodes=Array.from(xml.querySelectorAll('item')).slice(0,25);
+      if(nodes.length) return nodes.map(item=>({
+        title:(item.querySelector('title')?.textContent||'—').replace(/&amp;/g,'&'),
+        link: item.querySelector('link')?.textContent?.trim()||'#',
+        pubDate: item.querySelector('pubDate')?.textContent||'',
+      }));
+    }
+  }catch(e){}
+
   return null;
 }
 
