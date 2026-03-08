@@ -42,6 +42,21 @@
     #map-controls{position:absolute;bottom:30px;right:10px;z-index:1000;display:flex;flex-direction:column;gap:4px}
     .map-btn{background:#0d1117;border:1px solid #1e293b;color:#64748b;padding:6px 12px;border-radius:4px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;transition:all .15s;text-align:left;white-space:nowrap}
     .map-btn:hover{border-color:#334155;color:#94a3b8}
+    /* PULSE ANIMATION for active strikes */
+    @keyframes strikeRing {
+      0%  { transform:translate(-50%,-50%) scale(1); opacity:.9; }
+      100%{ transform:translate(-50%,-50%) scale(3.5); opacity:0; }
+    }
+    .strike-pulse::after {
+      content:'';
+      position:absolute;
+      top:50%;left:50%;
+      width:100%;height:100%;
+      border-radius:50%;
+      background:inherit;
+      animation:strikeRing 1.6s ease-out infinite;
+      pointer-events:none;
+    }
 
     /* RIGHT SIDEBAR */
     #sidebar{width:290px;background:#0d1117;border-left:1px solid #1e293b;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
@@ -137,6 +152,7 @@
       <button class="map-btn" onclick="toggleFlights(this)">✈ FLIGHTS</button>
       <button class="map-btn" onclick="toggleShips(this)">🚢 SHIPS</button>
       <button class="map-btn" onclick="toggleDesal(this)">💧 DESAL</button>
+      <button class="map-btn" onclick="toggleFrontlines(this)">🗾 FRONTLINES</button>
     </div>
   </div>
 
@@ -429,12 +445,80 @@ function toggleDesal(btn){
   else{map.removeLayer(desalLayer);btn.style.borderColor='';btn.style.color='';}
 }
 
+// ── FRONTLINES ───────────────────────────────────────────────────────
+let frontlinesVisible=false;
+let frontlinesLayer=null;
+
+// Syria control zones — actor colors
+const ACTOR_COLORS={
+  'Syrian Government':'#ef4444',
+  'SDF / AANES':'#f59e0b',
+  'HTS / Hayat Tahrir al-Sham':'#34d399',
+  'Turkish-backed forces':'#60a5fa',
+  'ISIS':'#111827',
+  'Unknown / Contested':'#6b7280',
+};
+
+// Hardcoded approximate Syria control polygons (simplified, based on ISW ~early 2026)
+const SYRIA_ZONES=[
+  {actor:'Syrian Government',color:'#ef4444',coords:[[[35.5,32.5],[36.5,32.5],[37.5,33.5],[38.5,34.0],[38.5,35.0],[37.0,36.0],[36.0,36.5],[35.5,36.5],[34.5,35.5],[34.5,34.0],[35.5,32.5]]]},
+  {actor:'SDF / AANES',color:'#f59e0b',coords:[[[38.5,35.5],[42.5,35.5],[42.5,37.5],[40.0,37.5],[38.0,37.0],[37.5,36.5],[38.0,36.0],[38.5,35.5]]]},
+  {actor:'HTS / Hayat Tahrir al-Sham',color:'#34d399',coords:[[[35.5,35.5],[37.0,35.5],[38.0,36.0],[37.5,36.5],[36.5,37.0],[35.5,37.5],[35.0,37.0],[35.0,36.0],[35.5,35.5]]]},
+  {actor:'Turkish-backed forces',color:'#60a5fa',coords:[[[36.5,36.5],[38.5,36.5],[38.5,37.5],[37.5,37.5],[36.5,37.0],[36.5,36.5]]]},
+];
+
+async function loadFrontlines(){
+  if(frontlinesLayer){map.removeLayer(frontlinesLayer);frontlinesLayer=null;}
+  frontlinesLayer=L.layerGroup();
+
+  SYRIA_ZONES.forEach(zone=>{
+    // Convert [lng,lat] → [lat,lng] for Leaflet
+    const latlngs=zone.coords[0].map(([lng,lat])=>[lat,lng]);
+    L.polygon(latlngs,{
+      color:zone.color,
+      weight:2,
+      opacity:0.9,
+      fillColor:zone.color,
+      fillOpacity:0.12,
+      dashArray:'6,4',
+    }).addTo(frontlinesLayer)
+     .bindPopup(`<div style="font-family:'Space Mono',monospace;padding:8px">
+       <div style="font-size:9px;letter-spacing:2px;color:#64748b;margin-bottom:4px">CONTROL ZONE</div>
+       <div style="color:${zone.color};font-weight:700;font-size:12px">${zone.actor}</div>
+       <div style="font-size:9px;color:#475569;margin-top:4px">Approximate · Based on ISW data</div>
+     </div>`,{maxWidth:220});
+  });
+
+  // Add frontline boundary labels
+  frontlinesLayer.addTo(map);
+}
+
+function toggleFrontlines(btn){
+  frontlinesVisible=!frontlinesVisible;
+  if(frontlinesVisible){
+    loadFrontlines();
+    btn.style.borderColor='#34d399';btn.style.color='#34d399';
+  } else {
+    if(frontlinesLayer){map.removeLayer(frontlinesLayer);frontlinesLayer=null;}
+    btn.style.borderColor='';btn.style.color='';
+  }
+}
+
 // ── EVENTS ───────────────────────────────────────────────────────────
 function getAgeHours(ts){if(!ts)return 9999;try{return(Date.now()-new Date(ts).getTime())/3600000}catch{return 9999}}
 function getOpacity(ts){const h=getAgeHours(ts);if(h<1)return 1;if(h<6)return 0.85;if(h<24)return 0.65;if(h<72)return 0.4;return 0.25;}
 function createIcon(e){
   const color=TOPIC_COLORS[e.topic]||"#64748b",size=URGENCY_SIZES[e.urgency]||8,opacity=getOpacity(e.captured_at),ring=THEATER_COLORS[e.theater]||"#fff";
-  return L.divIcon({className:'',html:`<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};opacity:${opacity};box-shadow:0 0 ${size+2}px ${color};border:1.5px solid ${ring}"></div>`,iconSize:[size,size],iconAnchor:[size/2,size/2]});
+  const ageH=getAgeHours(e.captured_at);
+  const isActiveStrike=(e.topic==='military')&&e.urgency==='high'&&ageH<2;
+  const pulseClass=isActiveStrike?' strike-pulse':'';
+  const glowSize=isActiveStrike?size*3:size+2;
+  return L.divIcon({
+    className:'',
+    html:`<div class="${pulseClass}" style="position:relative;width:${size}px;height:${size}px;border-radius:50%;background:${color};opacity:${opacity};box-shadow:0 0 ${glowSize}px ${color};border:${isActiveStrike?'2px':'1.5px'} solid ${ring}"></div>`,
+    iconSize:[size,size],
+    iconAnchor:[size/2,size/2]
+  });
 }
 function formatTime(ts){if(!ts)return'—';try{return new Date(ts).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}catch{return ts.slice(0,16).replace('T',' ')}}
 function buildPopup(e){
