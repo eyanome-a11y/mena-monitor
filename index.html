@@ -6,6 +6,7 @@
   <title>MENA Monitor — GeoIntel Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier-Leaflet/0.2.6/oms.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
     *{margin:0;padding:0;box-sizing:border-box}
@@ -66,6 +67,8 @@
     .cctv-popup .cc-links{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
     .cctv-popup .cc-link{font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:3px;border:1px solid;text-decoration:none;cursor:pointer}
     .cctv-popup .cc-note{font-size:8px;color:#334155;line-height:1.6;margin-top:6px}
+    /* SPIDERFY LEG LINES */
+    .oms-spiderleg { stroke: #475569; stroke-width: 1.5; stroke-dasharray: 4,3; opacity: 0.6; }
     @keyframes strikeRing {
       0%  { transform:translate(-50%,-50%) scale(1); opacity:.9; }
       100%{ transform:translate(-50%,-50%) scale(3.5); opacity:0; }
@@ -952,13 +955,54 @@ function buildPopup(e){
 function getFiltered(){
   return allEvents.filter(e=>(currentTopic==='all'||e.topic===currentTopic)&&(currentTheater==='all'||e.theater===currentTheater)&&(currentHours===0||getAgeHours(e.captured_at)<=currentHours)&&(timelineHours===0||getAgeHours(e.captured_at)>=timelineHours));
 }
+// OMS — OverlappingMarkerSpiderfier: spreads stacked markers into spiral on click
+let oms=null;
+function initOMS(){
+  if(oms)return;
+  oms=new OverlappingMarkerSpiderfier(map,{
+    keepSpiderfied:true,
+    nearbyDistance:12,       // px radius to detect overlap
+    circleSpiralSwitchover:6,// use circle for ≤6, spiral for more
+    circleFootSeparation:28,
+    spiralFootSeparation:28,
+    spiralLengthStart:24,
+    spiralLengthFactor:6,
+    legWeight:1.5,
+    legColors:{
+      usual:'#334155',
+      highlighted:'#f97316'
+    }
+  });
+  // When a spiderfied marker is clicked, open its popup
+  oms.addListener('click', m=>{
+    m.openPopup();
+  });
+  // Visual feedback: highlight leg when hovering spiderfied marker
+  oms.addListener('spiderfy', ms=>{
+    ms.forEach(m=>m.setZIndexOffset(1000));
+  });
+  oms.addListener('unspiderfy', ms=>{
+    ms.forEach(m=>m.setZIndexOffset(0));
+  });
+}
+
 function renderMarkers(){
-  markers.forEach(m=>map.removeLayer(m));markers=[];
+  // Remove old markers
+  markers.forEach(m=>{try{map.removeLayer(m);}catch(e){}});
+  markers=[];
+  // Re-init OMS so leg lines are cleared
+  if(oms){oms.clearMarkers();}
+  initOMS();
+
   getFiltered().forEach((e,i)=>{
     const lat=parseFloat(e.latitude),lon=parseFloat(e.longitude);
     if(isNaN(lat)||isNaN(lon))return;
-    const m=L.marker([lat,lon],{icon:createIcon(e)}).addTo(map).bindPopup(buildPopup(e),{maxWidth:280});
-    m.on('click',()=>{selectedIdx=i;renderSidebar();});
+    const m=L.marker([lat,lon],{icon:createIcon(e)});
+    m.bindPopup(buildPopup(e),{maxWidth:280});
+    // Track sidebar selection on popup open
+    m.on('popupopen',()=>{selectedIdx=i;renderSidebar();});
+    m.addTo(map);
+    oms.addMarker(m);
     markers.push(m);
   });
 }
