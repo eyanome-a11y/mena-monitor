@@ -328,7 +328,18 @@ async function loadShips(){
     shipsLayer.clearLayers();
     (data.ships||[]).forEach(s=>{
       L.marker([s.lat,s.lon],{icon:L.divIcon({className:'',html:`<div style="color:#34d399;font-size:13px;transform:rotate(${s.heading||0}deg)">▲</div>`,iconSize:[13,13],iconAnchor:[6,6]})})
-        .bindPopup(`<div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0"><div style="color:#34d399;font-weight:700">🚢 ${s.name||'Unknown'}</div><div style="color:#94a3b8;margin-top:4px">MMSI: ${s.mmsi}</div><div style="color:#94a3b8">Speed: ${s.speed||0}kn | Hdg: ${s.heading||0}°</div></div>`)
+        .bindPopup(`<div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0">
+          <div style="color:#34d399;font-weight:700;font-size:12px;margin-bottom:6px">🚢 ${s.name||'Unknown'}</div>
+          <div style="display:grid;grid-template-columns:60px 1fr;gap:3px 6px;margin-bottom:8px">
+            <span style="color:#475569">MMSI</span><span style="color:#94a3b8">${s.mmsi}</span>
+            <span style="color:#475569">SPEED</span><span style="color:#94a3b8">${s.speed||0} kn</span>
+            <span style="color:#475569">HEADING</span><span style="color:#94a3b8">${s.heading||0}°</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:4px">
+            <a href="https://www.vesselfinder.com/vessels/details/${s.mmsi}" target="_blank" style="color:#34d399;font-size:9px;letter-spacing:1px;text-decoration:none;border:1px solid #34d39944;padding:2px 6px;border-radius:3px">VESSELFINDER ↗</a>
+            <a href="https://www.marinetraffic.com/en/ais/details/ships/mmsi:${s.mmsi}" target="_blank" style="color:#60a5fa;font-size:9px;letter-spacing:1px;text-decoration:none;border:1px solid #60a5fa44;padding:2px 6px;border-radius:3px">MARINETRAFFIC ↗</a>
+          </div>
+        </div>`)
         .addTo(shipsLayer);
     });
     console.log(`Ships: ${data.total} cached, AIS connected: ${data.connected}`);
