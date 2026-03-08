@@ -217,7 +217,7 @@
       <button class="map-btn" onclick="toggleShips(this)">🚢 SHIPS</button>
       <button class="map-btn" onclick="toggleDesal(this)">💧 DESAL</button>
       <button class="map-btn" onclick="toggleFrontlines(this)">🗾 FRONTLINES</button>
-      <button class="map-btn" onclick="toggleCCTV(this)">📹 CCTV</button>
+      <button class="map-btn" onclick="toggleCCTV(this)">🔍 SHODAN</button>
     </div>
   </div>
 
@@ -652,191 +652,210 @@ function toggleDesal(btn){
   else{map.removeLayer(desalLayer);btn.style.borderColor='';btn.style.color='';}
 }
 
-// ── CCTV & PUBLIC IP CAMERAS ─────────────────────────────────────────
-// Source: Insecam.org — world directory of publicly exposed IP cameras
-// All cameras are publicly accessible (no auth required, not private)
-// Insecam filters: country code + category
+// ── SHODAN CAMERA NODES ──────────────────────────────────────────────
+// Each node opens a pre-built Shodan query for exposed webcams in that country/city
+// Shodan indexes publicly exposed devices — all legal OSINT
+// Queries use: has_screenshot:true + country + optional city/port filter
 
-let cctvVisible=false, cctvLayer=null;
+let shodanVisible=false, shodanLayer=null;
 
-// Curated CCTV nodes — each links to Insecam country page + known working direct streams
-// Direct stream format: http://IP:PORT/video (MJPEG) or /snapshot.jpg
-// We use Insecam country/city pages as the reliable fallback since direct IPs change frequently
-const CCTV_NODES=[
+const SHODAN_NODES=[
+  // ── IRAN ─────────────────────────────────────────────────────────────
+  {id:'ir-tehran',    name:'Tehran',           lat:35.6892,lon:51.3890, country:'IR',flag:'🇮🇷',
+   pop:9_200_000, category:'capital',
+   query:'has_screenshot:true country:IR city:Tehran',
+   note:'Capital. Largest concentration of exposed cams in Iran. Look for traffic, govt buildings, commercial areas.'},
+  {id:'ir-isfahan',   name:'Isfahan',           lat:32.6546,lon:51.6680, country:'IR',flag:'🇮🇷',
+   pop:2_200_000, category:'industrial',
+   query:'has_screenshot:true country:IR city:Isfahan',
+   note:'Major industrial hub. Steel, nuclear research facilities nearby. Good indicator of industrial activity.'},
+  {id:'ir-bandar',    name:'Bandar Abbas',      lat:27.1832,lon:56.2666, country:'IR',flag:'🇮🇷',
+   pop:526_000,  category:'strategic',
+   query:'has_screenshot:true country:IR city:"Bandar Abbas"',
+   note:'Hormuz chokepoint. Iran\'s main naval port. Combine with SHIPS layer for full maritime picture.'},
+  {id:'ir-bushehr',   name:'Bushehr',           lat:28.9684,lon:50.8385, country:'IR',flag:'🇮🇷',
+   pop:223_000,  category:'strategic',
+   query:'has_screenshot:true country:IR city:Bushehr',
+   note:'Site of Iran\'s nuclear power plant. Any unusual activity here is high significance.'},
 
-  // ── UAE ──────────────────────────────────────────────────────────────
-  {id:'ae-dubai-traffic',name:'Dubai — Traffic Network',lat:25.2048,lon:55.2708,
-   country:'AE',flag:'🇦🇪',category:'traffic',
-   insecam:'https://www.insecam.org/en/bycountry/AE/',
-   desc:'UAE has one of the densest traffic cam networks in MENA. Live feeds via Insecam directory.',
-   directUrl:'https://www.insecam.org/en/bycountry/AE/'},
-
-  {id:'ae-abudhabi',name:'Abu Dhabi — City Cams',lat:24.4539,lon:54.3773,
-   country:'AE',flag:'🇦🇪',category:'city',
-   insecam:'https://www.insecam.org/en/bycountry/AE/',
-   desc:'Abu Dhabi municipal camera feeds. Capital city monitoring.',
-   directUrl:'https://www.insecam.org/en/bycountry/AE/'},
+  // ── ISRAEL / PALESTINE ───────────────────────────────────────────────
+  {id:'il-tlv',       name:'Tel Aviv',          lat:32.0853,lon:34.7818, country:'IL',flag:'🇮🇱',
+   pop:4_500_000, category:'capital',
+   query:'has_screenshot:true country:IL city:"Tel Aviv"',
+   note:'Greater Tel Aviv metro. Largest cam concentration in Israel. Urban normalcy indicator.'},
+  {id:'il-haifa',     name:'Haifa',             lat:32.7940,lon:34.9896, country:'IL',flag:'🇮🇱',
+   pop:285_000,  category:'strategic',
+   query:'has_screenshot:true country:IL city:Haifa',
+   note:'Main northern port + petrochemical zone. Primary Hezbollah rocket target historically.'},
+  {id:'il-jerusalem', name:'Jerusalem',         lat:31.7683,lon:35.2137, country:'IL',flag:'🇮🇱',
+   pop:974_000,  category:'capital',
+   query:'has_screenshot:true country:IL city:Jerusalem',
+   note:'Political and religious flashpoint. Any unusual security cam activity here is significant.'},
 
   // ── SAUDI ARABIA ─────────────────────────────────────────────────────
-  {id:'sa-riyadh',name:'Riyadh — Public Cams',lat:24.7136,lon:46.6753,
-   country:'SA',flag:'🇸🇦',category:'city',
-   insecam:'https://www.insecam.org/en/bycountry/SA/',
-   desc:'Saudi Arabia public IP cameras indexed by Insecam. Includes Riyadh commercial districts.',
-   directUrl:'https://www.insecam.org/en/bycountry/SA/'},
+  {id:'sa-riyadh',    name:'Riyadh',            lat:24.7136,lon:46.6753, country:'SA',flag:'🇸🇦',
+   pop:7_600_000, category:'capital',
+   query:'has_screenshot:true country:SA city:Riyadh',
+   note:'Saudi capital. Dense cam network around govt ministries and Aramco HQ.'},
+  {id:'sa-jeddah',    name:'Jeddah',            lat:21.4858,lon:39.1925, country:'SA',flag:'🇸🇦',
+   pop:4_700_000, category:'port',
+   query:'has_screenshot:true country:SA city:Jeddah',
+   note:'Main Red Sea port. Key logistics hub for Mecca pilgrimage and Saudi imports.'},
+  {id:'sa-dhahran',   name:'Dhahran / Aramco',  lat:26.3110,lon:50.1547, country:'SA',flag:'🇸🇦',
+   pop:300_000,  category:'strategic',
+   query:'has_screenshot:true country:SA city:Dhahran',
+   note:'Saudi Aramco HQ + Eastern Province oil infrastructure. Previously targeted by drone/missile attacks.'},
 
-  {id:'sa-jeddah',name:'Jeddah — Port & City',lat:21.4858,lon:39.1925,
-   country:'SA',flag:'🇸🇦',category:'port',
-   insecam:'https://www.insecam.org/en/bycountry/SA/',
-   desc:'Jeddah is Saudi\'s main Red Sea port. City and port area surveillance feeds.',
-   directUrl:'https://www.insecam.org/en/bycountry/SA/'},
-
-  // ── IRAN ─────────────────────────────────────────────────────────────
-  {id:'ir-tehran',name:'Tehran — Street Cams',lat:35.6892,lon:51.3890,
-   country:'IR',flag:'🇮🇷',category:'city',
-   insecam:'https://www.insecam.org/en/bycountry/IR/',
-   desc:'Iranian IP cameras accessible via Insecam. Tehran urban monitoring. Coverage varies.',
-   directUrl:'https://www.insecam.org/en/bycountry/IR/'},
-
-  {id:'ir-isfahan',name:'Isfahan — City Center',lat:32.6546,lon:51.6680,
-   country:'IR',flag:'🇮🇷',category:'city',
-   insecam:'https://www.insecam.org/en/bycountry/IR/',
-   desc:'Isfahan — major industrial and cultural center. Insecam indexed cameras.',
-   directUrl:'https://www.insecam.org/en/bycountry/IR/'},
-
-  {id:'ir-hormuz',name:'Hormuz Strait Zone — Bandar Abbas',lat:27.1832,lon:56.2666,
-   country:'IR',flag:'🇮🇷',category:'strategic',
-   insecam:'https://www.insecam.org/en/bycountry/IR/',
-   desc:'Bandar Abbas port area. Critical Hormuz chokepoint. Limited cam availability — supplement with AIS layer.',
-   directUrl:'https://www.insecam.org/en/bycountry/IR/'},
+  // ── UAE ──────────────────────────────────────────────────────────────
+  {id:'ae-dubai',     name:'Dubai',             lat:25.2048,lon:55.2708, country:'AE',flag:'🇦🇪',
+   pop:3_600_000, category:'capital',
+   query:'has_screenshot:true country:AE city:Dubai',
+   note:'UAE financial hub. Very high cam density. Jebel Ali port is largest in MENA — key logistics indicator.'},
+  {id:'ae-abudhabi',  name:'Abu Dhabi',         lat:24.4539,lon:54.3773, country:'AE',flag:'🇦🇪',
+   pop:1_500_000, category:'capital',
+   query:'has_screenshot:true country:AE city:"Abu Dhabi"',
+   note:'UAE political capital. ADNOC HQ. Key US military base (Al Dhafra) nearby.'},
 
   // ── TURKEY ───────────────────────────────────────────────────────────
-  {id:'tr-istanbul',name:'Istanbul — Bosphorus Strait',lat:41.0082,lon:28.9784,
-   country:'TR',flag:'🇹🇷',category:'strategic',
-   insecam:'https://www.insecam.org/en/bycountry/TR/',
-   directStream:'http://www.ibb.gov.tr/tr-TR/Pages/Canli-Kameralar.aspx',
-   desc:'Istanbul has extensive public cam network. Bosphorus is a key maritime chokepoint — 3% of world oil. Turkish municipality also has official feeds.',
-   directUrl:'https://www.insecam.org/en/bycountry/TR/'},
+  {id:'tr-istanbul',  name:'Istanbul / Bosphorus', lat:41.0082,lon:28.9784, country:'TR',flag:'🇹🇷',
+   pop:15_800_000, category:'strategic',
+   query:'has_screenshot:true country:TR city:Istanbul',
+   note:'Bosphorus chokepoint — 3% of world oil. Largest Shodan cam presence in MENA theater. Critical maritime monitor.'},
+  {id:'tr-ankara',    name:'Ankara',            lat:39.9334,lon:32.8597, country:'TR',flag:'🇹🇷',
+   pop:5_700_000, category:'capital',
+   query:'has_screenshot:true country:TR city:Ankara',
+   note:'Turkish capital. NATO member — key diplomatic and military decision center for Syria conflict.'},
+  {id:'tr-hatay',     name:'Hatay — Syria Border', lat:36.4018,lon:36.3498, country:'TR',flag:'🇹🇷',
+   pop:1_600_000, category:'strategic',
+   query:'has_screenshot:true country:TR city:Hatay',
+   note:'Turkish province bordering Syria. Key transit zone for Turkish-backed forces. Frontline adjacent.'},
 
   // ── EGYPT ────────────────────────────────────────────────────────────
-  {id:'eg-cairo',name:'Cairo — Street Network',lat:30.0444,lon:31.2357,
-   country:'EG',flag:'🇪🇬',category:'city',
-   insecam:'https://www.insecam.org/en/bycountry/EG/',
-   desc:'Cairo public cameras. Egypt has a large Insecam presence across Cairo governorate.',
-   directUrl:'https://www.insecam.org/en/bycountry/EG/'},
-
-  {id:'eg-suez',name:'Suez Canal — Port Said area',lat:31.2653,lon:32.3019,
-   country:'EG',flag:'🇪🇬',category:'strategic',
-   insecam:'https://www.insecam.org/en/bycountry/EG/',
-   desc:'Port Said at the north entrance of the Suez Canal. 12% of world trade passes here. Combine with SHIPS layer.',
-   directUrl:'https://www.insecam.org/en/bycountry/EG/'},
-
-  // ── ISRAEL ───────────────────────────────────────────────────────────
-  {id:'il-tlv',name:'Tel Aviv — City & Port',lat:32.0853,lon:34.7818,
-   country:'IL',flag:'🇮🇱',category:'city',
-   insecam:'https://www.insecam.org/en/bycountry/IL/',
-   desc:'Israeli public cameras on Insecam. Tel Aviv urban and port area.',
-   directUrl:'https://www.insecam.org/en/bycountry/IL/'},
-
-  {id:'il-haifa',name:'Haifa — Port (Critical)',lat:32.7940,lon:34.9896,
-   country:'IL',flag:'🇮🇱',category:'port',
-   insecam:'https://www.insecam.org/en/bycountry/IL/',
-   desc:'Haifa is Israel\'s main northern port and key military logistics hub. Strategic monitoring point.',
-   directUrl:'https://www.insecam.org/en/bycountry/IL/'},
-
-  // ── JORDAN ───────────────────────────────────────────────────────────
-  {id:'jo-aqaba',name:'Aqaba — Red Sea Port',lat:29.5321,lon:35.0063,
-   country:'JO',flag:'🇯🇴',category:'port',
-   insecam:'https://www.insecam.org/en/bycountry/JO/',
-   desc:'Aqaba is Jordan\'s only sea access — Red Sea port. Strategically significant for Gulf supply chains.',
-   directUrl:'https://www.insecam.org/en/bycountry/JO/'},
-
-  // ── KUWAIT ───────────────────────────────────────────────────────────
-  {id:'kw-kuwait-city',name:'Kuwait City — Urban Cams',lat:29.3759,lon:47.9774,
-   country:'KW',flag:'🇰🇼',category:'city',
-   insecam:'https://www.insecam.org/en/bycountry/KW/',
-   desc:'Kuwait City public cameras. Kuwait is a key US military logistics base in the Gulf.',
-   directUrl:'https://www.insecam.org/en/bycountry/KW/'},
-
-  // ── QATAR ────────────────────────────────────────────────────────────
-  {id:'qa-doha',name:'Doha — City & Port',lat:25.2854,lon:51.5310,
-   country:'QA',flag:'🇶🇦',category:'city',
-   insecam:'https://www.insecam.org/en/bycountry/QA/',
-   desc:'Doha public cameras. Qatar hosts largest US airbase in MENA (Al Udeid). LNG export hub.',
-   directUrl:'https://www.insecam.org/en/bycountry/QA/'},
-
-  // ── IRAQ ─────────────────────────────────────────────────────────────
-  {id:'iq-baghdad',name:'Baghdad — City Cams',lat:33.3152,lon:44.3661,
-   country:'IQ',flag:'🇮🇶',category:'city',
-   insecam:'https://www.insecam.org/en/bycountry/IQ/',
-   desc:'Baghdad public cameras. Limited availability. Monitor via Telegram pipeline for ground reporting.',
-   directUrl:'https://www.insecam.org/en/bycountry/IQ/'},
+  {id:'eg-cairo',     name:'Cairo',             lat:30.0444,lon:31.2357, country:'EG',flag:'🇪🇬',
+   pop:21_300_000, category:'capital',
+   query:'has_screenshot:true country:EG city:Cairo',
+   note:'Largest city in Arab world. High cam density. Egypt is key US ally and Gaza conflict mediator.'},
+  {id:'eg-suez',      name:'Suez Canal Zone',   lat:30.5852,lon:32.2654, country:'EG',flag:'🇪🇬',
+   pop:750_000,  category:'strategic',
+   query:'has_screenshot:true country:EG city:"Port Said"',
+   note:'12% of world trade. Houthi attacks have significantly rerouted shipping away from Suez. Monitor closely.'},
+  {id:'eg-alexand',   name:'Alexandria — Port', lat:31.2001,lon:29.9187, country:'EG',flag:'🇪🇬',
+   pop:5_400_000, category:'port',
+   query:'has_screenshot:true country:EG city:Alexandria',
+   note:'Egypt\'s main Mediterranean port. Key entry point for Ukrainian grain and European goods.'},
 
   // ── LEBANON ──────────────────────────────────────────────────────────
-  {id:'lb-beirut',name:'Beirut — City Cams',lat:33.8938,lon:35.5018,
-   country:'LB',flag:'🇱🇧',category:'city',
-   insecam:'https://www.insecam.org/en/bycountry/LB/',
-   desc:'Beirut public cameras. Lebanon is a critical Hezbollah-Israel flashpoint. Cross-reference with event feed.',
-   directUrl:'https://www.insecam.org/en/bycountry/LB/'},
+  {id:'lb-beirut',    name:'Beirut',            lat:33.8938,lon:35.5018, country:'LB',flag:'🇱🇧',
+   pop:2_400_000, category:'strategic',
+   query:'has_screenshot:true country:LB',
+   note:'Hezbollah-Israel flashpoint. Post-war reconstruction monitoring. Cross-reference with event feed.'},
+
+  // ── KUWAIT ───────────────────────────────────────────────────────────
+  {id:'kw-city',      name:'Kuwait City',       lat:29.3759,lon:47.9774, country:'KW',flag:'🇰🇼',
+   pop:3_200_000, category:'capital',
+   query:'has_screenshot:true country:KW',
+   note:'Key US logistics base (Camp Arifjan). Kuwaiti cam infrastructure well indexed on Shodan.'},
+
+  // ── QATAR ────────────────────────────────────────────────────────────
+  {id:'qa-doha',      name:'Doha',              lat:25.2854,lon:51.5310, country:'QA',flag:'🇶🇦',
+   pop:2_800_000, category:'strategic',
+   query:'has_screenshot:true country:QA',
+   note:'Al Udeid Air Base — largest US airbase in MENA. AJE HQ. Key Hamas negotiation hub.'},
+
+  // ── IRAQ ─────────────────────────────────────────────────────────────
+  {id:'iq-baghdad',   name:'Baghdad',           lat:33.3152,lon:44.3661, country:'IQ',flag:'🇮🇶',
+   pop:8_100_000, category:'capital',
+   query:'has_screenshot:true country:IQ city:Baghdad',
+   note:'Iraq is a key Iran proxy battlefield. Green Zone, US Embassy, Iranian-backed militias all present.'},
+  {id:'iq-basra',     name:'Basra — Oil Hub',   lat:30.5085,lon:47.7804, country:'IQ',flag:'🇮🇶',
+   pop:2_700_000, category:'strategic',
+   query:'has_screenshot:true country:IQ city:Basra',
+   note:'Iraq\'s main oil export hub + port to the Gulf. Strategically critical — most Iraqi oil exports pass here.'},
+
+  // ── JORDAN ───────────────────────────────────────────────────────────
+  {id:'jo-amman',     name:'Amman',             lat:31.9539,lon:35.9106, country:'JO',flag:'🇯🇴',
+   pop:4_300_000, category:'capital',
+   query:'has_screenshot:true country:JO',
+   note:'Jordan is a key US-Israel ally. Intercepted Iranian missiles during April 2024 attack. Key refugee transit hub.'},
+
+  // ── SYRIA ────────────────────────────────────────────────────────────
+  {id:'sy-damascus',  name:'Damascus',          lat:33.5138,lon:36.2765, country:'SY',flag:'🇸🇾',
+   pop:2_500_000, category:'capital',
+   query:'has_screenshot:true country:SY',
+   note:'Post-HTS takeover. Limited cam availability — infrastructure disrupted. Use Telegram pipeline for Syria intel.'},
 ];
 
-const CCTV_CAT_COLORS={traffic:'#06b6d4',city:'#60a5fa',port:'#34d399',strategic:'#ef4444'};
+const SHODAN_COLORS={capital:'#60a5fa',strategic:'#ef4444',port:'#34d399',industrial:'#f59e0b'};
 
-function buildCCTVIcon(node){
-  const color=CCTV_CAT_COLORS[node.category]||'#64748b';
-  const catIcon={traffic:'🚦',city:'📹',port:'⚓',strategic:'⚠️'}[node.category]||'📹';
+function buildShodanIcon(node){
+  const color=SHODAN_COLORS[node.category]||'#64748b';
   return L.divIcon({
     className:'',
     html:`<div style="
-      width:28px;height:28px;border-radius:4px;
+      width:26px;height:26px;border-radius:50%;
       background:#0d1117;border:2px solid ${color};
       display:flex;align-items:center;justify-content:center;
-      font-size:12px;cursor:pointer;
-      box-shadow:0 0 10px ${color}55;
-    ">${catIcon}</div>`,
-    iconSize:[28,28],
-    iconAnchor:[14,14]
+      font-size:11px;cursor:pointer;
+      box-shadow:0 0 10px ${color}66;
+    ">🔍</div>`,
+    iconSize:[26,26],
+    iconAnchor:[13,13]
   });
 }
 
-function buildCCTVPopup(node){
-  const color=CCTV_CAT_COLORS[node.category]||'#64748b';
-  const catLabel=node.category.toUpperCase();
-
-  return `<div class="cctv-popup">
-    <div class="cc-meta">${node.flag} ${node.country} &nbsp;·&nbsp; <span style="color:${color}">${catLabel}</span></div>
-    <div class="cc-title">${node.name}</div>
-    <div class="cc-note">${node.desc}</div>
-    <div class="cc-links">
-      <a href="${node.directUrl}" target="_blank" class="cc-link"
-         style="color:${color};border-color:${color}55">
-        📹 OPEN INSECAM ↗
+function buildShodanPopup(node){
+  const color=SHODAN_COLORS[node.category]||'#64748b';
+  const shodanUrl=`https://www.shodan.io/search?query=${encodeURIComponent(node.query)}`;
+  const shodanImgUrl=`https://www.shodan.io/search?query=${encodeURIComponent(node.query+'  product:webcam')}`;
+  return `<div style="font-family:'Space Mono',monospace;min-width:280px">
+    <div style="font-size:8px;letter-spacing:2px;color:#475569;margin-bottom:3px">${node.flag} ${node.country} &nbsp;·&nbsp; <span style="color:${color}">${node.category.toUpperCase()}</span></div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:#e2e8f0">${node.name}</div>
+    <div style="font-size:9px;color:#475569;line-height:1.7;margin-bottom:10px;border-left:2px solid ${color}44;padding-left:8px">${node.note}</div>
+    <div style="font-size:8px;letter-spacing:1px;color:#334155;margin-bottom:6px">◈ SHODAN QUERIES</div>
+    <div style="display:flex;flex-direction:column;gap:5px">
+      <a href="${shodanUrl}" target="_blank"
+         style="display:block;padding:6px 10px;border:1px solid ${color}55;border-radius:4px;
+                color:${color};font-size:9px;letter-spacing:1px;text-decoration:none;
+                background:${color}11">
+        🔍 ALL EXPOSED DEVICES ↗
       </a>
-      ${node.directStream?`<a href="${node.directStream}" target="_blank" class="cc-link"
-         style="color:#34d399;border-color:#34d39955">🔗 OFFICIAL FEED ↗</a>`:''}
+      <a href="${shodanImgUrl}" target="_blank"
+         style="display:block;padding:6px 10px;border:1px solid #a78bfa55;border-radius:4px;
+                color:#a78bfa;font-size:9px;letter-spacing:1px;text-decoration:none;
+                background:#a78bfa11">
+        📷 WEBCAMS WITH SCREENSHOTS ↗
+      </a>
+      <a href="https://www.shodan.io/search?query=${encodeURIComponent('has_screenshot:true country:'+node.country+' port:80,8080,554')}" target="_blank"
+         style="display:block;padding:6px 10px;border:1px solid #34d39955;border-radius:4px;
+                color:#34d399;font-size:9px;letter-spacing:1px;text-decoration:none;
+                background:#34d39911">
+        📡 RTSP / HTTP STREAMS ↗
+      </a>
     </div>
     <div style="margin-top:8px;font-size:8px;color:#1e293b;border-top:1px solid #1e293b;padding-top:6px">
-      Source: Insecam.org · Publicly exposed cameras · No login required
+      Shodan · Legal OSINT · Publicly exposed devices only<br>
+      <span style="color:#0f172a">Query: ${node.query}</span>
     </div>
   </div>`;
 }
 
-function loadCCTV(){
-  cctvLayer=L.layerGroup();
-  CCTV_NODES.forEach(node=>{
-    const marker=L.marker([node.lat,node.lon],{icon:buildCCTVIcon(node)});
-    marker.bindPopup(buildCCTVPopup(node),{maxWidth:320,className:'dark-popup'});
-    marker.addTo(cctvLayer);
+function loadShodan(){
+  shodanLayer=L.layerGroup();
+  SHODAN_NODES.forEach(node=>{
+    const marker=L.marker([node.lat,node.lon],{icon:buildShodanIcon(node)});
+    marker.bindPopup(buildShodanPopup(node),{maxWidth:320,className:'dark-popup'});
+    marker.addTo(shodanLayer);
   });
-  cctvLayer.addTo(map);
+  shodanLayer.addTo(map);
 }
 
 function toggleCCTV(btn){
-  cctvVisible=!cctvVisible;
-  if(cctvVisible){
-    loadCCTV();
+  shodanVisible=!shodanVisible;
+  if(shodanVisible){
+    loadShodan();
     btn.style.borderColor='#ef4444';btn.style.color='#ef4444';
   } else {
-    if(cctvLayer){map.removeLayer(cctvLayer);cctvLayer=null;}
+    if(shodanLayer){map.removeLayer(shodanLayer);shodanLayer=null;}
     btn.style.borderColor='';btn.style.color='';
   }
 }
