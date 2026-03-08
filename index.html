@@ -58,6 +58,14 @@
     .map-btn{background:#0d1117;border:1px solid #1e293b;color:#64748b;padding:6px 12px;border-radius:4px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;transition:all .15s;text-align:left;white-space:nowrap}
     .map-btn:hover{border-color:#334155;color:#94a3b8}
     /* PULSE ANIMATION for active strikes */
+    /* WEBCAM */
+    .webcam-popup{font-family:'Space Mono',monospace;min-width:260px}
+    .webcam-popup .wc-title{font-size:12px;font-weight:700;margin-bottom:4px;color:#e2e8f0}
+    .webcam-popup .wc-meta{font-size:8px;letter-spacing:1px;color:#475569;margin-bottom:8px}
+    .webcam-popup .wc-tag{display:inline-block;padding:1px 6px;border-radius:2px;font-size:8px;margin-right:4px;margin-bottom:6px}
+    .webcam-popup .wc-embed{width:100%;height:140px;border:1px solid #1e293b;border-radius:4px;background:#000;margin-bottom:8px}
+    .webcam-popup .wc-links{display:flex;gap:6px;flex-wrap:wrap}
+    .webcam-popup .wc-link{font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:3px;border:1px solid;text-decoration:none;cursor:pointer}
     @keyframes strikeRing {
       0%  { transform:translate(-50%,-50%) scale(1); opacity:.9; }
       100%{ transform:translate(-50%,-50%) scale(3.5); opacity:0; }
@@ -209,6 +217,7 @@
       <button class="map-btn" onclick="toggleShips(this)">🚢 SHIPS</button>
       <button class="map-btn" onclick="toggleDesal(this)">💧 DESAL</button>
       <button class="map-btn" onclick="toggleFrontlines(this)">🗾 FRONTLINES</button>
+      <button class="map-btn" onclick="toggleWebcams(this)">📷 WEBCAMS</button>
     </div>
   </div>
 
@@ -641,6 +650,155 @@ function toggleDesal(btn){
   desalVisible=!desalVisible;
   if(desalVisible){desalLayer.addTo(map);loadDesal();btn.style.borderColor='#06b6d4';btn.style.color='#06b6d4';}
   else{map.removeLayer(desalLayer);btn.style.borderColor='';btn.style.color='';}
+}
+
+// ── WEBCAMS & PUBLIC STREAMS ─────────────────────────────────────────
+let webcamVisible=false, webcamLayer=null;
+
+// Curated public cameras & streams in MENA region
+// Sources: YouTube Live, Windy Webcams, publicly indexed IP cams, news agency streams
+const WEBCAM_DATA=[
+  // ── SAUDI ARABIA ─────────────────────────────
+  {id:'mecca-kaaba',name:'Mecca — Masjid al-Haram',lat:21.4225,lon:39.8262,
+   type:'youtube',country:'SA',category:'landmark',
+   stream:'https://www.youtube.com/embed/live_streaming?channel=UCFgU2BZbZMI_gRpy7YVsY4A',
+   ytUrl:'https://www.youtube.com/watch?v=XOjHKbMHgmE',
+   desc:'Live feed of the Grand Mosque and Kaaba. Uninterrupted 24/7 stream — useful for crowd density and event monitoring.'},
+  {id:'medina-masjid',name:'Medina — Masjid al-Nabawi',lat:24.4672,lon:39.6112,
+   type:'youtube',country:'SA',category:'landmark',
+   stream:'https://www.youtube.com/embed/live_streaming?channel=UCuAjgGHvXxZeXMuGZWHtFXQ',
+   ytUrl:'https://www.youtube.com/watch?v=wKwU_6FvlZg',
+   desc:'Live feed of the Prophet's Mosque. Good indicator of crowd normalcy vs. disruption.'},
+  {id:'riyadh-skyline',name:'Riyadh — Kingdom Tower Cam',lat:24.7136,lon:46.6753,
+   type:'link',country:'SA',category:'city',
+   ytUrl:'https://www.youtube.com/watch?v=4NZGe3E9_DY',
+   desc:'Riyadh city skyline. Useful for visual confirmation of normal urban activity.'},
+  // ── UAE ──────────────────────────────────────
+  {id:'dubai-creek',name:'Dubai — Creek / Downtown',lat:25.2048,lon:55.2708,
+   type:'windy',country:'AE',category:'city',
+   windyUrl:'https://webcams.windy.com/webcams/1542809953/player/1542809953.mp4',
+   ytUrl:'https://www.youtube.com/watch?v=m_c0ek2MbkI',
+   desc:'Downtown Dubai live cam. Major logistics and aviation hub — useful for operational normalcy assessment.'},
+  {id:'dubai-port',name:'Dubai — Port Rashid / Jebel Ali area',lat:25.0657,lon:55.1713,
+   type:'link',country:'AE',category:'port',
+   ytUrl:'https://www.marinetraffic.com/en/ais/home/centerx:55.1/centery:25.0/zoom:12',
+   desc:'Jebel Ali is the largest port in the Middle East. No direct cam — MarineTraffic link for vessel monitoring.'},
+  // ── IRAN ─────────────────────────────────────
+  {id:'tehran-milad',name:'Tehran — Milad Tower Cam',lat:35.7448,lon:51.3753,
+   type:'link',country:'IR',category:'city',
+   ytUrl:'https://www.youtube.com/watch?v=VqfYFZKyKsE',
+   desc:'Tehran skyline view. Useful baseline for city activity assessment.'},
+  {id:'bandar-abbas',name:'Bandar Abbas — Strait of Hormuz',lat:27.1832,lon:56.2666,
+   type:'link',country:'IR',category:'port',
+   ytUrl:'https://www.marinetraffic.com/en/ais/home/centerx:56.3/centery:27.1/zoom:12',
+   desc:'Critical chokepoint — 20% of world oil passes here. MarineTraffic link for vessel monitoring. No public cam available.'},
+  // ── LEBANON ──────────────────────────────────
+  {id:'beirut-corniche',name:'Beirut — Corniche / Waterfront',lat:33.8938,lon:35.5018,
+   type:'youtube',country:'LB',category:'city',
+   ytUrl:'https://www.youtube.com/watch?v=LD7VUSEX_pI',
+   desc:'Beirut waterfront area. Useful for monitoring Lebanese capital activity and crowd behavior.'},
+  {id:'beirut-port',name:'Beirut — Port Area',lat:33.9006,lon:35.5197,
+   type:'link',country:'LB',category:'port',
+   ytUrl:'https://www.marinetraffic.com/en/ais/home/centerx:35.5/centery:33.9/zoom:13',
+   desc:'Port of Beirut — site of 2020 explosion. Currently under reconstruction. MarineTraffic link.'},
+  // ── ISRAEL ───────────────────────────────────
+  {id:'jerusalem-wailing',name:'Jerusalem — Western Wall',lat:31.7767,lon:35.2345,
+   type:'youtube',country:'IL',category:'landmark',
+   ytUrl:'https://www.youtube.com/watch?v=XdnFJAMHFhs',
+   desc:'Live cam of the Western Wall plaza. 24/7 stream — useful for activity and security event monitoring.'},
+  {id:'tel-aviv-beach',name:'Tel Aviv — Beach / Seafront',lat:32.0853,lon:34.7818,
+   type:'link',country:'IL',category:'city',
+   ytUrl:'https://www.youtube.com/watch?v=nvEjNBGUCMI',
+   desc:'Tel Aviv seafront. Useful for civilian normalcy assessment during escalation periods.'},
+  // ── SYRIA ────────────────────────────────────
+  {id:'damascus-umayyad',name:'Damascus — Umayyad Mosque area',lat:33.5114,lon:36.3064,
+   type:'info',country:'SY',category:'landmark',
+   desc:'No public livestream available for Damascus. Monitor via Telegram OSINT channels in the pipeline.'},
+  // ── EGYPT ────────────────────────────────────
+  {id:'cairo-tahrir',name:'Cairo — Tahrir Square',lat:30.0444,lon:31.2357,
+   type:'youtube',country:'EG',category:'city',
+   ytUrl:'https://www.youtube.com/watch?v=S4A6XE7WCE4',
+   desc:'Cairo city live feed. Useful for monitoring Egyptian capital activity.'},
+  {id:'suez-canal',name:'Suez Canal — Ismailia',lat:30.5852,lon:32.2654,
+   type:'link',country:'EG',category:'port',
+   ytUrl:'https://www.marinetraffic.com/en/ais/home/centerx:32.3/centery:30.4/zoom:10',
+   desc:'Critical global shipping chokepoint. No public cam — MarineTraffic for vessel monitoring.'},
+  // ── JORDAN ───────────────────────────────────
+  {id:'amman-citadel',name:'Amman — Citadel View',lat:31.9539,lon:35.9106,
+   type:'link',country:'JO',category:'city',
+   ytUrl:'https://www.youtube.com/results?search_query=amman+jordan+live+cam',
+   desc:'Amman overview. Jordan is a key transit hub for refugees and diplomatic activity.'},
+];
+
+const WEBCAM_COLORS={landmark:'#f59e0b',city:'#06b6d4',port:'#34d399',strategic:'#ef4444'};
+const CAM_TYPE_ICON={youtube:'📹',link:'🔗',windy:'📡',info:'ℹ️'};
+
+function buildWebcamPopup(cam){
+  const color=WEBCAM_COLORS[cam.category]||'#64748b';
+  const typeIcon=CAM_TYPE_ICON[cam.type]||'📷';
+  const flagMap={SA:'🇸🇦',AE:'🇦🇪',IR:'🇮🇷',LB:'🇱🇧',IL:'🇮🇱',SY:'🇸🇾',EG:'🇪🇬',JO:'🇯🇴'};
+  const flag=flagMap[cam.country]||'🌍';
+
+  let streamHtml='';
+  if(cam.type==='youtube'&&cam.stream){
+    streamHtml=`<iframe class="wc-embed" src="${cam.stream}" frameborder="0" allow="autoplay" allowfullscreen></iframe>`;
+  }
+
+  let linksHtml='';
+  if(cam.ytUrl){
+    linksHtml+=`<a href="${cam.ytUrl}" target="_blank" class="wc-link" style="color:${color};border-color:${color}44">${typeIcon} OPEN STREAM ↗</a>`;
+  }
+  if(cam.windyUrl){
+    linksHtml+=`<a href="${cam.windyUrl}" target="_blank" class="wc-link" style="color:#06b6d4;border-color:#06b6d444">📡 WINDY ↗</a>`;
+  }
+
+  return `<div class="webcam-popup">
+    <div class="wc-meta">${flag} ${cam.country} · ${cam.category.toUpperCase()}</div>
+    <div class="wc-title">${cam.name}</div>
+    <span class="wc-tag" style="background:${color}22;color:${color}">${typeIcon} ${cam.type.toUpperCase()}</span>
+    ${streamHtml}
+    <div style="font-size:9px;color:#475569;line-height:1.6;margin-bottom:8px">${cam.desc}</div>
+    <div class="wc-links">${linksHtml||'<span style="font-size:9px;color:#334155">No stream available</span>'}</div>
+  </div>`;
+}
+
+function buildWebcamIcon(cam){
+  const color=WEBCAM_COLORS[cam.category]||'#64748b';
+  const icon=cam.type==='info'?'ℹ':cam.type==='youtube'?'▶':'📷';
+  return L.divIcon({
+    className:'',
+    html:`<div style="
+      width:26px;height:26px;border-radius:50%;
+      background:${color}22;border:2px solid ${color};
+      display:flex;align-items:center;justify-content:center;
+      font-size:10px;cursor:pointer;
+      box-shadow:0 0 8px ${color}66;
+      position:relative;
+    ">${icon}</div>`,
+    iconSize:[26,26],
+    iconAnchor:[13,13]
+  });
+}
+
+function loadWebcams(){
+  webcamLayer=L.layerGroup();
+  WEBCAM_DATA.forEach(cam=>{
+    const marker=L.marker([cam.lat,cam.lon],{icon:buildWebcamIcon(cam)});
+    marker.bindPopup(buildWebcamPopup(cam),{maxWidth:300,className:'dark-popup'});
+    marker.addTo(webcamLayer);
+  });
+  webcamLayer.addTo(map);
+}
+
+function toggleWebcams(btn){
+  webcamVisible=!webcamVisible;
+  if(webcamVisible){
+    loadWebcams();
+    btn.style.borderColor='#f59e0b';btn.style.color='#f59e0b';
+  } else {
+    if(webcamLayer){map.removeLayer(webcamLayer);webcamLayer=null;}
+    btn.style.borderColor='';btn.style.color='';
+  }
 }
 
 // ── FRONTLINES ───────────────────────────────────────────────────────
