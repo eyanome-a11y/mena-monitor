@@ -40,6 +40,21 @@
     /* MAP */
     #map{flex:1;z-index:1;position:relative}
     #map-controls{position:absolute;bottom:30px;right:10px;z-index:1000;display:flex;flex-direction:column;gap:4px}
+    #optical-panel{position:absolute;bottom:30px;left:10px;z-index:1000;background:#0d1117ee;backdrop-filter:blur(10px);border:1px solid #a78bfa55;border-radius:8px;padding:14px 16px;display:none;flex-direction:column;gap:10px;min-width:220px}
+    #optical-panel .opt-title{font-size:9px;letter-spacing:2px;color:#a78bfa;margin-bottom:2px}
+    #optical-panel label{font-size:9px;letter-spacing:1px;color:#475569;margin-bottom:3px;display:block}
+    #optical-panel input[type=date],#optical-panel select{background:#060910;border:1px solid #1e293b;color:#94a3b8;padding:4px 8px;border-radius:4px;font-family:'Space Mono',monospace;font-size:9px;width:100%;cursor:pointer}
+    #optical-panel input[type=range]{width:100%;accent-color:#a78bfa;cursor:pointer}
+    #optical-panel .opt-sensor-row{display:flex;gap:4px}
+    #optical-panel .sensor-btn{flex:1;background:#0f172a;border:1px solid #1e293b;color:#64748b;padding:4px 0;border-radius:3px;font-size:8px;letter-spacing:1px;cursor:pointer;transition:all .15s;font-family:'Space Mono',monospace}
+    #optical-panel .sensor-btn.on{border-color:#a78bfa;color:#a78bfa;background:#a78bfa18}
+    #optical-panel .opt-note{font-size:8px;color:#334155;line-height:1.6}
+    #optical-panel .opt-refresh{background:#a78bfa22;border:1px solid #a78bfa55;color:#a78bfa;padding:5px;border-radius:4px;font-size:9px;letter-spacing:1px;cursor:pointer;font-family:'Space Mono',monospace;width:100%;transition:all .15s}
+    #optical-panel .opt-refresh:hover{background:#a78bfa33}
+    #basemap-switcher{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:1000;display:flex;gap:4px;background:#0d111788;backdrop-filter:blur(8px);padding:5px;border-radius:6px;border:1px solid #1e293b}
+    .basemap-btn{background:transparent;border:1px solid #1e293b;color:#475569;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;transition:all .15s;white-space:nowrap}
+    .basemap-btn:hover{border-color:#334155;color:#94a3b8}
+    .basemap-btn.active{border-color:#f97316;color:#f97316;background:#f9731612}
     .map-btn{background:#0d1117;border:1px solid #1e293b;color:#64748b;padding:6px 12px;border-radius:4px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;transition:all .15s;text-align:left;white-space:nowrap}
     .map-btn:hover{border-color:#334155;color:#94a3b8}
     /* PULSE ANIMATION for active strikes */
@@ -147,8 +162,41 @@
   <!-- MAP -->
   <div id="map">
     <div id="loading"><div class="spinner"></div>LOADING INTEL...</div>
+    <div id="basemap-switcher">
+      <button class="basemap-btn active" onclick="setBasemap('dark',this)">◼ DARK</button>
+      <button class="basemap-btn" onclick="setBasemap('sentinel',this)">🛰 SENTINEL-2</button>
+      <button class="basemap-btn" onclick="setBasemap('satellite',this)">🌍 SATELLITE</button>
+      <button class="basemap-btn" onclick="setBasemap('topo',this)">⛰ TERRAIN</button>
+    </div>
+    <!-- OPTICAL PANEL -->
+    <div id="optical-panel">
+      <div class="opt-title">🛰 SENTINEL / OPTICAL</div>
+      <div>
+        <label>SENSOR</label>
+        <div class="opt-sensor-row">
+          <button class="sensor-btn on" id="sensor-modis" onclick="setSensor('modis')">MODIS 250m</button>
+          <button class="sensor-btn" id="sensor-s2" onclick="setSensor('s2')">S-2 10m</button>
+          <button class="sensor-btn" id="sensor-vii" onclick="setSensor('viirs')">VIIRS 375m</button>
+        </div>
+      </div>
+      <div>
+        <label>DATE</label>
+        <input type="date" id="optical-date" onchange="loadOptical()"/>
+      </div>
+      <div>
+        <label>OPACITY — <span id="opacity-val">75%</span></label>
+        <input type="range" id="optical-opacity" min="10" max="100" value="75" oninput="document.getElementById('opacity-val').textContent=this.value+'%';loadOptical()"/>
+      </div>
+      <div class="opt-note">
+        MODIS: full region daily coverage<br>
+        S-2: 10m detail, 5-day revisit<br>
+        VIIRS: nighttime/low-light
+      </div>
+      <button class="opt-refresh" onclick="loadOptical()">↻ REFRESH LAYER</button>
+    </div>
     <div id="map-controls">
-      <button class="map-btn" onclick="toggleFIRMS(this)">🛰️ SATELLITE</button>
+      <button class="map-btn" onclick="toggleFIRMS(this)">🔥 THERMAL</button>
+      <button class="map-btn" onclick="toggleOptical(this)">🛰 OPTICAL</button>
       <button class="map-btn" onclick="toggleFlights(this)">✈ FLIGHTS</button>
       <button class="map-btn" onclick="toggleShips(this)">🚢 SHIPS</button>
       <button class="map-btn" onclick="toggleDesal(this)">💧 DESAL</button>
@@ -209,8 +257,112 @@ let map,allEvents=[],markers=[],selectedIdx=null;
 let currentTopic='all',currentHours=0,currentTheater='all',timelineHours=0;
 
 map=L.map('map',{zoomControl:false}).setView([33.0,42.0],5);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:18}).addTo(map);
 L.control.zoom({position:'bottomright'}).addTo(map);
+
+// ── BASEMAPS ─────────────────────────────────────────────────────────
+const BASEMAPS={
+  dark:      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© CARTO',maxZoom:18}),
+  satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri',maxZoom:18}),
+  topo:      L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'© OpenTopoMap',maxZoom:17}),
+  sentinel:  L.tileLayer('https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/'+new Date(Date.now()-86400000).toISOString().slice(0,10)+'/GoogleMapsCompatible/{z}/{y}/{x}.jpg',{attribution:'NASA GIBS · MODIS Terra',maxZoom:9}),
+};
+let currentBasemap='dark';
+BASEMAPS.dark.addTo(map);
+
+// ── OPTICAL OVERLAY (NASA GIBS — no auth required) ────────────────────
+let opticalLayer=null, opticalVisible=false, currentSensor='modis';
+
+// Sensor configs — all from NASA GIBS WMTS, completely free
+const SENSORS={
+  modis:{
+    label:'MODIS Terra 250m',
+    layer:'MODIS_Terra_CorrectedReflectance_TrueColor',
+    maxZoom:9,
+    note:'Full MENA region · Daily'
+  },
+  s2:{
+    label:'Sentinel-2 10m',
+    layer:'Sentinel_2_L1C_TrueColor',
+    maxZoom:13,
+    note:'High detail · 5-day revisit'
+  },
+  viirs:{
+    label:'VIIRS SNPP 375m',
+    layer:'VIIRS_SNPP_CorrectedReflectance_TrueColor',
+    maxZoom:9,
+    note:'NOAA-20 · Daily low-light'
+  }
+};
+
+function getOpticalDate(){
+  const d=document.getElementById('optical-date');
+  if(d&&d.value)return d.value;
+  // default: 2 days ago (processing lag)
+  return new Date(Date.now()-2*86400000).toISOString().slice(0,10);
+}
+
+function setSensor(s){
+  currentSensor=s;
+  document.querySelectorAll('.sensor-btn').forEach(b=>b.classList.remove('on'));
+  const btn=document.getElementById('sensor-'+s);
+  if(btn)btn.classList.add('on');
+  // update note
+  const note=document.querySelector('#optical-panel .opt-note');
+  if(note){
+    const cfg=SENSORS[s]||SENSORS.modis;
+    note.innerHTML=`${cfg.label}<br>${cfg.note}<br><span style="color:#1e293b">─────────────────</span><br>Source: NASA GIBS · Free`;
+  }
+  if(opticalVisible)loadOptical();
+}
+
+function loadOptical(){
+  if(opticalLayer){map.removeLayer(opticalLayer);opticalLayer=null;}
+  const date=getOpticalDate();
+  const opacityPct=parseInt(document.getElementById('optical-opacity')?.value||75);
+  const opacity=opacityPct/100;
+  const cfg=SENSORS[currentSensor]||SENSORS.modis;
+
+  // NASA GIBS WMTS endpoint — free, no API key
+  const url=`https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${cfg.layer}/default/${date}/GoogleMapsCompatible/{z}/{y}/{x}.jpg`;
+
+  opticalLayer=L.tileLayer(url,{
+    attribution:`NASA GIBS · ${cfg.label}`,
+    maxZoom:cfg.maxZoom,
+    opacity:opacity,
+    errorTileUrl:'',
+  });
+  opticalLayer.addTo(map);
+  // Bring event markers to front after tiles load
+  setTimeout(()=>{
+    if(markers&&markers.length)markers.forEach(m=>{try{m.bringToFront()}catch(e){}});
+  },800);
+}
+
+function toggleOptical(btn){
+  opticalVisible=!opticalVisible;
+  const panel=document.getElementById('optical-panel');
+  if(opticalVisible){
+    // Set default date if empty
+    const dateEl=document.getElementById('optical-date');
+    if(dateEl&&!dateEl.value)dateEl.value=new Date(Date.now()-2*86400000).toISOString().slice(0,10);
+    loadOptical();
+    btn.style.borderColor='#a78bfa';btn.style.color='#a78bfa';
+    if(panel)panel.style.display='flex';
+  } else {
+    if(opticalLayer){map.removeLayer(opticalLayer);opticalLayer=null;}
+    btn.style.borderColor='';btn.style.color='';
+    if(panel)panel.style.display='none';
+  }
+}
+
+function setBasemap(name,btn){
+  if(BASEMAPS[currentBasemap])map.removeLayer(BASEMAPS[currentBasemap]);
+  currentBasemap=name;
+  BASEMAPS[name].addTo(map);
+  if(opticalVisible&&opticalLayer){map.removeLayer(opticalLayer);loadOptical();}
+  document.querySelectorAll('.basemap-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+}
 
 // ── RSS INTEL FEED ───────────────────────────────────────────────────
 const RSS_SOURCES={
