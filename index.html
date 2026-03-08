@@ -280,7 +280,8 @@ async function loadFIRMS(){
     (data.points||[]).forEach(p=>{
       const lat=parseFloat(p.latitude),lon=parseFloat(p.longitude);
       if(isNaN(lat)||isNaN(lon))return;
-      const bright=parseFloat(p.bright_ti4)||300;
+      // Use normalised brightness field
+      const bright=parseFloat(p.brightness||p.bright_ti4||p.bright_t31||'300');
       const intensity=Math.min((bright-300)/100,1);
       const size=4+Math.round(intensity*6);
       const color=intensity>0.6?'#ff2200':intensity>0.3?'#ff6600':'#ffaa00';
@@ -288,7 +289,8 @@ async function loadFIRMS(){
         .bindPopup(`<div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0"><div style="color:#ff6600;font-weight:700">🛰️ THERMAL DETECTION</div><div style="color:#94a3b8;margin-top:4px">Brightness: ${bright}K</div><div style="color:#94a3b8">Time: ${p.acq_time||'—'} UTC</div><div style="color:#94a3b8">Confidence: ${p.confidence||'—'}</div></div>`)
         .addTo(firmsLayer);
     });
-  }catch(e){console.log('FIRMS:',e);}
+    if(!data.points?.length) console.log('FIRMS: no thermal detections in range');
+  }catch(e){console.log('FIRMS error:',e);}
 }
 function toggleFIRMS(btn){
   firmsVisible=!firmsVisible;
@@ -317,32 +319,32 @@ function toggleFlights(btn){
   else{map.removeLayer(flightsLayer);clearInterval(flightsInterval);btn.style.borderColor='';btn.style.color='';}
 }
 
-// ── SHIPS ────────────────────────────────────────────────────────────
-let shipsLayer=L.layerGroup(),shipsVisible=false,shipsSocket=null;
+// ── SHIPS — REST polling from Railway AIS cache ──────────────────────
+let shipsLayer=L.layerGroup(),shipsVisible=false,shipsInterval=null;
+async function loadShips(){
+  try{
+    const res=await fetch('https://function-bun-production-7822.up.railway.app/api/ships');
+    const data=await res.json();
+    shipsLayer.clearLayers();
+    (data.ships||[]).forEach(s=>{
+      L.marker([s.lat,s.lon],{icon:L.divIcon({className:'',html:`<div style="color:#34d399;font-size:13px;transform:rotate(${s.heading||0}deg)">▲</div>`,iconSize:[13,13],iconAnchor:[6,6]})})
+        .bindPopup(`<div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0"><div style="color:#34d399;font-weight:700">🚢 ${s.name||'Unknown'}</div><div style="color:#94a3b8;margin-top:4px">MMSI: ${s.mmsi}</div><div style="color:#94a3b8">Speed: ${s.speed||0}kn | Hdg: ${s.heading||0}°</div></div>`)
+        .addTo(shipsLayer);
+    });
+    console.log(`Ships: ${data.total} cached, AIS connected: ${data.connected}`);
+  }catch(e){console.log('Ships:',e);}
+}
 function toggleShips(btn){
   shipsVisible=!shipsVisible;
   if(shipsVisible){
-    shipsLayer.addTo(map);btn.style.borderColor='#34d399';btn.style.color='#34d399';
-    try{
-      shipsSocket=new WebSocket("wss://function-bun-production-7822.up.railway.app");
-      shipsSocket.onmessage=(evt)=>{
-        try{
-          const data=JSON.parse(evt.data);
-          const meta=data.MetaData||{},msg=data.Message?.PositionReport||{};
-          const lat=meta.latitude||msg.Latitude,lon=meta.longitude||msg.Longitude;
-          if(!lat||!lon)return;
-          const name=(meta.ShipName||'Unknown').trim(),heading=msg.TrueHeading||msg.CourseOverGround||0,speed=msg.SpeedOverGround||0;
-          L.marker([lat,lon],{icon:L.divIcon({className:'',html:`<div style="color:#34d399;font-size:13px;transform:rotate(${heading}deg)">▲</div>`,iconSize:[13,13],iconAnchor:[6,6]})})
-            .bindPopup(`<div style="font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0"><div style="color:#34d399;font-weight:700">🚢 ${name}</div><div style="color:#94a3b8;margin-top:4px">Speed: ${speed}kn | Hdg: ${heading}°</div></div>`)
-            .addTo(shipsLayer);
-        }catch(e){}
-      };
-      shipsSocket.onerror=()=>{btn.textContent='🚢 SHIPS (offline)';};
-    }catch(e){}
+    shipsLayer.addTo(map);
+    loadShips();
+    shipsInterval=setInterval(loadShips,30000);
+    btn.style.borderColor='#34d399';btn.style.color='#34d399';
   }else{
-    if(shipsSocket)shipsSocket.close();
+    clearInterval(shipsInterval);
     map.removeLayer(shipsLayer);shipsLayer=L.layerGroup();
-    btn.style.borderColor='';btn.style.color='';btn.textContent='🚢 SHIPS';
+    btn.style.borderColor='';btn.style.color='';
   }
 }
 
