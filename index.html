@@ -67,6 +67,20 @@
     .cctv-popup .cc-links{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
     .cctv-popup .cc-link{font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:3px;border:1px solid;text-decoration:none;cursor:pointer}
     .cctv-popup .cc-note{font-size:8px;color:#334155;line-height:1.6;margin-top:6px}
+    /* MISSILE LAYER */
+    #missile-panel{position:absolute;top:60px;left:10px;z-index:1000;background:#0d1117ee;backdrop-filter:blur(10px);border:1px solid #ef444455;border-radius:8px;padding:14px 16px;display:none;flex-direction:column;gap:8px;min-width:230px}
+    #missile-panel .ms-title{font-size:9px;letter-spacing:2px;color:#ef4444;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+    #missile-panel .ms-pulse{width:7px;height:7px;border-radius:50%;background:#ef4444;box-shadow:0 0 6px #ef4444;animation:msPulse 1s ease-in-out infinite}
+    @keyframes msPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+    #missile-panel .ms-status{font-size:9px;color:#475569;letter-spacing:1px}
+    #missile-panel .ms-count{font-size:22px;font-weight:700;font-family:'Syne',sans-serif;color:#ef4444;line-height:1}
+    #missile-panel .ms-sublabel{font-size:8px;letter-spacing:2px;color:#334155}
+    #missile-panel .ms-log{max-height:140px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin-top:4px}
+    #missile-panel .ms-log-item{font-size:9px;color:#64748b;padding:5px 8px;background:#0f172a;border-radius:4px;border-left:2px solid #ef444466;line-height:1.5}
+    #missile-panel .ms-log-item .ms-city{color:#e2e8f0;font-weight:700}
+    #missile-panel .ms-log-item .ms-time{color:#334155;float:right}
+    #missile-panel .ms-source{font-size:8px;color:#1e293b;border-top:1px solid #1e293b;padding-top:6px;margin-top:2px}
+    @keyframes arcDraw{from{stroke-dashoffset:2000}to{stroke-dashoffset:0}}
     /* SPIDERFY LEG LINES */
     .oms-spiderleg { stroke: #475569; stroke-width: 1.5; stroke-dasharray: 4,3; opacity: 0.6; }
     @keyframes strikeRing {
@@ -213,6 +227,26 @@
 
       <button class="opt-refresh" onclick="applyOptical()">↻ APPLY / REFRESH</button>
     </div>
+    <!-- MISSILE PANEL -->
+    <div id="missile-panel">
+      <div class="ms-title"><div class="ms-pulse"></div>🚀 MISSILE ALERTS — LIVE</div>
+      <div style="display:flex;gap:16px;align-items:baseline">
+        <div>
+          <div class="ms-count" id="ms-count">0</div>
+          <div class="ms-sublabel">ACTIVE ALERTS</div>
+        </div>
+        <div>
+          <div class="ms-count" id="ms-total" style="color:#f59e0b">0</div>
+          <div class="ms-sublabel">SESSION TOTAL</div>
+        </div>
+      </div>
+      <div class="ms-status" id="ms-status">◈ POLLING RED ALERT API...</div>
+      <div class="ms-log" id="ms-log"></div>
+      <div class="ms-source">
+        Source: IDF Home Front Command · oref.org.il<br>
+        <span style="color:#0f172a">Arc = inferred trajectory based on known origin zones</span>
+      </div>
+    </div>
     <div id="map-controls">
       <button class="map-btn" onclick="toggleFIRMS(this)">🔥 THERMAL</button>
       <button class="map-btn" onclick="toggleOptical(this)">🛰 OPTICAL</button>
@@ -221,6 +255,7 @@
       <button class="map-btn" onclick="toggleDesal(this)">💧 DESAL</button>
       <button class="map-btn" onclick="toggleFrontlines(this)">🗾 FRONTLINES</button>
       <button class="map-btn" onclick="toggleCCTV(this)">🔍 SHODAN</button>
+      <button class="map-btn" id="missile-btn" onclick="toggleMissiles(this)">🚀 MISSILES</button>
     </div>
   </div>
 
@@ -1074,6 +1109,299 @@ loadEvents();
 setInterval(loadEvents,120000);
 loadRSS('aje', document.querySelector('.rss-tab'));
 setInterval(()=>loadRSS(currentRSSSource,null),300000);
+
+// ── MISSILE ALERT LAYER ───────────────────────────────────────────────
+// Source: IDF Home Front Command (Pikud HaOref) public API
+// RedAlert fires when Iron Dome radar detects incoming rocket/missile
+// We infer trajectory origin based on geographic theater analysis
+
+let missileVisible=false, missileSessionTotal=0, missileInterval=null;
+let activeArcs=[], missileMarkers=[], seenAlertIds=new Set();
+
+// Israeli city → coordinates lookup (cities most commonly alerted)
+const IL_CITIES={
+  'תל אביב':        [32.0853,34.7818], 'Tel Aviv':       [32.0853,34.7818],
+  'ירושלים':        [31.7683,35.2137], 'Jerusalem':      [31.7683,35.2137],
+  'חיפה':           [32.7940,34.9896], 'Haifa':          [32.7940,34.9896],
+  'באר שבע':        [31.2530,34.7915], 'Beer Sheva':     [31.2530,34.7915],
+  'אשקלון':         [31.6688,34.5743], 'Ashkelon':       [31.6688,34.5743],
+  'אשדוד':          [31.8040,34.6550], 'Ashdod':         [31.8040,34.6550],
+  'עזה':            [31.5017,34.4668], 'Gaza':           [31.5017,34.4668],
+  'נתניה':          [32.3215,34.8532], 'Netanya':        [32.3215,34.8532],
+  'ראשון לציון':    [31.9730,34.7925], 'Rishon LeZion':  [31.9730,34.7925],
+  'פתח תקווה':      [32.0868,34.8870], 'Petah Tikva':    [32.0868,34.8870],
+  'רמת גן':         [32.0824,34.8137], 'Ramat Gan':      [32.0824,34.8137],
+  'הרצליה':         [32.1663,34.8438], 'Herzliya':       [32.1663,34.8438],
+  'רחובות':         [31.8928,34.8113], 'Rehovot':        [31.8928,34.8113],
+  'כפר סבא':        [32.1784,34.9078], 'Kfar Saba':      [32.1784,34.9078],
+  'ראש העין':       [32.0955,34.9558], 'Rosh HaAyin':    [32.0955,34.9558],
+  'נהריה':          [33.0047,35.0966], 'Nahariya':       [33.0047,35.0966],
+  'קריית שמונה':    [33.2075,35.5698], 'Kiryat Shmona':  [33.2075,35.5698],
+  'צפת':            [32.9646,35.4960], 'Safed':          [32.9646,35.4960],
+  'טבריה':          [32.7940,35.5310], 'Tiberias':       [32.7940,35.5310],
+  'מטולה':          [33.2720,35.5720], 'Metula':         [33.2720,35.5720],
+  'הגולן':          [32.9000,35.7500], 'Golan':          [32.9000,35.7500],
+  'אילת':           [29.5577,34.9519], 'Eilat':          [29.5577,34.9519],
+  'ערד':            [31.2580,35.2130], 'Arad':           [31.2580,35.2130],
+  'דימונה':         [31.0680,35.0340], 'Dimona':         [31.0680,35.0340],
+};
+
+// Infer likely origin zone based on target location + active conflict theater
+function inferOrigin(targetLat, targetLon, cityName){
+  // North Israel (lat > 32.8) → Hezbollah / Lebanon
+  if(targetLat > 32.8)
+    return {lat:33.3,lon:35.5,label:'South Lebanon (Hezbollah)',color:'#f59e0b'};
+  // Golan area → Syria
+  if(targetLon > 35.6 && targetLat > 32.5)
+    return {lat:33.5,lon:36.3,label:'Syria (IRGC-backed)',color:'#8b5cf6'};
+  // South Israel (lat < 31.5) → Gaza or Houthis
+  if(targetLat < 31.5)
+    return {lat:29.5,lon:34.4,label:'Gaza / Southern Theater',color:'#ef4444'};
+  // Eilat specifically → Houthis (Yemen)
+  if(cityName&&(cityName.includes('אילת')||cityName.toLowerCase().includes('eilat')))
+    return {lat:14.5,lon:44.2,label:'Yemen (Houthis)',color:'#f97316'};
+  // Central Israel → likely Gaza or Iran-backed via Lebanon
+  return {lat:31.4,lon:34.4,label:'Gaza / Hamas',color:'#ef4444'};
+}
+
+// Compute Bézier arc points between two lat/lon coords
+function bezierArc(fromLat,fromLon,toLat,toLon,steps=60){
+  const midLat=(fromLat+toLat)/2;
+  const midLon=(fromLon+toLon)/2;
+  const dist=Math.sqrt(Math.pow(toLat-fromLat,2)+Math.pow(toLon-fromLon,2));
+  // Control point elevated perpendicular to the line
+  const cpLat=midLat + dist*0.45;
+  const cpLon=midLon;
+  const pts=[];
+  for(let t=0;t<=1;t+=1/steps){
+    const mt=1-t;
+    const lat=mt*mt*fromLat + 2*mt*t*cpLat + t*t*toLat;
+    const lon=mt*mt*fromLon + 2*mt*t*cpLon + t*t*toLon;
+    pts.push([lat,lon]);
+  }
+  return pts;
+}
+
+// Animate a missile dot travelling along arc points
+function animateMissile(arcPoints, color, label, onComplete){
+  if(!arcPoints.length)return;
+  // Draw the arc trail
+  const trail=L.polyline([], {
+    color:color, weight:2, opacity:0.7,
+    dashArray:'6,4'
+  }).addTo(map);
+  activeArcs.push(trail);
+
+  // Missile head marker
+  const headIcon=L.divIcon({
+    className:'',
+    html:`<div style="font-size:14px;transform:rotate(45deg);filter:drop-shadow(0 0 6px ${color})">🚀</div>`,
+    iconSize:[20,20],iconAnchor:[10,10]
+  });
+  const head=L.marker(arcPoints[0],{icon:headIcon,zIndexOffset:2000}).addTo(map);
+  missileMarkers.push(head);
+
+  let i=0;
+  const speed=30; // ms per step
+  const interval=setInterval(()=>{
+    if(i>=arcPoints.length){
+      clearInterval(interval);
+      // Impact flash at destination
+      const impact=L.circleMarker(arcPoints[arcPoints.length-1],{
+        radius:18,color:color,fillColor:color,fillOpacity:0.3,weight:3,opacity:0.9
+      }).addTo(map);
+      missileMarkers.push(impact);
+      // Shrink flash
+      let r=18;
+      const flash=setInterval(()=>{
+        r-=1.5;
+        if(r<=0){clearInterval(flash);map.removeLayer(impact);}
+        else impact.setRadius(r);
+      },40);
+      // Remove head
+      setTimeout(()=>{try{map.removeLayer(head);}catch(e){}},200);
+      if(onComplete)onComplete();
+      return;
+    }
+    head.setLatLng(arcPoints[i]);
+    trail.addLatLng(arcPoints[i]);
+    i++;
+  },speed);
+}
+
+// Log an alert to the panel
+function logMissileAlert(city, origin, time){
+  const log=document.getElementById('ms-log');
+  if(!log)return;
+  const timeStr=new Date(time).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const item=document.createElement('div');
+  item.className='ms-log-item';
+  item.innerHTML=`<span class="ms-city">${city}</span> <span class="ms-time">${timeStr}</span><br>
+    <span style="color:#475569;font-size:8px">⟵ ${origin.label}</span>`;
+  log.insertBefore(item,log.firstChild);
+  // Keep max 8 items
+  while(log.children.length>8)log.removeChild(log.lastChild);
+}
+
+// Parse a RedAlert response and fire arcs
+function processAlerts(alerts){
+  if(!alerts||!alerts.length)return;
+  alerts.forEach(alert=>{
+    const id=alert.id||alert.alertDate||Math.random();
+    if(seenAlertIds.has(id))return;
+    seenAlertIds.add(id);
+
+    const cities=Array.isArray(alert.data)?alert.data:[alert.data||alert.title||'Unknown'];
+    cities.forEach(city=>{
+      let coords=IL_CITIES[city];
+      // Fuzzy match if exact not found
+      if(!coords){
+        const key=Object.keys(IL_CITIES).find(k=>city.includes(k)||k.includes(city));
+        if(key)coords=IL_CITIES[key];
+      }
+      if(!coords)coords=[32.0,34.8]; // Default central Israel
+
+      const origin=inferOrigin(coords[0],coords[1],city);
+      const arcPts=bezierArc(origin.lat,origin.lon,coords[0],coords[1]);
+
+      // Fire animation
+      animateMissile(arcPts, origin.color, city, null);
+
+      // Drop impact marker that persists
+      setTimeout(()=>{
+        const impactIcon=L.divIcon({
+          className:'',
+          html:`<div style="
+            width:10px;height:10px;border-radius:50%;
+            background:${origin.color};
+            box-shadow:0 0 12px ${origin.color};
+            border:2px solid #fff;
+          "></div>`,
+          iconSize:[10,10],iconAnchor:[5,5]
+        });
+        const im=L.marker(coords,{icon:impactIcon,zIndexOffset:1500})
+          .bindPopup(`<div style="font-family:'Space Mono',monospace">
+            <div style="font-size:8px;letter-spacing:2px;color:#ef4444;margin-bottom:4px">🚀 MISSILE ALERT</div>
+            <div style="font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:6px">${city}</div>
+            <div style="font-size:9px;color:#475569;margin-bottom:4px">
+              <span style="color:${origin.color}">◈ INFERRED ORIGIN</span><br>${origin.label}
+            </div>
+            <div style="font-size:8px;color:#334155">${new Date().toLocaleString('en-GB')}</div>
+            <div style="font-size:8px;color:#1e293b;margin-top:6px;border-top:1px solid #1e293b;padding-top:4px">
+              Source: IDF Pikud HaOref · Arc is inferred trajectory
+            </div>
+          </div>`,{maxWidth:240})
+          .addTo(map);
+        missileMarkers.push(im);
+        // Remove after 5 min
+        setTimeout(()=>{try{map.removeLayer(im);}catch(e){}},300000);
+      },arcPts.length*30+500);
+
+      // Update panel
+      missileSessionTotal++;
+      logMissileAlert(city,origin,new Date());
+      document.getElementById('ms-total').textContent=missileSessionTotal;
+    });
+  });
+}
+
+// Poll the RedAlert API — try direct, then CORS proxy fallback
+async function pollRedAlert(){
+  const status=document.getElementById('ms-status');
+  const count=document.getElementById('ms-count');
+  try{
+    // Primary: IDF Pikud HaOref live alerts
+    const res=await fetch('https://www.oref.org.il/warningMessages/alert/alerts.json',{
+      headers:{'Referer':'https://www.oref.org.il/','X-Requested-With':'XMLHttpRequest'},
+      signal:AbortSignal.timeout(5000)
+    });
+    const text=await res.text();
+    if(!text||text.trim()===''){
+      if(status)status.textContent='◈ NO ACTIVE ALERTS';
+      if(count)count.textContent='0';
+      return;
+    }
+    const data=JSON.parse(text);
+    const alerts=Array.isArray(data)?data:[data];
+    if(status)status.innerHTML=`<span style="color:#ef4444">◈ ALERT DETECTED</span>`;
+    if(count)count.textContent=alerts.length;
+    processAlerts(alerts);
+  }catch(e){
+    // Fallback: CORS proxy
+    try{
+      const res=await fetch(
+        'https://api.allorigins.win/get?url='+encodeURIComponent('https://www.oref.org.il/warningMessages/alert/alerts.json'),
+        {signal:AbortSignal.timeout(8000)}
+      );
+      const json=await res.json();
+      const text=json.contents||'';
+      if(!text||text.trim()===''||text.trim()==='null'){
+        if(status)status.textContent='◈ NO ACTIVE ALERTS';
+        if(count)count.textContent='0';
+        return;
+      }
+      const data=JSON.parse(text);
+      const alerts=Array.isArray(data)?data:[data];
+      processAlerts(alerts);
+    }catch(e2){
+      if(status)status.textContent='◈ API TIMEOUT — RETRYING';
+    }
+  }
+}
+
+// Demo mode: fire a fake alert so you can see the animation work
+function demoMissileAlert(){
+  const demos=[
+    {city:'תל אביב',coords:[32.0853,34.7818]},
+    {city:'חיפה',coords:[32.7940,34.9896]},
+    {city:'קריית שמונה',coords:[33.2075,35.5698]},
+    {city:'אילת',coords:[29.5577,34.9519]},
+    {city:'באר שבע',coords:[31.2530,34.7915]},
+  ];
+  const d=demos[Math.floor(Math.random()*demos.length)];
+  const origin=inferOrigin(d.coords[0],d.coords[1],d.city);
+  const arcPts=bezierArc(origin.lat,origin.lon,d.coords[0],d.coords[1]);
+  animateMissile(arcPts,origin.color,d.city,null);
+  missileSessionTotal++;
+  logMissileAlert(d.city,origin,new Date());
+  const el=document.getElementById('ms-total');
+  if(el)el.textContent=missileSessionTotal;
+  const st=document.getElementById('ms-status');
+  if(st)st.innerHTML=`<span style="color:#f59e0b">◈ DEMO MODE — SIMULATED ALERT</span>`;
+}
+
+function toggleMissiles(btn){
+  missileVisible=!missileVisible;
+  const panel=document.getElementById('missile-panel');
+  if(missileVisible){
+    btn.style.borderColor='#ef4444';btn.style.color='#ef4444';
+    if(panel)panel.style.display='flex';
+    // Poll immediately then every 5 seconds
+    pollRedAlert();
+    missileInterval=setInterval(pollRedAlert,5000);
+    // Add demo button to panel if not already there
+    const log=document.getElementById('ms-log');
+    if(log&&!document.getElementById('demo-btn')){
+      const demoBtn=document.createElement('button');
+      demoBtn.id='demo-btn';
+      demoBtn.textContent='▶ DEMO ANIMATION';
+      demoBtn.style.cssText="background:#ef444422;border:1px solid #ef444455;color:#ef4444;padding:5px;border-radius:4px;font-size:8px;letter-spacing:1px;cursor:pointer;font-family:'Space Mono',monospace;margin-top:4px";
+      demoBtn.onclick=demoMissileAlert;
+      panel.insertBefore(demoBtn,document.querySelector('.ms-source'));
+    }
+  } else {
+    btn.style.borderColor='';btn.style.color='';
+    if(panel)panel.style.display='none';
+    if(missileInterval){clearInterval(missileInterval);missileInterval=null;}
+    // Clear all arcs and markers
+    activeArcs.forEach(a=>{try{map.removeLayer(a);}catch(e){}});
+    activeArcs=[];
+    missileMarkers.forEach(m=>{try{map.removeLayer(m);}catch(e){}});
+    missileMarkers=[];
+    seenAlertIds.clear();
+  }
+}
+// ─────────────────────────────────────────────────────────────────────
 </script>
 </body>
 </html>
