@@ -68,7 +68,7 @@
     .cctv-popup .cc-link{font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:3px;border:1px solid;text-decoration:none;cursor:pointer}
     .cctv-popup .cc-note{font-size:8px;color:#334155;line-height:1.6;margin-top:6px}
     /* MISSILE LAYER */
-    #missile-panel{position:absolute;top:60px;left:10px;z-index:1000;background:#0d1117ee;backdrop-filter:blur(10px);border:1px solid #ef444455;border-radius:8px;padding:14px 16px;display:none;flex-direction:column;gap:8px;min-width:230px}
+    #missile-panel{position:absolute;top:60px;left:10px;z-index:1000;background:#0d1117ee;backdrop-filter:blur(10px);border:1px solid #ef444455;border-radius:8px;padding:14px 16px;display:none;flex-direction:column;gap:8px;min-width:260px;max-width:280px}
     #missile-panel .ms-title{font-size:9px;letter-spacing:2px;color:#ef4444;margin-bottom:2px;display:flex;align-items:center;gap:6px}
     #missile-panel .ms-pulse{width:7px;height:7px;border-radius:50%;background:#ef4444;box-shadow:0 0 6px #ef4444;animation:msPulse 1s ease-in-out infinite}
     @keyframes msPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
@@ -228,26 +228,96 @@
       <button class="opt-refresh" onclick="applyOptical()">↻ APPLY / REFRESH</button>
     </div>
     <!-- MISSILE PANEL -->
+    <!-- ALERTS PANEL -->
     <div id="missile-panel">
-      <div class="ms-title"><div class="ms-pulse"></div>🚀 MISSILE ALERTS — LIVE</div>
-      <div style="display:flex;gap:16px;align-items:baseline">
-        <div>
-          <div class="ms-count" id="ms-count">0</div>
-          <div class="ms-sublabel">ACTIVE ALERTS</div>
+      <!-- TAB BAR -->
+      <div style="display:flex;gap:0;margin-bottom:10px;border-radius:4px;overflow:hidden;border:1px solid #1e293b">
+        <button id="tab-live"   onclick="switchTab('live')"   style="flex:1;padding:5px 4px;font-size:8px;letter-spacing:1px;font-family:monospace;cursor:pointer;background:#ef444422;color:#ef4444;border:none;border-right:1px solid #1e293b">🔴 LIVE</button>
+        <button id="tab-acled"  onclick="switchTab('acled')"  style="flex:1;padding:5px 4px;font-size:8px;letter-spacing:1px;font-family:monospace;cursor:pointer;background:#0f172a;color:#475569;border:none;border-right:1px solid #1e293b">📊 ACLED</button>
+        <button id="tab-replay" onclick="switchTab('replay')" style="flex:1;padding:5px 4px;font-size:8px;letter-spacing:1px;font-family:monospace;cursor:pointer;background:#0f172a;color:#475569;border:none">📼 REPLAY</button>
+      </div>
+
+      <!-- TAB: LIVE -->
+      <div id="pane-live">
+        <div class="ms-title"><div class="ms-pulse"></div>🚀 LIVE MISSILE ALERTS</div>
+        <div style="display:flex;gap:16px;align-items:baseline;margin-bottom:6px">
+          <div><div class="ms-count" id="ms-count">0</div><div class="ms-sublabel">ACTIVE</div></div>
+          <div><div class="ms-count" id="ms-total" style="color:#f59e0b">0</div><div class="ms-sublabel">SESSION</div></div>
         </div>
-        <div>
-          <div class="ms-count" id="ms-total" style="color:#f59e0b">0</div>
-          <div class="ms-sublabel">SESSION TOTAL</div>
+        <div class="ms-status" id="ms-status">◈ POLLING PIKUD HAOREF...</div>
+        <div class="ms-log" id="ms-log"></div>
+        <div class="ms-source">Source: IDF Home Front Command · oref.org.il<br>Coverage: Israel only · 5s poll · Arc = inferred</div>
+      </div>
+
+      <!-- TAB: ACLED -->
+      <div id="pane-acled" style="display:none">
+        <div style="font-size:9px;letter-spacing:2px;color:#60a5fa;margin-bottom:8px">📊 ACLED — VERIFIED CONFLICT DATA</div>
+        <div style="font-size:8px;color:#475569;line-height:1.7;margin-bottom:10px">
+          Both sides · 24-72h lag · Full MENA region<br>
+          Airstrikes, shelling, drone/missile events
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:8px;letter-spacing:1px;color:#334155">◈ DATE RANGE</div>
+          <div style="display:flex;gap:4px;align-items:center">
+            <input type="date" id="acled-from" style="flex:1;background:#0f172a;border:1px solid #1e293b;color:#94a3b8;padding:4px;border-radius:3px;font-size:9px;font-family:monospace">
+            <span style="color:#334155;font-size:9px">→</span>
+            <input type="date" id="acled-to"   style="flex:1;background:#0f172a;border:1px solid #1e293b;color:#94a3b8;padding:4px;border-radius:3px;font-size:9px;font-family:monospace">
+          </div>
+          <div style="font-size:8px;letter-spacing:1px;color:#334155;margin-top:4px">◈ FILTER BY ACTOR</div>
+          <select id="acled-actor" style="background:#0f172a;border:1px solid #1e293b;color:#94a3b8;padding:4px;border-radius:3px;font-size:9px;font-family:monospace">
+            <option value="">ALL ACTORS</option>
+            <option value="Israel">🇮🇱 Israel (IDF)</option>
+            <option value="Hamas">🇵🇸 Hamas</option>
+            <option value="Hezbollah">Hezbollah</option>
+            <option value="Houthi">Houthi</option>
+            <option value="Iran">🇮🇷 Iran (IRGC)</option>
+            <option value="Syria">🇸🇾 Syria</option>
+          </select>
+          <div style="font-size:8px;letter-spacing:1px;color:#334155;margin-top:2px">◈ EVENT TYPE</div>
+          <select id="acled-type" style="background:#0f172a;border:1px solid #1e293b;color:#94a3b8;padding:4px;border-radius:3px;font-size:9px;font-family:monospace">
+            <option value="">ALL TYPES</option>
+            <option value="Air/drone strike">Air/Drone Strike</option>
+            <option value="Shelling/artillery/missile attack">Missile/Artillery</option>
+            <option value="Remote explosive/landmine/IED">IED/Explosive</option>
+            <option value="Armed clash">Armed Clash</option>
+          </select>
+          <div style="font-size:8px;letter-spacing:1px;color:#334155;margin-top:2px">◈ API CREDENTIALS</div>
+          <input type="email" id="acled-email" placeholder="your@email.com" style="background:#0f172a;border:1px solid #1e293b;color:#94a3b8;padding:4px;border-radius:3px;font-size:9px;font-family:monospace">
+          <input type="text"  id="acled-key"   placeholder="ACLED API key" style="background:#0f172a;border:1px solid #1e293b;color:#94a3b8;padding:4px;border-radius:3px;font-size:9px;font-family:monospace">
+          <button onclick="fetchACLED()" style="background:#60a5fa18;border:1px solid #60a5fa55;color:#60a5fa;padding:6px;border-radius:4px;font-size:9px;letter-spacing:1px;cursor:pointer;font-family:monospace">
+            ▶ FETCH EVENTS
+          </button>
+          <div id="acled-status" style="font-size:8px;color:#475569;min-height:14px"></div>
+          <div id="acled-log" style="max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:3px"></div>
+        </div>
+        <div class="ms-source" style="margin-top:8px">
+          Free key: acleddata.com/register<br>
+          Coverage: Syria, Lebanon, Gaza, Yemen, Iran, Israel
         </div>
       </div>
-      <div class="ms-status" id="ms-status">◈ POLLING RED ALERT API...</div>
-      <div class="ms-log" id="ms-log"></div>
-      <div class="ms-source">
-        Source: IDF Home Front Command · oref.org.il<br>
-        <span style="color:#0f172a">Arc = inferred trajectory based on known origin zones</span>
+
+      <!-- TAB: REPLAY -->
+      <div id="pane-replay" style="display:none">
+        <div style="font-size:9px;letter-spacing:2px;color:#f59e0b;margin-bottom:8px">📼 HISTORICAL REPLAY</div>
+        <div style="font-size:8px;color:#475569;line-height:1.6;margin-bottom:10px">Real documented attacks.<br>Animated trajectory reconstruction.</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <button onclick="replayAttack('apr2024')" style="background:#ef444418;border:1px solid #ef444455;color:#ef4444;padding:6px 8px;border-radius:4px;font-size:8px;letter-spacing:1px;cursor:pointer;font-family:monospace;text-align:left">
+            ▶ APR 13-14 2024 — Iran Wave 1<br><span style="color:#334155;font-size:7px">170 drones · 120 ballistic missiles · Multi-origin</span>
+          </button>
+          <button onclick="replayAttack('oct2024')" style="background:#f9731618;border:1px solid #f9731655;color:#f97316;padding:6px 8px;border-radius:4px;font-size:8px;letter-spacing:1px;cursor:pointer;font-family:monospace;text-align:left">
+            ▶ OCT 1 2024 — Iran Wave 2<br><span style="color:#334155;font-size:7px">180 Fattah-1 ballistic missiles · Tehran launch</span>
+          </button>
+          <button onclick="replayAttack('houthi')" style="background:#f59e0b18;border:1px solid #f59e0b55;color:#f59e0b;padding:6px 8px;border-radius:4px;font-size:8px;letter-spacing:1px;cursor:pointer;font-family:monospace;text-align:left">
+            ▶ HOUTHI CAMPAIGN 2024<br><span style="color:#334155;font-size:7px">9 major strikes · Yemen → Eilat / Tel Aviv</span>
+          </button>
+          <button onclick="clearReplay();clearACLED();" style="background:#1e293b18;border:1px solid #1e293b;color:#475569;padding:5px 8px;border-radius:4px;font-size:8px;letter-spacing:1px;cursor:pointer;font-family:monospace;margin-top:2px">
+            ✕ CLEAR ALL ARCS
+          </button>
+        </div>
+        <div class="ms-source" style="margin-top:8px">Arc = Bézier trajectory reconstruction<br>Based on IDF/open source reports</div>
       </div>
     </div>
-    <div id="map-controls">
+        <div id="map-controls">
       <button class="map-btn" onclick="toggleFIRMS(this)">🔥 THERMAL</button>
       <button class="map-btn" onclick="toggleOptical(this)">🛰 OPTICAL</button>
       <button class="map-btn" onclick="toggleFlights(this)">✈ FLIGHTS</button>
@@ -255,7 +325,7 @@
       <button class="map-btn" onclick="toggleDesal(this)">💧 DESAL</button>
       <button class="map-btn" onclick="toggleFrontlines(this)">🗾 FRONTLINES</button>
       <button class="map-btn" onclick="toggleCCTV(this)">🔍 SHODAN</button>
-      <button class="map-btn" id="missile-btn" onclick="toggleMissiles(this)">🚀 MISSILES</button>
+      <button class="map-btn" id="missile-btn" onclick="toggleMissiles(this)">⚡ ALERTS</button>
     </div>
   </div>
 
@@ -1147,21 +1217,144 @@ const IL_CITIES={
 };
 
 // Infer likely origin zone based on target location + active conflict theater
-function inferOrigin(targetLat, targetLon, cityName){
-  // North Israel (lat > 32.8) → Hezbollah / Lebanon
-  if(targetLat > 32.8)
-    return {lat:33.3,lon:35.5,label:'South Lebanon (Hezbollah)',color:'#f59e0b'};
-  // Golan area → Syria
-  if(targetLon > 35.6 && targetLat > 32.5)
-    return {lat:33.5,lon:36.3,label:'Syria (IRGC-backed)',color:'#8b5cf6'};
-  // South Israel (lat < 31.5) → Gaza or Houthis
-  if(targetLat < 31.5)
-    return {lat:29.5,lon:34.4,label:'Gaza / Southern Theater',color:'#ef4444'};
-  // Eilat specifically → Houthis (Yemen)
+// Known launch origin zones by actor
+const ORIGINS={
+  iran:     {lat:32.4279,lon:53.6880,label:'Iran (IRGC)',color:'#ef4444'},
+  hezbollah:{lat:33.2,  lon:35.4,   label:'South Lebanon (Hezbollah)',color:'#f59e0b'},
+  houthis:  {lat:14.5,  lon:44.2,   label:'Yemen (Houthis)',color:'#f97316'},
+  hamas:    {lat:31.35, lon:34.32,  label:'Gaza (Hamas)',color:'#ff6b6b'},
+  syria:    {lat:33.5,  lon:36.3,   label:'Syria (IRGC-backed)',color:'#8b5cf6'},
+  pij:      {lat:31.38, lon:34.35,  label:'Gaza (PIJ)',color:'#ef4444'},
+};
+
+function inferOrigin(targetLat, targetLon, cityName, forceActor){
+  if(forceActor && ORIGINS[forceActor]) return ORIGINS[forceActor];
+  // North Israel (lat > 32.8) → Hezbollah
+  if(targetLat > 32.8) return ORIGINS.hezbollah;
+  // Golan area
+  if(targetLon > 35.6 && targetLat > 32.5) return ORIGINS.syria;
+  // Eilat → Houthis (Yemen, ~2000km range)
   if(cityName&&(cityName.includes('אילת')||cityName.toLowerCase().includes('eilat')))
-    return {lat:14.5,lon:44.2,label:'Yemen (Houthis)',color:'#f97316'};
-  // Central Israel → likely Gaza or Iran-backed via Lebanon
-  return {lat:31.4,lon:34.4,label:'Gaza / Hamas',color:'#ef4444'};
+    return ORIGINS.houthis;
+  // South Israel → Gaza
+  if(targetLat < 31.8) return ORIGINS.hamas;
+  // Central Israel default → Gaza
+  return ORIGINS.hamas;
+}
+
+// Historical attack datasets — real documented events
+const HISTORICAL_ATTACKS={
+  // Iran Wave 1 — April 13-14, 2024
+  // ~170 Shahed drones + 120 ballistic missiles, intercepted ~99%
+  // Targets: Nevatim airbase (Negev), Ramon airbase, Tel Aviv area
+  apr2024:[
+    {actor:'iran',city:'Nevatim Airbase',     coords:[31.2080,35.0120],delay:0,    type:'ballistic'},
+    {actor:'iran',city:'Ramon Airbase',        coords:[30.7760,34.6670],delay:1200, type:'ballistic'},
+    {actor:'iran',city:'Beer Sheva',           coords:[31.2530,34.7915],delay:2400, type:'ballistic'},
+    {actor:'iran',city:'Tel Aviv area',        coords:[32.0853,34.7818],delay:3600, type:'ballistic'},
+    {actor:'iran',city:'Haifa area',           coords:[32.7940,34.9896],delay:4200, type:'ballistic'},
+    {actor:'iran',city:'Jerusalem area',       coords:[31.7683,35.2137],delay:4800, type:'ballistic'},
+    {actor:'iran',city:'Dimona area',          coords:[31.0680,35.0340],delay:5400, type:'ballistic'},
+    {actor:'iran',city:'Nevatim (2nd wave)',   coords:[31.2100,35.0140],delay:6000, type:'ballistic'},
+    {actor:'hezbollah',city:'Kiryat Shmona',   coords:[33.2075,35.5698],delay:1800, type:'rocket'},
+    {actor:'hezbollah',city:'Nahariya',        coords:[33.0047,35.0966],delay:2200, type:'rocket'},
+    {actor:'houthis',city:'Eilat',             coords:[29.5577,34.9519],delay:3000, type:'cruise'},
+    {actor:'hamas',city:'Ashkelon',            coords:[31.6688,34.5743],delay:1000, type:'rocket'},
+    {actor:'hamas',city:'Beer Sheva',          coords:[31.2530,34.7915],delay:3200, type:'rocket'},
+  ],
+  // Iran Wave 2 — October 1, 2024
+  // ~180 Fattah-1 + Kheibar Shekan ballistic missiles
+  // More accurate than Wave 1, several reached Tel Aviv metro
+  oct2024:[
+    {actor:'iran',city:'Tel Aviv',             coords:[32.0853,34.7818],delay:0,    type:'ballistic'},
+    {actor:'iran',city:'Tel Aviv (2)',          coords:[32.1000,34.8000],delay:800,  type:'ballistic'},
+    {actor:'iran',city:'Gush Dan',             coords:[32.0500,34.7500],delay:1600, type:'ballistic'},
+    {actor:'iran',city:'Lod / Ben Gurion',     coords:[31.9930,34.8870],delay:2400, type:'ballistic'},
+    {actor:'iran',city:'Ramle',                coords:[31.9300,34.8700],delay:3000, type:'ballistic'},
+    {actor:'iran',city:'Jerusalem',            coords:[31.7683,35.2137],delay:3600, type:'ballistic'},
+    {actor:'iran',city:'Haifa',                coords:[32.7940,34.9896],delay:4200, type:'ballistic'},
+    {actor:'iran',city:'Beer Sheva',           coords:[31.2530,34.7915],delay:4800, type:'ballistic'},
+    {actor:'iran',city:'Nevatim Airbase',      coords:[31.2080,35.0120],delay:5200, type:'ballistic'},
+    {actor:'iran',city:'Tel Aviv (3)',          coords:[32.0700,34.7700],delay:5800, type:'ballistic'},
+    {actor:'iran',city:'Petah Tikva',          coords:[32.0868,34.8870],delay:6400, type:'ballistic'},
+    {actor:'iran',city:'Rishon LeZion',        coords:[31.9730,34.7925],delay:7000, type:'ballistic'},
+    {actor:'hezbollah',city:'Kiryat Shmona',   coords:[33.2075,35.5698],delay:500,  type:'rocket'},
+    {actor:'hezbollah',city:'Safed',           coords:[32.9646,35.4960],delay:2000, type:'rocket'},
+    {actor:'hezbollah',city:'Haifa',           coords:[32.7940,34.9896],delay:3500, type:'rocket'},
+  ],
+  // Houthi campaign — multiple strikes across 2024
+  houthi:[
+    {actor:'houthis',city:'Eilat (Jan)',       coords:[29.5577,34.9519],delay:0,    type:'ballistic'},
+    {actor:'houthis',city:'Eilat (Feb)',       coords:[29.5600,34.9500],delay:2000, type:'cruise'},
+    {actor:'houthis',city:'Eilat (Mar)',       coords:[29.5550,34.9530],delay:4000, type:'ballistic'},
+    {actor:'houthis',city:'Eilat (Jul)',       coords:[29.5580,34.9510],delay:6000, type:'ballistic'},
+    {actor:'houthis',city:'Tel Aviv (Jul 19)', coords:[32.0853,34.7818],delay:8000, type:'cruise'},
+    {actor:'houthis',city:'Jaffa port area',   coords:[32.0500,34.7500],delay:9500, type:'cruise'},
+    {actor:'houthis',city:'Tel Aviv (Sep)',    coords:[32.0900,34.7900],delay:11000,type:'ballistic'},
+    {actor:'houthis',city:'Eilat (Oct)',       coords:[29.5560,34.9520],delay:13000,type:'ballistic'},
+    {actor:'houthis',city:'Beer Sheva',        coords:[31.2530,34.7915],delay:15000,type:'ballistic'},
+  ],
+};
+
+const MISSILE_TYPE_ICON={ballistic:'🚀',rocket:'🔴',cruise:'✈️',drone:'🛸'};
+
+let replayActive=false, replayTimers=[];
+
+function clearReplay(){
+  replayTimers.forEach(t=>clearTimeout(t));
+  replayTimers=[];
+  replayActive=false;
+}
+
+function replayAttack(key){
+  if(replayActive){clearReplay();}
+  const attacks=HISTORICAL_ATTACKS[key];
+  if(!attacks)return;
+
+  replayActive=true;
+  const st=document.getElementById('ms-status');
+  const labels={apr2024:'APR 13-14, 2024 — Iran Wave 1',oct2024:'OCT 1, 2024 — Iran Wave 2',houthi:'HOUTHI CAMPAIGN 2024'};
+  if(st)st.innerHTML=`<span style="color:#ef4444">▶ REPLAYING: ${labels[key]||key}</span>`;
+
+  attacks.forEach(atk=>{
+    const t=setTimeout(()=>{
+      const origin=ORIGINS[atk.actor]||ORIGINS.iran;
+      const arcPts=bezierArc(origin.lat,origin.lon,atk.coords[0],atk.coords[1],80);
+      const icon=MISSILE_TYPE_ICON[atk.type]||'🚀';
+
+      // Animate with appropriate icon
+      animateMissileIcon(arcPts,origin.color,icon);
+
+      // Impact marker
+      setTimeout(()=>{
+        const im=L.circleMarker(atk.coords,{
+          radius:6,color:origin.color,fillColor:origin.color,
+          fillOpacity:0.8,weight:2,opacity:1
+        }).bindPopup(`<div style="font-family:monospace;padding:4px">
+          <div style="font-size:8px;letter-spacing:2px;color:${origin.color};margin-bottom:4px">${icon} ${atk.type.toUpperCase()} IMPACT</div>
+          <div style="font-size:12px;font-weight:700;color:#e2e8f0;margin-bottom:4px">${atk.city}</div>
+          <div style="font-size:9px;color:#475569">${origin.label}</div>
+          <div style="font-size:8px;color:#334155;margin-top:4px">${labels[key]}</div>
+        </div>`,{maxWidth:220}).addTo(map);
+        missileMarkers.push(im);
+        setTimeout(()=>{try{map.removeLayer(im);}catch(e){}},120000);
+      },arcPts.length*25+300);
+
+      missileSessionTotal++;
+      logMissileAlert(atk.city,origin,new Date());
+      const el=document.getElementById('ms-total');
+      if(el)el.textContent=missileSessionTotal;
+    },atk.delay);
+    replayTimers.push(t);
+  });
+
+  // Reset status after replay completes
+  const maxDelay=Math.max(...attacks.map(a=>a.delay))+5000;
+  const ft=setTimeout(()=>{
+    replayActive=false;
+    if(st)st.textContent='◈ REPLAY COMPLETE';
+  },maxDelay);
+  replayTimers.push(ft);
 }
 
 // Compute Bézier arc points between two lat/lon coords
@@ -1227,6 +1420,37 @@ function animateMissile(arcPoints, color, label, onComplete){
     trail.addLatLng(arcPoints[i]);
     i++;
   },speed);
+}
+
+// animateMissileIcon — like animateMissile but with custom icon
+function animateMissileIcon(arcPoints, color, iconEmoji){
+  if(!arcPoints.length)return;
+  const trail=L.polyline([],{color:color,weight:2,opacity:0.6,dashArray:'5,4'}).addTo(map);
+  activeArcs.push(trail);
+  const headIcon=L.divIcon({
+    className:'',
+    html:`<div style="font-size:13px;filter:drop-shadow(0 0 5px ${color})">${iconEmoji}</div>`,
+    iconSize:[18,18],iconAnchor:[9,9]
+  });
+  const head=L.marker(arcPoints[0],{icon:headIcon,zIndexOffset:2000}).addTo(map);
+  missileMarkers.push(head);
+  let i=0;
+  const iv=setInterval(()=>{
+    if(i>=arcPoints.length){
+      clearInterval(iv);
+      const imp=L.circleMarker(arcPoints[arcPoints.length-1],{
+        radius:14,color:color,fillColor:color,fillOpacity:0.3,weight:2
+      }).addTo(map);
+      missileMarkers.push(imp);
+      let r=14;
+      const fl=setInterval(()=>{r-=1;if(r<=0){clearInterval(fl);map.removeLayer(imp);}else imp.setRadius(r);},35);
+      setTimeout(()=>{try{map.removeLayer(head);}catch(e){}},200);
+      return;
+    }
+    head.setLatLng(arcPoints[i]);
+    trail.addLatLng(arcPoints[i]);
+    i++;
+  },25);
 }
 
 // Log an alert to the panel
@@ -1352,22 +1576,23 @@ async function pollRedAlert(){
 // Demo mode: fire a fake alert so you can see the animation work
 function demoMissileAlert(){
   const demos=[
-    {city:'תל אביב',coords:[32.0853,34.7818]},
-    {city:'חיפה',coords:[32.7940,34.9896]},
-    {city:'קריית שמונה',coords:[33.2075,35.5698]},
-    {city:'אילת',coords:[29.5577,34.9519]},
-    {city:'באר שבע',coords:[31.2530,34.7915]},
+    {city:'Tel Aviv',coords:[32.0853,34.7818],actor:'iran'},
+    {city:'Haifa',coords:[32.7940,34.9896],actor:'hezbollah'},
+    {city:'Kiryat Shmona',coords:[33.2075,35.5698],actor:'hezbollah'},
+    {city:'Eilat',coords:[29.5577,34.9519],actor:'houthis'},
+    {city:'Beer Sheva',coords:[31.2530,34.7915],actor:'iran'},
+    {city:'Nevatim Airbase',coords:[31.208,35.012],actor:'iran'},
   ];
   const d=demos[Math.floor(Math.random()*demos.length)];
-  const origin=inferOrigin(d.coords[0],d.coords[1],d.city);
-  const arcPts=bezierArc(origin.lat,origin.lon,d.coords[0],d.coords[1]);
-  animateMissile(arcPts,origin.color,d.city,null);
+  const origin=ORIGINS[d.actor]||inferOrigin(d.coords[0],d.coords[1],d.city);
+  const arcPts=bezierArc(origin.lat,origin.lon,d.coords[0],d.coords[1],80);
+  animateMissileIcon(arcPts,origin.color,'🚀');
   missileSessionTotal++;
   logMissileAlert(d.city,origin,new Date());
   const el=document.getElementById('ms-total');
   if(el)el.textContent=missileSessionTotal;
   const st=document.getElementById('ms-status');
-  if(st)st.innerHTML=`<span style="color:#f59e0b">◈ DEMO MODE — SIMULATED ALERT</span>`;
+  if(st)st.innerHTML=`<span style="color:#f59e0b">◈ DEMO — ${origin.label} → ${d.city}</span>`;
 }
 
 function toggleMissiles(btn){
@@ -1376,19 +1601,10 @@ function toggleMissiles(btn){
   if(missileVisible){
     btn.style.borderColor='#ef4444';btn.style.color='#ef4444';
     if(panel)panel.style.display='flex';
-    // Poll immediately then every 5 seconds
+    switchTab('live');
+    initACLEDDates();
     pollRedAlert();
     missileInterval=setInterval(pollRedAlert,5000);
-    // Add demo button to panel if not already there
-    const log=document.getElementById('ms-log');
-    if(log&&!document.getElementById('demo-btn')){
-      const demoBtn=document.createElement('button');
-      demoBtn.id='demo-btn';
-      demoBtn.textContent='▶ DEMO ANIMATION';
-      demoBtn.style.cssText="background:#ef444422;border:1px solid #ef444455;color:#ef4444;padding:5px;border-radius:4px;font-size:8px;letter-spacing:1px;cursor:pointer;font-family:'Space Mono',monospace;margin-top:4px";
-      demoBtn.onclick=demoMissileAlert;
-      panel.insertBefore(demoBtn,document.querySelector('.ms-source'));
-    }
   } else {
     btn.style.borderColor='';btn.style.color='';
     if(panel)panel.style.display='none';
@@ -1399,9 +1615,225 @@ function toggleMissiles(btn){
     missileMarkers.forEach(m=>{try{map.removeLayer(m);}catch(e){}});
     missileMarkers=[];
     seenAlertIds.clear();
+    clearACLED();
+    clearReplay();
   }
 }
 // ─────────────────────────────────────────────────────────────────────
+
+// ── TAB SWITCHER ──────────────────────────────────────────────────────
+function switchTab(tab){
+  ['live','acled','replay'].forEach(t=>{
+    const pane=document.getElementById('pane-'+t);
+    const btn =document.getElementById('tab-'+t);
+    if(!pane||!btn)return;
+    const active=(t===tab);
+    pane.style.display=active?'block':'none';
+    btn.style.background=active?'#ef444422':'#0f172a';
+    btn.style.color=active?'#ef4444':'#475569';
+  });
+}
+
+// ── ACLED LAYER ───────────────────────────────────────────────────────
+// ACLED = Armed Conflict Location & Event Data
+// Free API key at: acleddata.com/register
+// Coverage: Syria, Lebanon, Gaza, Yemen, Iran, Israel — both sides
+// Lag: 24-72 hours · Verified by ACLED researchers
+
+let acledLayer=null, acledMarkers=[], acledArcs=[];
+
+// Actor → color + inferred origin for arc drawing
+const ACLED_ACTORS={
+  'Israel':    {color:'#60a5fa', origin:[31.7,35.2],  side:'IL'},
+  'IDF':       {color:'#60a5fa', origin:[31.7,35.2],  side:'IL'},
+  'Hamas':     {color:'#ef4444', origin:[31.35,34.32], side:'PS'},
+  'PIJ':       {color:'#ff6b6b', origin:[31.38,34.35], side:'PS'},
+  'Hezbollah': {color:'#f59e0b', origin:[33.2,35.4],   side:'LB'},
+  'Houthi':    {color:'#f97316', origin:[14.5,44.2],   side:'YE'},
+  'Iran':      {color:'#ef4444', origin:[32.4,53.7],   side:'IR'},
+  'IRGC':      {color:'#dc2626', origin:[32.4,53.7],   side:'IR'},
+  'Syria':     {color:'#8b5cf6', origin:[33.5,36.3],   side:'SY'},
+  'default':   {color:'#64748b', origin:[32.0,35.0],   side:'??'},
+};
+
+function getActorInfo(name){
+  if(!name) return ACLED_ACTORS.default;
+  const key=Object.keys(ACLED_ACTORS).find(k=>name.includes(k));
+  return key?ACLED_ACTORS[key]:ACLED_ACTORS.default;
+}
+
+function clearACLED(){
+  acledArcs.forEach(a=>{try{map.removeLayer(a);}catch(e){}});
+  acledMarkers.forEach(m=>{try{map.removeLayer(m);}catch(e){}});
+  acledArcs=[];acledMarkers=[];
+  const log=document.getElementById('acled-log');
+  if(log)log.innerHTML='';
+}
+
+function renderACLEDEvent(ev){
+  const lat=parseFloat(ev.latitude),lon=parseFloat(ev.longitude);
+  if(isNaN(lat)||isNaN(lon))return;
+  const actor1=getActorInfo(ev.actor1||'');
+  const actor2=getActorInfo(ev.actor2||'');
+  const mainActor=actor1;
+  const color=mainActor.color;
+  const isStrike=(ev.sub_event_type||'').toLowerCase().includes('strike')||
+                 (ev.sub_event_type||'').toLowerCase().includes('missile')||
+                 (ev.sub_event_type||'').toLowerCase().includes('shell');
+
+  // Draw arc for strikes only
+  if(isStrike && mainActor.origin){
+    const arcPts=bezierArc(mainActor.origin[0],mainActor.origin[1],lat,lon,60);
+    const arc=L.polyline(arcPts,{color:color,weight:1.5,opacity:0.5,dashArray:'5,3'}).addTo(map);
+    acledArcs.push(arc);
+  }
+
+  // Impact/event marker
+  const icon=L.divIcon({
+    className:'',
+    html:`<div style="
+      width:9px;height:9px;border-radius:50%;
+      background:${color};
+      box-shadow:0 0 8px ${color}aa;
+      border:1px solid ${color};
+      opacity:0.85;
+    "></div>`,
+    iconSize:[9,9],iconAnchor:[4,4]
+  });
+
+  const dateStr=ev.event_date||'';
+  const fatalities=ev.fatalities||0;
+
+  const marker=L.marker([lat,lon],{icon,zIndexOffset:500})
+    .bindPopup(`<div style="font-family:monospace;min-width:240px">
+      <div style="font-size:8px;letter-spacing:2px;color:${color};margin-bottom:4px">
+        📊 ACLED · ${dateStr}
+      </div>
+      <div style="font-size:12px;font-weight:700;color:#e2e8f0;margin-bottom:6px;line-height:1.3">
+        ${ev.sub_event_type||ev.event_type||'Event'}
+      </div>
+      <div style="font-size:9px;color:#64748b;margin-bottom:4px">
+        <span style="color:${color}">${ev.actor1||'Unknown'}</span>
+        ${ev.actor2?` → <span style="color:#94a3b8">${ev.actor2}</span>`:''}
+      </div>
+      <div style="font-size:9px;color:#475569;margin-bottom:4px">📍 ${ev.location||''}${ev.admin1?', '+ev.admin1:''}, ${ev.country||''}</div>
+      ${fatalities>0?`<div style="font-size:9px;color:#ef4444;margin-bottom:4px">💀 ${fatalities} fatalities reported</div>`:''}
+      ${ev.notes?`<div style="font-size:8px;color:#334155;border-top:1px solid #1e293b;padding-top:4px;margin-top:4px;line-height:1.6;max-height:60px;overflow-y:auto">${ev.notes.substring(0,300)}${ev.notes.length>300?'...':''}</div>`:''}
+      <div style="font-size:7px;color:#1e293b;margin-top:6px">Source: ACLED · acleddata.com</div>
+    </div>`,{maxWidth:300,className:'dark-popup'})
+    .addTo(map);
+  acledMarkers.push(marker);
+}
+
+async function fetchACLED(){
+  const email=document.getElementById('acled-email').value.trim();
+  const key  =document.getElementById('acled-key').value.trim();
+  const from =document.getElementById('acled-from').value;
+  const to   =document.getElementById('acled-to').value;
+  const actor=document.getElementById('acled-actor').value;
+  const type =document.getElementById('acled-type').value;
+  const status=document.getElementById('acled-status');
+  const log   =document.getElementById('acled-log');
+
+  if(!email||!key){
+    status.innerHTML='<span style="color:#ef4444">⚠ Enter ACLED email + API key</span>';
+    return;
+  }
+  if(!from||!to){
+    status.innerHTML='<span style="color:#ef4444">⚠ Select date range</span>';
+    return;
+  }
+
+  clearACLED();
+  status.innerHTML='<span style="color:#f59e0b">◈ FETCHING FROM ACLED...</span>';
+
+  // ACLED countries covering the theater
+  const countries='Israel:Palestine:Syria:Lebanon:Yemen:Iran:Iraq:Jordan';
+
+  // Build ACLED API URL
+  // ACLED v2 API: https://api.acleddata.com/acled/read
+  const params=new URLSearchParams({
+    key, email,
+    event_date:`${from}|${to}`,
+    event_date_where:'BETWEEN',
+    region:'11:4:7', // Middle East + North Africa
+    limit:'1000',
+    fields:'event_date|event_type|sub_event_type|actor1|actor2|location|admin1|country|latitude|longitude|fatalities|notes',
+  });
+
+  if(actor) params.set('actor1',actor);
+  if(type)  params.set('sub_event_type',type);
+
+  try{
+    // Use allorigins proxy for CORS
+    const apiUrl=`https://api.acleddata.com/acled/read?${params}`;
+    const proxyUrl=`https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
+
+    const res=await fetch(proxyUrl,{signal:AbortSignal.timeout(20000)});
+    const json=await res.json();
+    const data=JSON.parse(json.contents||'{}');
+
+    if(data.status!==200||!data.data){
+      status.innerHTML=`<span style="color:#ef4444">⚠ API error: ${data.error||'Check credentials'}</span>`;
+      return;
+    }
+
+    const events=data.data;
+    status.innerHTML=`<span style="color:#34d399">✓ ${events.length} events loaded</span>`;
+
+    // Filter relevant event types (remove protests, riots etc)
+    const relevant=events.filter(ev=>{
+      const et=(ev.event_type||'').toLowerCase();
+      const se=(ev.sub_event_type||'').toLowerCase();
+      return et.includes('explosion')||et.includes('battle')||et.includes('violence')||
+             se.includes('strike')||se.includes('missile')||se.includes('shell')||
+             se.includes('drone')||se.includes('rocket')||se.includes('airstrike');
+    });
+
+    // Render all events
+    relevant.forEach(ev=>renderACLEDEvent(ev));
+
+    // Populate mini log
+    if(log){
+      log.innerHTML='';
+      const recent=relevant.slice(0,15);
+      recent.forEach(ev=>{
+        const info=getActorInfo(ev.actor1||'');
+        const item=document.createElement('div');
+        item.style.cssText='font-size:8px;padding:4px 6px;background:#0f172a;border-radius:3px;border-left:2px solid '+info.color+';line-height:1.5;cursor:pointer;color:#64748b';
+        item.innerHTML=`<span style="color:#e2e8f0">${ev.location||ev.admin1}</span> <span style="float:right;color:#334155">${ev.event_date}</span><br><span style="color:${info.color}">${ev.actor1}</span> · ${ev.sub_event_type}`;
+        item.onclick=()=>map.setView([parseFloat(ev.latitude),parseFloat(ev.longitude)],10);
+        log.appendChild(item);
+      });
+    }
+
+    // Auto-fit map to events
+    if(relevant.length>0){
+      const lats=relevant.map(e=>parseFloat(e.latitude)).filter(v=>!isNaN(v));
+      const lons=relevant.map(e=>parseFloat(e.longitude)).filter(v=>!isNaN(v));
+      if(lats.length){
+        const bounds=[[Math.min(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]];
+        map.fitBounds(bounds,{padding:[40,40]});
+      }
+    }
+
+  }catch(e){
+    status.innerHTML=`<span style="color:#ef4444">⚠ ${e.message||'Fetch failed'}</span>`;
+    console.error('ACLED fetch error:',e);
+  }
+}
+
+// Set default date range (last 30 days) on panel open
+function initACLEDDates(){
+  const to=new Date();
+  const from=new Date();
+  from.setDate(from.getDate()-30);
+  const fmt=d=>d.toISOString().split('T')[0];
+  const fi=document.getElementById('acled-from');
+  const ti=document.getElementById('acled-to');
+  if(fi&&!fi.value)fi.value=fmt(from);
+  if(ti&&!ti.value)ti.value=fmt(to);
+}
 </script>
 </body>
 </html>
