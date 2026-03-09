@@ -20,23 +20,31 @@
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
     #main{display:flex;flex:1;overflow:hidden}
 
-    /* RSS PANEL */
-    #rss-panel{width:270px;background:#0d1117;border-right:1px solid #1e293b;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
-    #rss-header{padding:8px 12px;border-bottom:1px solid #1e293b;font-size:10px;letter-spacing:2px;color:#a78bfa;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
-    #rss-source-tabs{display:flex;gap:3px;padding:5px 8px;border-bottom:1px solid #1e293b;flex-wrap:wrap;flex-shrink:0}
-    .rss-tab{background:#0f172a;border:1px solid #1e293b;color:#475569;padding:2px 6px;border-radius:3px;cursor:pointer;font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1px;transition:all .15s}
+    /* OSINT BOOKMARKS PANEL */
+    #rss-panel{width:240px;background:#0d1117;border-right:1px solid #1e293b;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+    #rss-header{padding:8px 12px;border-bottom:1px solid #1e293b;font-size:10px;letter-spacing:2px;color:#34d399;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+    #rss-source-tabs{display:flex;gap:2px;padding:5px 6px;border-bottom:1px solid #1e293b;flex-wrap:wrap;flex-shrink:0}
+    .rss-tab{background:#0f172a;border:1px solid #1e293b;color:#475569;padding:2px 5px;border-radius:3px;cursor:pointer;font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1px;transition:all .15s}
     .rss-tab:hover{border-color:#334155;color:#64748b}
-    .rss-tab.active{border-color:#a78bfa;color:#a78bfa;background:#a78bfa18}
-    #rss-list{flex:1;overflow-y:auto;padding:5px}
+    .rss-tab.active{border-color:#34d399;color:#34d399;background:#34d39918}
+    #rss-list{flex:1;overflow-y:auto;padding:6px}
     #rss-list::-webkit-scrollbar{width:3px}
     #rss-list::-webkit-scrollbar-track{background:#0d1117}
     #rss-list::-webkit-scrollbar-thumb{background:#1e293b;border-radius:2px}
-    .rss-card{background:#060910;border:1px solid #1e293b;border-radius:4px;padding:7px 9px;margin-bottom:4px;cursor:pointer;transition:all .15s;text-decoration:none;display:block}
-    .rss-card:hover{background:#0f172a;border-color:#334155}
-    .rss-source-tag{font-size:8px;letter-spacing:1px;margin-bottom:3px;font-weight:700}
-    .rss-title{font-size:9px;color:#94a3b8;line-height:1.45}
-    .rss-time{font-size:8px;color:#334155;margin-top:3px}
+    .osint-cat{}
+    .osint-group-label{font-size:8px;letter-spacing:2px;color:#334155;padding:4px 2px 6px;margin-top:2px}
+    .osint-link{display:flex;align-items:center;gap:6px;padding:5px 6px;border-radius:4px;text-decoration:none;font-size:9px;color:#64748b;border:1px solid transparent;margin-bottom:2px;transition:all .15s;letter-spacing:.5px}
+    .osint-link:hover{background:#0f172a;border-color:#1e293b;color:#94a3b8}
+    .ol-dot{display:inline-block;width:6px;height:6px;border-radius:50%;flex-shrink:0}
+    .ol-arrow{margin-left:auto;color:#1e293b;font-size:9px}
+    .osint-link:hover .ol-arrow{color:#475569}
     #rss-status{padding:16px;font-size:9px;color:#475569;letter-spacing:1px;text-align:center}
+    /* COLLAPSIBLE MAP CONTROLS */
+    #layers-toggle{background:#0d1117;border:1px solid #1e293b;color:#64748b;padding:6px 12px;border-radius:4px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;transition:all .15s;text-align:left;white-space:nowrap;width:100%}
+    #layers-toggle:hover{border-color:#334155;color:#94a3b8}
+    #layers-toggle.open{border-color:#f97316;color:#f97316;background:#f9731612}
+    #layers-submenu{display:none;flex-direction:column;gap:4px;margin-top:4px}
+    #layers-submenu.open{display:flex}
 
     /* MAP */
     #map{flex:1;z-index:1;position:relative}
@@ -166,22 +174,133 @@
 </div>
 
 <div id="main">
-  <!-- RSS INTEL FEED -->
+  <!-- OSINT BOOKMARKS PANEL -->
   <div id="rss-panel">
     <div id="rss-header">
-      <span>◈ INTEL FEED</span>
-      <span id="rss-count" style="color:#a78bfa;font-size:9px">—</span>
+      <span>◈ OSINT SOURCES</span>
+      <span style="color:#34d399;font-size:8px;letter-spacing:1px">QUICK ACCESS</span>
     </div>
+
+    <!-- CATEGORY TABS -->
     <div id="rss-source-tabs">
-      <button class="rss-tab active" onclick="loadRSS('aje',this)">AJE</button>
-      <button class="rss-tab" onclick="loadRSS('reuters',this)">REUTERS</button>
-      <button class="rss-tab" onclick="loadRSS('bbc',this)">BBC</button>
-      <button class="rss-tab" onclick="loadRSS('isw',this)">ISW</button>
-      <button class="rss-tab" onclick="loadRSS('bellingcat',this)">BCAT</button>
-      <button class="rss-tab" onclick="loadRSS('mee',this)">MEE</button>
-      <button class="rss-tab" onclick="loadRSS('cradle',this)">CRADLE</button>
+      <button class="rss-tab active" onclick="showCat('maps',this)">🗺 MAPS</button>
+      <button class="rss-tab" onclick="showCat('news',this)">📰 NEWS</button>
+      <button class="rss-tab" onclick="showCat('military',this)">⚔ MIL</button>
+      <button class="rss-tab" onclick="showCat('maritime',this)">🚢 SEA</button>
+      <button class="rss-tab" onclick="showCat('air',this)">✈ AIR</button>
+      <button class="rss-tab" onclick="showCat('sat',this)">🛰 SAT</button>
     </div>
-    <div id="rss-list"><div id="rss-status">◌ LOADING...</div></div>
+
+    <div id="rss-list">
+      <!-- MAPS -->
+      <div class="osint-cat" id="cat-maps">
+        <div class="osint-group-label">◈ LIVE CONFLICT MAPS</div>
+        <a class="osint-link" href="https://liveuamap.com/middle-east" target="_blank"><span class="ol-dot" style="background:#ef4444"></span>LiveUAMap · MENA<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://syria.liveuamap.com" target="_blank"><span class="ol-dot" style="background:#06b6d4"></span>LiveUAMap · Syria<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.understandingwar.org/project/iraq-file" target="_blank"><span class="ol-dot" style="background:#8b5cf6"></span>ISW · Iraq/Syria Maps<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://acleddata.com/dashboard" target="_blank"><span class="ol-dot" style="background:#60a5fa"></span>ACLED Dashboard<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.conflictmonitor.org" target="_blank"><span class="ol-dot" style="background:#f59e0b"></span>Conflict Monitor<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://unosat.org/maps/" target="_blank"><span class="ol-dot" style="background:#34d399"></span>UNOSAT · Damage Maps<span class="ol-arrow">↗</span></a>
+
+        <div class="osint-group-label" style="margin-top:10px">◈ SATELLITE IMAGERY</div>
+        <a class="osint-link" href="https://apps.sentinel-hub.com/eo-browser/" target="_blank"><span class="ol-dot" style="background:#a78bfa"></span>Sentinel Hub EO Browser<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://zoom.earth/#view=30,45,4z/date=today" target="_blank"><span class="ol-dot" style="background:#06b6d4"></span>Zoom Earth · Live<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://worldview.earthdata.nasa.gov" target="_blank"><span class="ol-dot" style="background:#f97316"></span>NASA Worldview<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://firms.modaps.eosdis.nasa.gov/map/" target="_blank"><span class="ol-dot" style="background:#ff6600"></span>NASA FIRMS · Fires<span class="ol-arrow">↗</span></a>
+      </div>
+
+      <!-- NEWS -->
+      <div class="osint-cat" id="cat-news" style="display:none">
+        <div class="osint-group-label">◈ CONFLICT COVERAGE</div>
+        <a class="osint-link" href="https://www.aljazeera.com/middle-east/" target="_blank"><span class="ol-dot" style="background:#f97316"></span>Al Jazeera · MENA<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.reuters.com/world/middle-east/" target="_blank"><span class="ol-dot" style="background:#ef4444"></span>Reuters · Middle East<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.bbc.com/news/world/middle_east" target="_blank"><span class="ol-dot" style="background:#06b6d4"></span>BBC · Middle East<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.middleeasteye.net" target="_blank"><span class="ol-dot" style="background:#34d399"></span>Middle East Eye<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://thecradle.co" target="_blank"><span class="ol-dot" style="background:#f59e0b"></span>The Cradle<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://english.alarabiya.net" target="_blank"><span class="ol-dot" style="background:#60a5fa"></span>Al Arabiya English<span class="ol-arrow">↗</span></a>
+
+        <div class="osint-group-label" style="margin-top:10px">◈ ANALYSIS</div>
+        <a class="osint-link" href="https://www.understandingwar.org" target="_blank"><span class="ol-dot" style="background:#8b5cf6"></span>ISW · War Analysis<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.iiss.org/research/regions/middle-east" target="_blank"><span class="ol-dot" style="background:#a78bfa"></span>IISS · MENA Research<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.crisisgroup.org/middle-east-north-africa" target="_blank"><span class="ol-dot" style="background:#34d399"></span>ICG · Crisis Group<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.bellingcat.com" target="_blank"><span class="ol-dot" style="background:#a78bfa"></span>Bellingcat · OSINT<span class="ol-arrow">↗</span></a>
+      </div>
+
+      <!-- MILITARY -->
+      <div class="osint-cat" id="cat-military" style="display:none">
+        <div class="osint-group-label">◈ ORDER OF BATTLE</div>
+        <a class="osint-link" href="https://www.understandingwar.org/backgrounder/iran-update" target="_blank"><span class="ol-dot" style="background:#ef4444"></span>ISW · Iran Updates<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.understandingwar.org/backgrounder/syria-situation-report" target="_blank"><span class="ol-dot" style="background:#06b6d4"></span>ISW · Syria SitRep<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.janes.com/defence-news/news-detail/middle-east" target="_blank"><span class="ol-dot" style="background:#f59e0b"></span>Jane's · MENA<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.israeldefense.co.il/en" target="_blank"><span class="ol-dot" style="background:#60a5fa"></span>Israel Defense<span class="ol-arrow">↗</span></a>
+
+        <div class="osint-group-label" style="margin-top:10px">◈ ALERTS / LIVE</div>
+        <a class="osint-link" href="https://www.oref.org.il/en" target="_blank"><span class="ol-dot" style="background:#ef4444"></span>Pikud HaOref · IDF Alerts<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://t.me/intelslava" target="_blank"><span class="ol-dot" style="background:#0088cc"></span>Intel Slava Z · TG<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://t.me/SyrianCivilWarMap" target="_blank"><span class="ol-dot" style="background:#06b6d4"></span>Syria War Map · TG<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://t.me/iranwire_en" target="_blank"><span class="ol-dot" style="background:#ef4444"></span>IranWire EN · TG<span class="ol-arrow">↗</span></a>
+
+        <div class="osint-group-label" style="margin-top:10px">◈ WEAPONS / TECH</div>
+        <a class="osint-link" href="https://www.oryxspioenkop.com" target="_blank"><span class="ol-dot" style="background:#f59e0b"></span>Oryx · Equipment Losses<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.iranwatch.org" target="_blank"><span class="ol-dot" style="background:#ef4444"></span>Iran Watch · Nuclear<span class="ol-arrow">↗</span></a>
+      </div>
+
+      <!-- MARITIME -->
+      <div class="osint-cat" id="cat-maritime" style="display:none">
+        <div class="osint-group-label">◈ LIVE VESSEL TRACKING</div>
+        <a class="osint-link" href="https://www.marinetraffic.com/en/ais/home/centerx:50/centery:25/zoom:5" target="_blank"><span class="ol-dot" style="background:#34d399"></span>MarineTraffic · Gulf<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.vesselfinder.com/?zoom=5&lat=25&lng=55" target="_blank"><span class="ol-dot" style="background:#60a5fa"></span>VesselFinder · Gulf<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.marinetraffic.com/en/ais/home/centerx:38/centery:14/zoom:6" target="_blank"><span class="ol-dot" style="background:#f59e0b"></span>MarineTraffic · Red Sea<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.myshiptracking.com" target="_blank"><span class="ol-dot" style="background:#a78bfa"></span>MyShipTracking<span class="ol-arrow">↗</span></a>
+
+        <div class="osint-group-label" style="margin-top:10px">◈ CHOKEPOINTS</div>
+        <a class="osint-link" href="https://www.marinetraffic.com/en/ais/home/centerx:56.5/centery:26.5/zoom:9" target="_blank"><span class="ol-dot" style="background:#ef4444"></span>Strait of Hormuz<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.marinetraffic.com/en/ais/home/centerx:32.5/centery:30/zoom:9" target="_blank"><span class="ol-dot" style="background:#f97316"></span>Suez Canal<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.marinetraffic.com/en/ais/home/centerx:43.5/centery:12.5/zoom:8" target="_blank"><span class="ol-dot" style="background:#f59e0b"></span>Bab-el-Mandeb<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.marinetraffic.com/en/ais/home/centerx:29/centery:41/zoom:8" target="_blank"><span class="ol-dot" style="background:#60a5fa"></span>Bosphorus<span class="ol-arrow">↗</span></a>
+
+        <div class="osint-group-label" style="margin-top:10px">◈ INTELLIGENCE</div>
+        <a class="osint-link" href="https://www.dryad.global/threat-intelligence" target="_blank"><span class="ol-dot" style="background:#a78bfa"></span>Dryad Maritime Threats<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.criticalthreats.org/briefs/maritime-briefing" target="_blank"><span class="ol-dot" style="background:#ef4444"></span>AEI Maritime Briefing<span class="ol-arrow">↗</span></a>
+      </div>
+
+      <!-- AIR -->
+      <div class="osint-cat" id="cat-air" style="display:none">
+        <div class="osint-group-label">◈ LIVE FLIGHT TRACKING</div>
+        <a class="osint-link" href="https://globe.adsbexchange.com/#@32,45,5z" target="_blank"><span class="ol-dot" style="background:#60a5fa"></span>ADSB Exchange · MENA<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.flightradar24.com/32,45/5" target="_blank"><span class="ol-dot" style="background:#f97316"></span>FlightRadar24 · MENA<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://flightaware.com" target="_blank"><span class="ol-dot" style="background:#a78bfa"></span>FlightAware<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.planefinder.net" target="_blank"><span class="ol-dot" style="background:#34d399"></span>PlaneFinder<span class="ol-arrow">↗</span></a>
+
+        <div class="osint-group-label" style="margin-top:10px">◈ MILITARY AIR</div>
+        <a class="osint-link" href="https://globe.adsbexchange.com/#@32,45,5z" target="_blank"><span class="ol-dot" style="background:#ef4444"></span>ADSBX · Mil Aircraft<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.airportinfo.live" target="_blank"><span class="ol-dot" style="background:#f59e0b"></span>Airport Activity Live<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://liveatc.net/feedindex.php?type=approach" target="_blank"><span class="ol-dot" style="background:#06b6d4"></span>LiveATC · Radio<span class="ol-arrow">↗</span></a>
+
+        <div class="osint-group-label" style="margin-top:10px">◈ CLOSED AIRSPACE</div>
+        <a class="osint-link" href="https://www.notams.faa.gov/dinsQueryWeb/" target="_blank"><span class="ol-dot" style="background:#ef4444"></span>NOTAM Search · FAA<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://ourairspace.net" target="_blank"><span class="ol-dot" style="background:#f97316"></span>OurAirspace · NOTAMs<span class="ol-arrow">↗</span></a>
+      </div>
+
+      <!-- SATELLITE -->
+      <div class="osint-cat" id="cat-sat" style="display:none">
+        <div class="osint-group-label">◈ SATELLITE PASSES</div>
+        <a class="osint-link" href="https://n2yo.com/passes/?s=39634&lat=32&lng=45&a=3" target="_blank"><span class="ol-dot" style="background:#a78bfa"></span>Sentinel-2A Passes · MENA<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://n2yo.com/passes/?s=40697&lat=32&lng=45&a=3" target="_blank"><span class="ol-dot" style="background:#8b5cf6"></span>Sentinel-2B Passes<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://n2yo.com/passes/?s=25994&lat=32&lng=45&a=3" target="_blank"><span class="ol-dot" style="background:#f97316"></span>Terra (MODIS) Passes<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://n2yo.com/satellite/?s=25994" target="_blank"><span class="ol-dot" style="background:#f59e0b"></span>Terra Live Position<span class="ol-arrow">↗</span></a>
+
+        <div class="osint-group-label" style="margin-top:10px">◈ SAR / RADAR</div>
+        <a class="osint-link" href="https://apps.sentinel-hub.com/eo-browser/?zoom=5&lat=32&lng=45" target="_blank"><span class="ol-dot" style="background:#34d399"></span>Sentinel Hub · EO Browser<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://search.asf.alaska.edu" target="_blank"><span class="ol-dot" style="background:#60a5fa"></span>ASF · Sentinel-1 SAR<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://scihub.copernicus.eu/dhus" target="_blank"><span class="ol-dot" style="background:#a78bfa"></span>Copernicus Open Hub<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.planet.com/explorer/" target="_blank"><span class="ol-dot" style="background:#ef4444"></span>Planet · Daily Imagery<span class="ol-arrow">↗</span></a>
+
+        <div class="osint-group-label" style="margin-top:10px">◈ SPACE TRACKING</div>
+        <a class="osint-link" href="https://celestrak.org/cesium/orbit-viz.php" target="_blank"><span class="ol-dot" style="background:#f97316"></span>Celestrak · Orbit Viz<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.n2yo.com" target="_blank"><span class="ol-dot" style="background:#60a5fa"></span>N2YO · Satellite Tracker<span class="ol-arrow">↗</span></a>
+      </div>
+    </div>
   </div>
 
   <!-- MAP -->
@@ -246,7 +365,7 @@
         </div>
         <div class="ms-status" id="ms-status">◈ POLLING PIKUD HAOREF...</div>
         <div class="ms-log" id="ms-log"></div>
-        <div class="ms-source">Source: IDF Home Front Command · oref.org.il<br>Coverage: Israel only · 5s poll · Arc = inferred</div>
+        <div class="ms-source">Source: IDF Pikud HaOref · oref.org.il<br>⚠ Browser blocks direct API — use REPLAY<br>for real trajectories or ACLED for verified data</div>
       </div>
 
       <!-- TAB: ACLED -->
@@ -318,14 +437,17 @@
       </div>
     </div>
         <div id="map-controls">
-      <button class="map-btn" onclick="toggleFIRMS(this)">🔥 THERMAL</button>
-      <button class="map-btn" onclick="toggleOptical(this)">🛰 OPTICAL</button>
-      <button class="map-btn" onclick="toggleFlights(this)">✈ FLIGHTS</button>
-      <button class="map-btn" onclick="toggleShips(this)">🚢 SHIPS</button>
-      <button class="map-btn" onclick="toggleDesal(this)">💧 DESAL</button>
-      <button class="map-btn" onclick="toggleFrontlines(this)">🗾 FRONTLINES</button>
-      <button class="map-btn" onclick="toggleCCTV(this)">🔍 SHODAN</button>
-      <button class="map-btn" id="missile-btn" onclick="toggleMissiles(this)">⚡ ALERTS</button>
+      <button id="layers-toggle" onclick="toggleLayersMenu(this)">⊞ LAYERS ▾</button>
+      <div id="layers-submenu">
+        <button class="map-btn" id="btn-thermal"    onclick="toggleFIRMS(this)">🔥 THERMAL</button>
+        <button class="map-btn" id="btn-optical"    onclick="toggleOptical(this)">🛰 OPTICAL</button>
+        <button class="map-btn" id="btn-flights"    onclick="toggleFlights(this)">✈ FLIGHTS</button>
+        <button class="map-btn" id="btn-ships"      onclick="toggleShips(this)">🚢 SHIPS</button>
+        <button class="map-btn" id="btn-desal"      onclick="toggleDesal(this)">💧 DESAL</button>
+        <button class="map-btn" id="btn-frontlines" onclick="toggleFrontlines(this)">🗾 FRONTLINES</button>
+        <button class="map-btn" id="btn-shodan"     onclick="toggleCCTV(this)">🔍 SHODAN</button>
+        <button class="map-btn" id="missile-btn"    onclick="toggleMissiles(this)">⚡ ALERTS</button>
+      </div>
     </div>
   </div>
 
@@ -357,10 +479,11 @@
     </div>
     <div class="filter-row" id="topic-row">
       <button class="filter-btn active" onclick="setTopicFilter('all',this)">ALL</button>
-      <button class="filter-btn" onclick="setTopicFilter('military',this)">MILITARY</button>
-      <button class="filter-btn" onclick="setTopicFilter('diplomacy',this)">DIPLOMACY</button>
-      <button class="filter-btn" onclick="setTopicFilter('politics',this)">POLITICS</button>
-      <button class="filter-btn" onclick="setTopicFilter('humanitarian',this)">HUMAN.</button>
+      <button class="filter-btn" onclick="setTopicFilter('military',this)">MIL</button>
+      <button class="filter-btn" onclick="setTopicFilter('diplomacy',this)">DIP</button>
+      <button class="filter-btn" onclick="setTopicFilter('politics',this)">POL</button>
+      <button class="filter-btn" onclick="setTopicFilter('humanitarian',this)">HUM</button>
+      <button class="filter-btn" onclick="clearAllMarkers(this)" style="border-color:#334155;color:#334155">✕ NONE</button>
     </div>
     <div id="events-list"></div>
     <div id="legend">
@@ -389,7 +512,7 @@ const BASEMAPS={
   dark:      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© CARTO',maxZoom:18}),
   satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri',maxZoom:18}),
   topo:      L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'© OpenTopoMap',maxZoom:17}),
-  sentinel:  L.tileLayer('https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/'+new Date(Date.now()-86400000).toISOString().slice(0,10)+'/GoogleMapsCompatible/{z}/{y}/{x}.jpg',{attribution:'NASA GIBS · MODIS Terra',maxZoom:9}),
+  sentinel:  L.tileLayer('https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2021_3857/default/g/{z}/{y}/{x}.jpg',{attribution:'© EOX IT Services · Sentinel-2 cloudless 2021',maxNativeZoom:14,maxZoom:18}),
 };
 let currentBasemap='dark';
 BASEMAPS.dark.addTo(map);
@@ -1137,6 +1260,7 @@ function selectEvent(i){
   renderSidebar();
 }
 function setTopicFilter(topic,btn){
+  mapCleared=false;
   currentTopic=topic;
   document.querySelectorAll('#topic-row .filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');selectedIdx=null;renderMarkers();renderSidebar();
@@ -1177,8 +1301,38 @@ async function loadEvents(){
 
 loadEvents();
 setInterval(loadEvents,120000);
-loadRSS('aje', document.querySelector('.rss-tab'));
-setInterval(()=>loadRSS(currentRSSSource,null),300000);
+
+// ── OSINT BOOKMARKS ───────────────────────────────────────────────────
+function showCat(cat, btn){
+  document.querySelectorAll('.osint-cat').forEach(el=>el.style.display='none');
+  const el=document.getElementById('cat-'+cat);
+  if(el)el.style.display='block';
+  document.querySelectorAll('.rss-tab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+}
+// Show maps category by default
+showCat('maps', document.querySelector('.rss-tab'));
+
+// ── COLLAPSIBLE LAYERS ────────────────────────────────────────────────
+function toggleLayersMenu(btn){
+  const menu=document.getElementById('layers-submenu');
+  const isOpen=menu.classList.toggle('open');
+  btn.classList.toggle('open',isOpen);
+  btn.textContent=isOpen?'⊞ LAYERS ▴':'⊞ LAYERS ▾';
+}
+
+// ── NONE / CLEAR ALL MARKERS ──────────────────────────────────────────
+let mapCleared=false;
+function clearAllMarkers(btn){
+  mapCleared=true;
+  markers.forEach(m=>{try{map.removeLayer(m);}catch(e){}});
+  // Don't empty markers array — just hide. setTopicFilter restores.
+  if(oms){oms.clearMarkers();}
+  document.querySelectorAll('#topic-row .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('event-count').textContent='0 events';
+  document.getElementById('events-list').innerHTML='<div style="padding:20px;text-align:center;font-size:10px;color:#334155;letter-spacing:2px">MAP CLEARED<br><span style="color:#1e293b">Click ALL to restore</span></div>';
+}
 
 // ── MISSILE ALERT LAYER ───────────────────────────────────────────────
 // Source: IDF Home Front Command (Pikud HaOref) public API
