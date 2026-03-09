@@ -491,7 +491,7 @@
   <div id="report-panel">
     <div id="report-box">
       <div class="rp-header">
-        <span class="rp-title">◈ INTELLIGENCE BRIEF GENERATOR</span>
+        <span class="rp-title">◈ OSINT BRIEF GENERATOR</span>
         <button class="rp-close" onclick="closeReportPanel()">✕</button>
       </div>
 
@@ -538,7 +538,7 @@
           <button class="rp-toggle on-green" id="tog-map" onclick="rpToggleSwitch(this)"></button>
         </div>
         <div class="rp-toggle-row">
-          <span class="rp-toggle-label">🤖 AI analysis (Claude)</span>
+          <span class="rp-toggle-label">🤖 AI analysis</span>
           <button class="rp-toggle on" id="tog-ai" onclick="rpToggleSwitch(this)"></button>
         </div>
         <div class="rp-toggle-row">
@@ -577,8 +577,8 @@
 
       <!-- ACTIONS -->
       <div class="rp-section" style="border-bottom:none">
-        <button class="rp-generate" onclick="generateFullPDF()" id="rp-pdf-btn">⬇ EXPORT FULL BRIEF — PDF</button>
-        <button class="rp-quick" onclick="quickExport()">⚡ QUICK EXPORT — CURRENT VIEW</button>
+        <button class="rp-generate" onclick="generateFullPDF()" id="rp-pdf-btn">⬇ EXPORT OSINT BRIEF — PDF</button>
+        <button class="rp-quick" onclick="quickExport(this)">⚡ QUICK EXPORT — CURRENT VIEW</button>
       </div>
     </div>
   </div>
@@ -2286,7 +2286,7 @@ async function generateAIAnalysis(){
     syria:evs.filter(e=>e.theater==='syria').length,
   };
 
-  const prompt=`You are an OSINT intelligence analyst. Generate a concise intelligence brief based on the following data from the MENA Monitor system.
+  const prompt=`You are an OSINT intelligence analyst. Generate a concise OSINT brief based on the following data from the MENA Monitor system.
 
 THEATER: ${theaterLabel}
 TOPICS: ${topicsLabel}
@@ -2300,7 +2300,7 @@ STATISTICS:
 TOP EVENTS (showing ${top20.length} of ${stats.total}):
 ${eventSummary}
 
-Write a structured intelligence brief with these sections:
+Write a structured OSINT brief with these sections:
 1. EXECUTIVE SUMMARY (2-3 sentences, key developments)
 2. KEY DEVELOPMENTS (3-5 bullet points, most significant events)
 3. THREAT ASSESSMENT (brief assessment of escalation risk, 2-3 sentences)
@@ -2330,21 +2330,26 @@ Use professional intelligence analyst language. Be concise and factual. Do not s
 }
 
 // ── QUICK EXPORT (current visible map) ───────────────────────────────────
-async function quickExport(){
-  const btn=event.target;
+async function quickExport(btn){
+  if(!btn) btn=document.querySelector('.rp-quick');
+  if(!btn) return;
   const origText=btn.textContent;
   btn.textContent='◌ CAPTURING...';
   btn.disabled=true;
-
   try{
-    const evs=getFilteredEvents();
+    // Use currently visible events (respects active map filters)
+    const evs=allEvents.filter(e=>{
+      if(currentTopic!=='all'&&e.topic!==currentTopic)return false;
+      if(currentTheater!=='all'&&e.theater!==currentTheater)return false;
+      if(currentHours>0&&getAgeHours(e.captured_at)>currentHours)return false;
+      return true;
+    });
     const classification=document.getElementById('rp-classification')?.value||'OSINT';
     await buildAndDownloadPDF(evs, classification, true);
   }catch(err){
     console.error('[QuickExport]',err);
-    alert('Export failed. Check console for details.');
+    alert('Export failed: '+err.message);
   }
-
   btn.textContent=origText;
   btn.disabled=false;
 }
@@ -2352,11 +2357,15 @@ async function quickExport(){
 // ── FULL PDF EXPORT ───────────────────────────────────────────────────────
 async function generateFullPDF(){
   const btn=document.getElementById('rp-pdf-btn');
-  btn.textContent='◌ GENERATING PDF...';
-  btn.disabled=true;
+  if(btn){btn.textContent='◌ GENERATING PDF...';btn.disabled=true;}
 
   try{
+    // Make sure jsPDF is loaded
+    if(typeof window.jspdf==='undefined'){
+      throw new Error('jsPDF library not loaded. Try refreshing the page.');
+    }
     const evs=rpGetEvents();
+    if(!evs.length){alert('No events in current scope. Adjust filters.');if(btn){btn.textContent='⬇ EXPORT OSINT BRIEF — PDF';btn.disabled=false;}return;}
     const classification=document.getElementById('rp-classification')?.value||'OSINT';
     await buildAndDownloadPDF(evs, classification, false);
   }catch(err){
@@ -2364,12 +2373,12 @@ async function generateFullPDF(){
     alert('PDF export failed: '+err.message);
   }
 
-  btn.textContent='⬇ EXPORT FULL BRIEF — PDF';
-  btn.disabled=false;
+  if(btn){btn.textContent='⬇ EXPORT OSINT BRIEF — PDF';btn.disabled=false;}
 }
 
 // ── CORE PDF BUILDER ──────────────────────────────────────────────────────
 async function buildAndDownloadPDF(evs, classification, isQuick){
+  if(typeof window.jspdf==='undefined') throw new Error('jsPDF not loaded — refresh and try again');
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const W=210, H=297;
@@ -2436,12 +2445,12 @@ async function buildAndDownloadPDF(evs, classification, isQuick){
   doc.setFont('helvetica','normal');
   const theaterLabel=rpTheater==='all'?'ALL THEATERS':rpTheater.toUpperCase()+' THEATER';
   const nowStr=new Date().toISOString().slice(0,16).replace('T',' ')+' UTC';
-  doc.text(`INTELLIGENCE BRIEF  ·  ${theaterLabel}  ·  ${nowStr}`,M,19);
+  doc.text(`OSINT BRIEF  ·  ${theaterLabel}  ·  ${nowStr}`,M,19);
 
   // MENAMonitorBot badge
   setColor(COL.muted);
   doc.setFontSize(7);
-  doc.text('MENAMonitorBot  ·  OSINT  ·  Yanome Studio',W-M,14,{align:'right'});
+  doc.text('MENAMonitorBot  ·  OSINT  ·  YANOMETRICS',W-M,14,{align:'right'});
   doc.text(`Events: ${evs.length}  ·  ${isQuick?'Quick Export':'Full Brief'}`,W-M,19,{align:'right'});
 
   y=36;
@@ -2497,7 +2506,7 @@ async function buildAndDownloadPDF(evs, classification, isQuick){
     setColor(COL.accent);
     doc.setFontSize(8);
     doc.setFont('helvetica','bold');
-    doc.text('◈ AI ANALYSIS (Claude)',M+4,y+6);
+    doc.text('◈ AI ANALYSIS',M+4,y+6);
 
     setColor(COL.white);
     doc.setFont('helvetica','normal');
@@ -2618,7 +2627,7 @@ async function buildAndDownloadPDF(evs, classification, isQuick){
   setColor(COL.muted);
   doc.setFontSize(7);
   doc.setFont('helvetica','normal');
-  doc.text('Generated by MENAMonitorBot · OSINT Intelligence System · mena.monitor25@gmail.com',W/2,H-8,{align:'center'});
+  doc.text('Generated by MENAMonitorBot · YANOMETRICS · mena.monitor25@gmail.com',W/2,H-8,{align:'center'});
   doc.text(`All data sourced from open channels · ${new Date().toISOString().slice(0,10)}`,W/2,H-4,{align:'center'});
 
   // ── Save ──
@@ -2627,17 +2636,8 @@ async function buildAndDownloadPDF(evs, classification, isQuick){
 }
 
 // ── QUICK EXPORT BUTTON (bottom-left shortcut) ────────────────────────────
-document.getElementById('export-btn').addEventListener('dblclick',function(){
-  this.textContent='◌ CAPTURING...';
-  this.classList.add('loading');
-  const evs=getFilteredEvents();
-  buildAndDownloadPDF(evs,'OSINT',true).then(()=>{
-    this.textContent='📄 EXPORT BRIEF';
-    this.classList.remove('loading');
-  }).catch(()=>{
-    this.textContent='📄 EXPORT BRIEF';
-    this.classList.remove('loading');
-  });
+document.getElementById('export-btn').addEventListener('click',function(){
+  openReportPanel();
 });
 </script>
 </body>
