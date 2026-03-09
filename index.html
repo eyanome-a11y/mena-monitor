@@ -2263,8 +2263,7 @@ async function generateAIAnalysis(){
   const topicsLabel=[...rpTopics].join(', ').toUpperCase();
   const hoursLabel=rpHours===0?'all available data':`last ${rpHours} hours`;
 
-  const eventSummary=top20.map((e,i)=>`${i+1}. [${e.topic?.toUpperCase()||'?'}][${e.urgency?.toUpperCase()||'?'}] ${e.location||'Unknown location'}: ${e.brief_summary||e.original_text?.slice(0,120)||'No summary'}`).join('
-');
+  const eventSummary=top20.map((e,i)=>`${i+1}. [${e.topic?.toUpperCase()||'?'}][${e.urgency?.toUpperCase()||'?'}] ${e.location||'Unknown location'}: ${e.brief_summary||e.original_text?.slice(0,120)||'No summary'}`).join('\n');
 
   const stats={
     total:evs.length,
