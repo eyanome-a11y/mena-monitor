@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier-Leaflet/0.2.6/oms.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
     *{margin:0;padding:0;box-sizing:border-box}
@@ -39,6 +41,55 @@
     .ol-arrow{margin-left:auto;color:#1e293b;font-size:9px}
     .osint-link:hover .ol-arrow{color:#475569}
     #rss-status{padding:16px;font-size:9px;color:#475569;letter-spacing:1px;text-align:center}
+    /* ── EXPORT / REPORT BUTTON ─────────────────────────────── */
+    #export-btn{position:absolute;bottom:30px;left:10px;z-index:1001;background:#0d1117;border:1px solid #1e293b;color:#64748b;padding:7px 14px;border-radius:5px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;transition:all .2s;display:flex;align-items:center;gap:6px}
+    #export-btn:hover{border-color:#a78bfa;color:#a78bfa;background:#a78bfa12}
+    #export-btn.loading{border-color:#f59e0b;color:#f59e0b;animation:exportPulse 1s ease-in-out infinite}
+    @keyframes exportPulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+    /* ── REPORT PANEL ────────────────────────────────────────── */
+    #report-panel{position:fixed;top:0;left:0;right:0;bottom:0;background:#00000088;z-index:9999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+    #report-panel.open{display:flex}
+    #report-box{background:#0d1117;border:1px solid #1e293b;border-radius:10px;width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px #000c}
+    #report-box::-webkit-scrollbar{width:3px}
+    #report-box::-webkit-scrollbar-thumb{background:#1e293b;border-radius:2px}
+    .rp-header{padding:16px 20px;border-bottom:1px solid #1e293b;display:flex;align-items:center;justify-content:space-between}
+    .rp-title{font-size:12px;letter-spacing:3px;color:#a78bfa}
+    .rp-close{background:none;border:none;color:#475569;font-size:18px;cursor:pointer;padding:0 4px;transition:color .15s}
+    .rp-close:hover{color:#e2e8f0}
+    .rp-section{padding:14px 20px;border-bottom:1px solid #0f172a}
+    .rp-section-title{font-size:9px;letter-spacing:2px;color:#334155;margin-bottom:10px}
+    .rp-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+    .rp-chip{background:#0f172a;border:1px solid #1e293b;color:#475569;padding:4px 10px;border-radius:20px;cursor:pointer;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;transition:all .15s;user-select:none}
+    .rp-chip:hover{border-color:#334155;color:#64748b}
+    .rp-chip.active{border-color:#a78bfa;color:#a78bfa;background:#a78bfa18}
+    .rp-chip.active-green{border-color:#34d399;color:#34d399;background:#34d39918}
+    .rp-chip.active-red{border-color:#ef4444;color:#ef4444;background:#ef444418}
+    .rp-label{font-size:9px;color:#475569;letter-spacing:1px;margin-bottom:5px}
+    .rp-select{background:#0f172a;border:1px solid #1e293b;color:#64748b;padding:5px 8px;border-radius:4px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;outline:none;width:100%}
+    .rp-select:focus{border-color:#334155}
+    .rp-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0}
+    .rp-toggle-label{font-size:9px;color:#64748b;letter-spacing:1px}
+    .rp-toggle{width:32px;height:16px;background:#1e293b;border-radius:8px;cursor:pointer;position:relative;transition:background .2s;border:none;flex-shrink:0}
+    .rp-toggle::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;background:#475569;border-radius:50%;transition:all .2s}
+    .rp-toggle.on{background:#a78bfa44}
+    .rp-toggle.on::after{left:18px;background:#a78bfa}
+    .rp-toggle.on-green{background:#34d39944}
+    .rp-toggle.on-green::after{left:18px;background:#34d399}
+    .rp-preview{background:#060910;border:1px solid #1e293b;border-radius:6px;padding:12px;margin:10px 0;font-size:9px;color:#475569;letter-spacing:.5px;line-height:1.7;min-height:60px;max-height:200px;overflow-y:auto}
+    .rp-preview::-webkit-scrollbar{width:2px}
+    .rp-preview::-webkit-scrollbar-thumb{background:#1e293b}
+    .rp-ai-status{font-size:9px;color:#f59e0b;letter-spacing:1px;display:flex;align-items:center;gap:6px}
+    .rp-generate{background:#a78bfa18;border:1px solid #a78bfa44;color:#a78bfa;padding:10px 20px;border-radius:5px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;transition:all .2s;width:100%;margin-top:4px}
+    .rp-generate:hover{background:#a78bfa28;border-color:#a78bfa}
+    .rp-generate:disabled{opacity:.4;cursor:not-allowed}
+    .rp-quick{background:#34d39918;border:1px solid #34d39944;color:#34d399;padding:8px 20px;border-radius:5px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;transition:all .2s;width:100%;margin-top:4px}
+    .rp-quick:hover{background:#34d39928;border-color:#34d399}
+    .rp-stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px}
+    .rp-stat-card{background:#060910;border:1px solid #1e293b;border-radius:5px;padding:8px 10px;text-align:center}
+    .rp-stat-num{font-size:18px;font-weight:700;font-family:'Syne',sans-serif;color:#e2e8f0;line-height:1.2}
+    .rp-stat-lbl{font-size:8px;letter-spacing:1px;color:#334155;margin-top:2px}
+
     /* COLLAPSIBLE MAP CONTROLS */
     #layers-toggle{background:#0d1117;border:1px solid #1e293b;color:#64748b;padding:6px 12px;border-radius:4px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;transition:all .15s;text-align:left;white-space:nowrap;width:100%}
     #layers-toggle:hover{border-color:#334155;color:#94a3b8}
@@ -436,6 +487,105 @@
         <div class="ms-source" style="margin-top:8px">Arc = Bézier trajectory reconstruction<br>Based on IDF/open source reports</div>
       </div>
     </div>
+  <!-- ══ REPORT / EXPORT PANEL ═══════════════════════════════════════════ -->
+  <div id="report-panel">
+    <div id="report-box">
+      <div class="rp-header">
+        <span class="rp-title">◈ INTELLIGENCE BRIEF GENERATOR</span>
+        <button class="rp-close" onclick="closeReportPanel()">✕</button>
+      </div>
+
+      <!-- SCOPE -->
+      <div class="rp-section">
+        <div class="rp-section-title">SCOPE</div>
+        <div class="rp-label">THEATER</div>
+        <div class="rp-row" id="rp-theater-row">
+          <span class="rp-chip active" onclick="rpToggle(this,'theater','all')">ALL</span>
+          <span class="rp-chip" onclick="rpToggle(this,'theater','iran')">🇮🇷 IRAN</span>
+          <span class="rp-chip" onclick="rpToggle(this,'theater','syria')">🇸🇾 SYRIA</span>
+        </div>
+        <div class="rp-label" style="margin-top:8px">TOPICS</div>
+        <div class="rp-row" id="rp-topic-row">
+          <span class="rp-chip active" onclick="rpTopicToggle(this,'military')">⚔ MILITARY</span>
+          <span class="rp-chip active" onclick="rpTopicToggle(this,'diplomacy')">🤝 DIPLOMACY</span>
+          <span class="rp-chip active" onclick="rpTopicToggle(this,'politics')">🏛 POLITICS</span>
+          <span class="rp-chip active" onclick="rpTopicToggle(this,'humanitarian')">🆘 HUMANITARIAN</span>
+        </div>
+        <div class="rp-label" style="margin-top:8px">TIME WINDOW</div>
+        <select class="rp-select" id="rp-hours">
+          <option value="6">Last 6 hours</option>
+          <option value="12">Last 12 hours</option>
+          <option value="24" selected>Last 24 hours</option>
+          <option value="48">Last 48 hours</option>
+          <option value="72">Last 72 hours</option>
+          <option value="0">All available</option>
+        </select>
+      </div>
+
+      <!-- SECTIONS TO INCLUDE -->
+      <div class="rp-section">
+        <div class="rp-section-title">INCLUDE IN BRIEF</div>
+        <div class="rp-toggle-row">
+          <span class="rp-toggle-label">📊 Statistics overview</span>
+          <button class="rp-toggle on-green" id="tog-stats" onclick="rpToggleSwitch(this)"></button>
+        </div>
+        <div class="rp-toggle-row">
+          <span class="rp-toggle-label">📋 Event list with summaries</span>
+          <button class="rp-toggle on-green" id="tog-events" onclick="rpToggleSwitch(this)"></button>
+        </div>
+        <div class="rp-toggle-row">
+          <span class="rp-toggle-label">🗺 Map screenshot</span>
+          <button class="rp-toggle on-green" id="tog-map" onclick="rpToggleSwitch(this)"></button>
+        </div>
+        <div class="rp-toggle-row">
+          <span class="rp-toggle-label">🤖 AI analysis (Claude)</span>
+          <button class="rp-toggle on" id="tog-ai" onclick="rpToggleSwitch(this)"></button>
+        </div>
+        <div class="rp-toggle-row">
+          <span class="rp-toggle-label">📡 Classification level</span>
+          <select class="rp-select" id="rp-classification" style="width:auto;padding:3px 8px">
+            <option value="OSINT">OSINT</option>
+            <option value="UNCLASSIFIED">UNCLASSIFIED</option>
+            <option value="CONFIDENTIAL">CONFIDENTIAL</option>
+            <option value="FOR OFFICIAL USE ONLY">FOUO</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- LIVE STATS PREVIEW -->
+      <div class="rp-section" id="rp-stats-section">
+        <div class="rp-section-title">SCOPE PREVIEW <span id="rp-event-count" style="color:#34d399">— events</span></div>
+        <div class="rp-stats-grid" id="rp-stats-grid">
+          <div class="rp-stat-card"><div class="rp-stat-num" id="rps-mil">—</div><div class="rp-stat-lbl">MILITARY</div></div>
+          <div class="rp-stat-card"><div class="rp-stat-num" id="rps-dip">—</div><div class="rp-stat-lbl">DIPLOMACY</div></div>
+          <div class="rp-stat-card"><div class="rp-stat-num" id="rps-pol">—</div><div class="rp-stat-lbl">POLITICS</div></div>
+          <div class="rp-stat-card"><div class="rp-stat-num" id="rps-hum">—</div><div class="rp-stat-lbl">HUMAN.</div></div>
+          <div class="rp-stat-card"><div class="rp-stat-num" id="rps-high" style="color:#ef4444">—</div><div class="rp-stat-lbl">HIGH URG.</div></div>
+          <div class="rp-stat-card"><div class="rp-stat-num" id="rps-iran" style="color:#f97316">—</div><div class="rp-stat-lbl">IRAN</div></div>
+        </div>
+      </div>
+
+      <!-- AI PREVIEW -->
+      <div class="rp-section" id="rp-ai-section">
+        <div class="rp-section-title">AI ANALYSIS PREVIEW</div>
+        <div class="rp-preview" id="rp-ai-preview">Click "Generate AI Analysis" to produce a Claude-powered intelligence assessment of the selected events.</div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="rp-chip" style="flex:1;padding:7px" onclick="generateAIAnalysis()" id="rp-ai-btn">▶ GENERATE AI ANALYSIS</button>
+          <button class="rp-chip" style="padding:7px 10px" onclick="document.getElementById('rp-ai-preview').textContent='Click generate to produce analysis.'">✕</button>
+        </div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="rp-section" style="border-bottom:none">
+        <button class="rp-generate" onclick="generateFullPDF()" id="rp-pdf-btn">⬇ EXPORT FULL BRIEF — PDF</button>
+        <button class="rp-quick" onclick="quickExport()">⚡ QUICK EXPORT — CURRENT VIEW</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT BUTTON (bottom-left of map) -->
+  <button id="export-btn" onclick="openReportPanel()">📄 EXPORT BRIEF</button>
+
         <div id="map-controls">
       <button id="layers-toggle" onclick="toggleLayersMenu(this)">⊞ LAYERS ▾</button>
       <div id="layers-submenu">
@@ -1687,44 +1837,68 @@ function processAlerts(alerts){
 async function pollRedAlert(){
   const status=document.getElementById('ms-status');
   const count=document.getElementById('ms-count');
+  // ── Use Railway server-side proxy — bypasses browser CORS ─────────────
+  const RAILWAY_ALERTS='https://function-bun-production-7822.up.railway.app/api/alerts';
   try{
-    // Primary: IDF Pikud HaOref live alerts
-    const res=await fetch('https://www.oref.org.il/warningMessages/alert/alerts.json',{
-      headers:{'Referer':'https://www.oref.org.il/','X-Requested-With':'XMLHttpRequest'},
-      signal:AbortSignal.timeout(5000)
-    });
-    const text=await res.text();
-    if(!text||text.trim()===''){
+    const res=await fetch(RAILWAY_ALERTS,{signal:AbortSignal.timeout(8000)});
+    const data=await res.json();
+
+    // Update active counter
+    const activeAlerts=data.alerts||[];
+    const hasActive=data.active||false;
+
+    if(hasActive && activeAlerts.length>0){
+      const newest=activeAlerts[0];
+      if(status)status.innerHTML=`<span style="color:#ef4444">🔴 ALERT DETECTED</span>`;
+      if(count)count.textContent=activeAlerts.length;
+      // Only process alerts we haven't seen yet
+      activeAlerts.forEach(alert=>{
+        const uid=alert.id||alert.timestamp;
+        if(!seenAlertIds.has(uid)){
+          seenAlertIds.add(uid);
+          // Synthesize processAlerts-compatible object
+          const areas=alert.areas||[];
+          const origin=inferOriginText(alert.inferred_origin);
+          const arcPts=origin?bezierArc(origin.lat,origin.lon,origin.lat+0.5,origin.lon+0.5,60):null;
+          if(arcPts)animateMissileIcon(arcPts,origin.color||'#ef4444','🚀');
+          logMissileAlert(areas[0]||'Unknown zone',{name:alert.inferred_origin,color:'#ef4444'},new Date(alert.timestamp));
+          missileSessionTotal++;
+          const el=document.getElementById('ms-session');
+          if(el)el.textContent=missileSessionTotal;
+        }
+      });
+    } else {
       if(status)status.textContent='◈ NO ACTIVE ALERTS';
       if(count)count.textContent='0';
-      return;
     }
-    const data=JSON.parse(text);
-    const alerts=Array.isArray(data)?data:[data];
-    if(status)status.innerHTML=`<span style="color:#ef4444">◈ ALERT DETECTED</span>`;
-    if(count)count.textContent=alerts.length;
-    processAlerts(alerts);
+
+    // Show Telegram status if configured
+    if(data.telegram_configured){
+      const tgEl=document.getElementById('ms-tg-status');
+      if(tgEl)tgEl.style.display='flex';
+    }
+
+    // Show error count if any
+    if(data.poll_errors>0){
+      if(status)status.textContent=`◈ POLLING (${data.poll_errors} err)`;
+    }
+
   }catch(e){
-    // Fallback: CORS proxy
-    try{
-      const res=await fetch(
-        'https://api.allorigins.win/get?url='+encodeURIComponent('https://www.oref.org.il/warningMessages/alert/alerts.json'),
-        {signal:AbortSignal.timeout(8000)}
-      );
-      const json=await res.json();
-      const text=json.contents||'';
-      if(!text||text.trim()===''||text.trim()==='null'){
-        if(status)status.textContent='◈ NO ACTIVE ALERTS';
-        if(count)count.textContent='0';
-        return;
-      }
-      const data=JSON.parse(text);
-      const alerts=Array.isArray(data)?data:[data];
-      processAlerts(alerts);
-    }catch(e2){
-      if(status)status.textContent='◈ API TIMEOUT — RETRYING';
-    }
+    if(status)status.textContent='◈ RAILWAY UNREACHABLE';
+    console.warn('[ALERTS] Railway endpoint error:',e.message);
   }
+}
+
+// Helper: parse inferred_origin string → coords for arc drawing
+function inferOriginText(text){
+  if(!text)return null;
+  const t=text.toLowerCase();
+  if(/houthi|yemen/i.test(t))    return {lat:15.5,lon:44.2,color:'#f59e0b'};
+  if(/hezbollah|lebanon/i.test(t))return {lat:33.8,lon:35.5,color:'#ef4444'};
+  if(/hamas|gaza/i.test(t))       return {lat:31.4,lon:34.3,color:'#f97316'};
+  if(/iran/i.test(t))             return {lat:32.4,lon:53.7,color:'#ef4444'};
+  if(/syria/i.test(t))            return {lat:34.8,lon:38.9,color:'#a78bfa'};
+  return null;
 }
 
 // Demo mode: fire a fake alert so you can see the animation work
@@ -1988,6 +2162,476 @@ function initACLEDDates(){
   if(fi&&!fi.value)fi.value=fmt(from);
   if(ti&&!ti.value)ti.value=fmt(to);
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ██████ BRIEF GENERATOR SYSTEM ████████████████████████████████████████████
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── State ─────────────────────────────────────────────────────────────────
+let rpTheater='all';
+let rpTopics=new Set(['military','diplomacy','politics','humanitarian']);
+let rpHours=24;
+let rpToggles={stats:true,events:true,map:true,ai:true};
+let rpAIText='';
+
+// ── Panel open/close ──────────────────────────────────────────────────────
+function openReportPanel(){
+  document.getElementById('report-panel').classList.add('open');
+  rpUpdatePreview();
+}
+function closeReportPanel(){
+  document.getElementById('report-panel').classList.remove('open');
+}
+// Close on backdrop click
+document.getElementById('report-panel').addEventListener('click',function(e){
+  if(e.target===this)closeReportPanel();
+});
+
+// ── UI helpers ────────────────────────────────────────────────────────────
+function rpToggle(el,field,value){
+  document.querySelectorAll('#rp-'+field+'-row .rp-chip').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  rpTheater=value;
+  rpUpdatePreview();
+}
+
+function rpTopicToggle(el,topic){
+  if(rpTopics.has(topic)){
+    if(rpTopics.size===1)return; // keep at least one
+    rpTopics.delete(topic);
+    el.classList.remove('active');
+  } else {
+    rpTopics.add(topic);
+    el.classList.add('active');
+  }
+  rpUpdatePreview();
+}
+
+function rpToggleSwitch(btn){
+  const id=btn.id.replace('tog-','');
+  rpToggles[id]=!rpToggles[id];
+  btn.classList.toggle('on',rpToggles[id]);
+  btn.classList.toggle('on-green',rpToggles[id] && id!=='ai');
+  if(id==='ai') btn.classList.toggle('on',rpToggles[id]);
+  // Show/hide sections
+  const map_={'stats':'rp-stats-section','ai':'rp-ai-section'};
+  if(map_[id]) document.getElementById(map_[id]).style.display=rpToggles[id]?'':'none';
+}
+
+document.getElementById('rp-hours').addEventListener('change',function(){
+  rpHours=parseInt(this.value)||0;
+  rpUpdatePreview();
+});
+
+// ── Get scoped events ─────────────────────────────────────────────────────
+function rpGetEvents(){
+  return allEvents.filter(e=>{
+    if(rpTheater!=='all' && e.theater!==rpTheater) return false;
+    if(!rpTopics.has(e.topic)) return false;
+    if(rpHours>0 && getAgeHours(e.captured_at)>rpHours) return false;
+    return true;
+  });
+}
+
+// ── Live stats preview ────────────────────────────────────────────────────
+function rpUpdatePreview(){
+  const evs=rpGetEvents();
+  document.getElementById('rp-event-count').textContent=`— ${evs.length} events`;
+  const cnt=(t)=>evs.filter(e=>e.topic===t).length;
+  document.getElementById('rps-mil').textContent=cnt('military');
+  document.getElementById('rps-dip').textContent=cnt('diplomacy');
+  document.getElementById('rps-pol').textContent=cnt('politics');
+  document.getElementById('rps-hum').textContent=cnt('humanitarian');
+  document.getElementById('rps-high').textContent=evs.filter(e=>e.urgency==='high').length;
+  document.getElementById('rps-iran').textContent=evs.filter(e=>e.theater==='iran').length;
+}
+
+// ── AI Analysis via Claude API ────────────────────────────────────────────
+async function generateAIAnalysis(){
+  const btn=document.getElementById('rp-ai-btn');
+  const preview=document.getElementById('rp-ai-preview');
+  const evs=rpGetEvents();
+  if(!evs.length){preview.textContent='No events in scope. Adjust filters.';return;}
+
+  btn.textContent='◌ GENERATING...';
+  btn.disabled=true;
+  preview.textContent='◌ Connecting to Claude API...';
+
+  // Build context from events
+  const top20=evs.slice(0,20);
+  const theaterLabel=rpTheater==='all'?'MENA Region':rpTheater.toUpperCase();
+  const topicsLabel=[...rpTopics].join(', ').toUpperCase();
+  const hoursLabel=rpHours===0?'all available data':`last ${rpHours} hours`;
+
+  const eventSummary=top20.map((e,i)=>`${i+1}. [${e.topic?.toUpperCase()||'?'}][${e.urgency?.toUpperCase()||'?'}] ${e.location||'Unknown location'}: ${e.brief_summary||e.original_text?.slice(0,120)||'No summary'}`).join('
+');
+
+  const stats={
+    total:evs.length,
+    military:evs.filter(e=>e.topic==='military').length,
+    diplomacy:evs.filter(e=>e.topic==='diplomacy').length,
+    politics:evs.filter(e=>e.topic==='politics').length,
+    humanitarian:evs.filter(e=>e.topic==='humanitarian').length,
+    highUrgency:evs.filter(e=>e.urgency==='high').length,
+    iran:evs.filter(e=>e.theater==='iran').length,
+    syria:evs.filter(e=>e.theater==='syria').length,
+  };
+
+  const prompt=`You are an OSINT intelligence analyst. Generate a concise intelligence brief based on the following data from the MENA Monitor system.
+
+THEATER: ${theaterLabel}
+TOPICS: ${topicsLabel}
+TIME WINDOW: ${hoursLabel}
+TOTAL EVENTS: ${stats.total}
+
+STATISTICS:
+- Military: ${stats.military} | Diplomacy: ${stats.diplomacy} | Politics: ${stats.politics} | Humanitarian: ${stats.humanitarian}
+- High urgency: ${stats.highUrgency} | Iran theater: ${stats.iran} | Syria theater: ${stats.syria}
+
+TOP EVENTS (showing ${top20.length} of ${stats.total}):
+${eventSummary}
+
+Write a structured intelligence brief with these sections:
+1. EXECUTIVE SUMMARY (2-3 sentences, key developments)
+2. KEY DEVELOPMENTS (3-5 bullet points, most significant events)
+3. THREAT ASSESSMENT (brief assessment of escalation risk, 2-3 sentences)
+4. WATCH ITEMS (1-3 items to monitor in next 24-48 hours)
+
+Use professional intelligence analyst language. Be concise and factual. Do not speculate beyond what the data shows.`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data=await res.json();
+    rpAIText=data.content?.[0]?.text||'No response from API.';
+    preview.textContent=rpAIText;
+  }catch(err){
+    rpAIText='';
+    preview.textContent='⚠ Could not reach Claude API. The brief will be generated without AI analysis.';
+    console.error('[AI Analysis]',err);
+  }
+
+  btn.textContent='▶ REGENERATE ANALYSIS';
+  btn.disabled=false;
+}
+
+// ── QUICK EXPORT (current visible map) ───────────────────────────────────
+async function quickExport(){
+  const btn=event.target;
+  const origText=btn.textContent;
+  btn.textContent='◌ CAPTURING...';
+  btn.disabled=true;
+
+  try{
+    const evs=getFilteredEvents();
+    const classification=document.getElementById('rp-classification')?.value||'OSINT';
+    await buildAndDownloadPDF(evs, classification, true);
+  }catch(err){
+    console.error('[QuickExport]',err);
+    alert('Export failed. Check console for details.');
+  }
+
+  btn.textContent=origText;
+  btn.disabled=false;
+}
+
+// ── FULL PDF EXPORT ───────────────────────────────────────────────────────
+async function generateFullPDF(){
+  const btn=document.getElementById('rp-pdf-btn');
+  btn.textContent='◌ GENERATING PDF...';
+  btn.disabled=true;
+
+  try{
+    const evs=rpGetEvents();
+    const classification=document.getElementById('rp-classification')?.value||'OSINT';
+    await buildAndDownloadPDF(evs, classification, false);
+  }catch(err){
+    console.error('[PDF Export]',err);
+    alert('PDF export failed: '+err.message);
+  }
+
+  btn.textContent='⬇ EXPORT FULL BRIEF — PDF';
+  btn.disabled=false;
+}
+
+// ── CORE PDF BUILDER ──────────────────────────────────────────────────────
+async function buildAndDownloadPDF(evs, classification, isQuick){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210, H=297;
+  const M=15; // margin
+  const CW=W-2*M; // content width
+  let y=M;
+
+  // ── Color palette ──
+  const COL={
+    bg:[13,17,23],
+    panel:[15,23,42],
+    border:[30,41,59],
+    white:[226,232,240],
+    muted:[71,85,105],
+    accent:[167,139,250],  // purple
+    red:[239,68,68],
+    orange:[249,115,22],
+    green:[52,211,153],
+    yellow:[245,158,11],
+    cyan:[6,182,212],
+  };
+
+  function setColor(rgb){doc.setTextColor(...rgb);}
+  function setFill(rgb){doc.setFillColor(...rgb);}
+  function setDraw(rgb){doc.setDrawColor(...rgb);}
+
+  // ── Background ──
+  setFill(COL.bg);
+  doc.rect(0,0,W,H,'F');
+
+  // ── Header banner ──
+  setFill(COL.panel);
+  setDraw(COL.border);
+  doc.setLineWidth(0.3);
+  doc.rect(0,0,W,28,'FD');
+
+  // Classification stripe
+  const classColors={
+    'OSINT':COL.green,
+    'UNCLASSIFIED':COL.green,
+    'CONFIDENTIAL':COL.red,
+    'FOR OFFICIAL USE ONLY':COL.yellow,
+  };
+  const classCol=classColors[classification]||COL.muted;
+  setFill(classCol);
+  doc.rect(0,0,W,4,'F');
+  setFill(classCol);
+  doc.rect(0,24,W,4,'F');
+
+  setColor(classCol);
+  doc.setFontSize(7);
+  doc.setFont('helvetica','bold');
+  doc.text(classification,W/2,2.8,{align:'center'});
+  doc.text(classification,W/2,26.8,{align:'center'});
+
+  // Title
+  setColor(COL.accent);
+  doc.setFontSize(16);
+  doc.setFont('helvetica','bold');
+  doc.text('MENA MONITOR',M,14);
+
+  setColor(COL.muted);
+  doc.setFontSize(8);
+  doc.setFont('helvetica','normal');
+  const theaterLabel=rpTheater==='all'?'ALL THEATERS':rpTheater.toUpperCase()+' THEATER';
+  const nowStr=new Date().toISOString().slice(0,16).replace('T',' ')+' UTC';
+  doc.text(`INTELLIGENCE BRIEF  ·  ${theaterLabel}  ·  ${nowStr}`,M,19);
+
+  // MENAMonitorBot badge
+  setColor(COL.muted);
+  doc.setFontSize(7);
+  doc.text('MENAMonitorBot  ·  OSINT  ·  Yanome Studio',W-M,14,{align:'right'});
+  doc.text(`Events: ${evs.length}  ·  ${isQuick?'Quick Export':'Full Brief'}`,W-M,19,{align:'right'});
+
+  y=36;
+
+  // ── Stats bar ──
+  if((isQuick||rpToggles.stats)&&evs.length>0){
+    const mil=evs.filter(e=>e.topic==='military').length;
+    const dip=evs.filter(e=>e.topic==='diplomacy').length;
+    const pol=evs.filter(e=>e.topic==='politics').length;
+    const hum=evs.filter(e=>e.topic==='humanitarian').length;
+    const hi=evs.filter(e=>e.urgency==='high').length;
+    const iran=evs.filter(e=>e.theater==='iran').length;
+
+    const stats=[
+      {label:'TOTAL',val:evs.length,col:COL.white},
+      {label:'MILITARY',val:mil,col:COL.red},
+      {label:'DIPLOMACY',val:dip,col:COL.cyan},
+      {label:'POLITICS',val:pol,col:COL.yellow},
+      {label:'HUMAN.',val:hum,col:COL.green},
+      {label:'HIGH URG',val:hi,col:COL.red},
+      {label:'🇮🇷 IRAN',val:iran,col:COL.orange},
+    ];
+
+    const boxW=(CW-6)/stats.length;
+    stats.forEach((s,i)=>{
+      const bx=M+i*(boxW+1);
+      setFill(COL.panel);
+      setDraw(COL.border);
+      doc.setLineWidth(0.2);
+      doc.rect(bx,y,boxW,16,'FD');
+      setColor(s.col);
+      doc.setFontSize(14);
+      doc.setFont('helvetica','bold');
+      doc.text(String(s.val),bx+boxW/2,y+9,{align:'center'});
+      setColor(COL.muted);
+      doc.setFontSize(6);
+      doc.setFont('helvetica','normal');
+      doc.text(s.label,bx+boxW/2,y+14,{align:'center'});
+    });
+    y+=22;
+  }
+
+  // ── AI Analysis ──
+  if(!isQuick&&rpToggles.ai&&rpAIText){
+    setFill(COL.panel);
+    setDraw(COL.accent);
+    doc.setLineWidth(0.3);
+    const lines=doc.setFontSize(8).splitTextToSize(rpAIText,CW-8);
+    const boxH=Math.min(lines.length*4.5+12,80);
+    if(y+boxH>H-20){doc.addPage();setFill(COL.bg);doc.rect(0,0,W,H,'F');y=M;}
+    doc.rect(M,y,CW,boxH,'FD');
+
+    setColor(COL.accent);
+    doc.setFontSize(8);
+    doc.setFont('helvetica','bold');
+    doc.text('◈ AI ANALYSIS (Claude)',M+4,y+6);
+
+    setColor(COL.white);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(7.5);
+    const visLines=lines.slice(0,Math.floor((boxH-12)/4.5));
+    doc.text(visLines,M+4,y+12);
+    y+=boxH+5;
+  }
+
+  // ── Event list ──
+  if((isQuick||rpToggles.events)&&evs.length>0){
+    // Section header
+    setColor(COL.muted);
+    doc.setFontSize(8);
+    doc.setFont('helvetica','bold');
+    doc.text('EVENT LOG',M,y+4);
+    setDraw(COL.border);
+    doc.setLineWidth(0.2);
+    doc.line(M+18,y+3,M+CW,y+3);
+    y+=8;
+
+    const topicColors={'military':COL.red,'diplomacy':COL.cyan,'politics':COL.yellow,'humanitarian':COL.green};
+    const urgColors={'high':COL.red,'medium':COL.yellow,'low':COL.muted};
+
+    const maxEvs=isQuick?30:evs.length;
+    for(let i=0;i<Math.min(maxEvs,evs.length);i++){
+      const e=evs[i];
+      const tCol=topicColors[e.topic]||COL.muted;
+      const uCol=urgColors[e.urgency]||COL.muted;
+      const summary=(e.brief_summary||e.translated_text||e.original_text||'').slice(0,200);
+      const sumLines=doc.setFontSize(7).splitTextToSize(summary,CW-28);
+      const rowH=Math.max(10,sumLines.length*3.5+8);
+
+      if(y+rowH>H-15){
+        doc.addPage();
+        setFill(COL.bg);doc.rect(0,0,W,H,'F');
+        y=M;
+      }
+
+      // Row bg
+      setFill(i%2===0?COL.bg:COL.panel);
+      setDraw(COL.border);
+      doc.setLineWidth(0.1);
+      doc.rect(M,y,CW,rowH,'FD');
+
+      // Left accent strip (topic color)
+      setFill(tCol);
+      doc.rect(M,y,2,rowH,'F');
+
+      // Index
+      setColor(COL.muted);
+      doc.setFontSize(7);
+      doc.setFont('helvetica','bold');
+      doc.text(String(i+1).padStart(2,'0'),M+4,y+5);
+
+      // Topic + urgency badges
+      setColor(tCol);
+      doc.setFontSize(6.5);
+      doc.text((e.topic||'?').toUpperCase().slice(0,4),M+11,y+5);
+
+      setColor(uCol);
+      doc.setFontSize(6);
+      doc.text((e.urgency||'').toUpperCase().slice(0,3),M+11,y+9);
+
+      // Location
+      setColor(COL.white);
+      doc.setFontSize(7.5);
+      doc.setFont('helvetica','bold');
+      doc.text((e.location||'Unknown').slice(0,35),M+28,y+5);
+
+      // Age
+      const age=getAgeHours(e.captured_at);
+      setColor(COL.muted);
+      doc.setFontSize(6.5);
+      doc.setFont('helvetica','normal');
+      doc.text(age<1?`${Math.round(age*60)}min ago`:age<24?`${Math.round(age)}h ago`:`${Math.round(age/24)}d ago`,W-M-2,y+5,{align:'right'});
+
+      // Summary
+      setColor([148,163,184]);
+      doc.setFontSize(7);
+      doc.text(sumLines,M+28,y+10);
+
+      y+=rowH+1;
+    }
+
+    if(evs.length>maxEvs){
+      setColor(COL.muted);
+      doc.setFontSize(7);
+      doc.text(`... and ${evs.length-maxEvs} more events not shown`,M,y+5);
+      y+=10;
+    }
+  }
+
+  // ── Map screenshot ──
+  if(rpToggles.map&&!isQuick){
+    try{
+      const mapEl=document.getElementById('map');
+      const canvas=await html2canvas(mapEl,{useCORS:true,scale:1.2,logging:false,backgroundColor:'#0d1117'});
+      const imgData=canvas.toDataURL('image/jpeg',0.7);
+      doc.addPage();
+      setFill(COL.bg);doc.rect(0,0,W,H,'F');
+
+      setColor(COL.muted);
+      doc.setFontSize(8);doc.setFont('helvetica','bold');
+      doc.text('◈ MAP SCREENSHOT',M,M+4);
+      doc.setLineWidth(0.2);setDraw(COL.border);
+      doc.line(M+30,M+3,M+CW,M+3);
+
+      const imgY=M+10;
+      const imgH=(CW/canvas.width)*canvas.height;
+      doc.addImage(imgData,'JPEG',M,imgY,CW,Math.min(imgH,H-imgY-20));
+    }catch(err){
+      console.warn('[PDF] Map screenshot failed:',err.message);
+    }
+  }
+
+  // ── Footer on last page ──
+  setColor(COL.muted);
+  doc.setFontSize(7);
+  doc.setFont('helvetica','normal');
+  doc.text('Generated by MENAMonitorBot · OSINT Intelligence System · mena.monitor25@gmail.com',W/2,H-8,{align:'center'});
+  doc.text(`All data sourced from open channels · ${new Date().toISOString().slice(0,10)}`,W/2,H-4,{align:'center'});
+
+  // ── Save ──
+  const fname=`MENA-Brief-${new Date().toISOString().slice(0,10)}-${rpTheater.toUpperCase()}.pdf`;
+  doc.save(fname);
+}
+
+// ── QUICK EXPORT BUTTON (bottom-left shortcut) ────────────────────────────
+document.getElementById('export-btn').addEventListener('dblclick',function(){
+  this.textContent='◌ CAPTURING...';
+  this.classList.add('loading');
+  const evs=getFilteredEvents();
+  buildAndDownloadPDF(evs,'OSINT',true).then(()=>{
+    this.textContent='📄 EXPORT BRIEF';
+    this.classList.remove('loading');
+  }).catch(()=>{
+    this.textContent='📄 EXPORT BRIEF';
+    this.classList.remove('loading');
+  });
+});
 </script>
 </body>
 </html>
