@@ -41,7 +41,39 @@
     .ol-arrow{margin-left:auto;color:#1e293b;font-size:9px}
     .osint-link:hover .ol-arrow{color:#475569}
     #rss-status{padding:16px;font-size:9px;color:#475569;letter-spacing:1px;text-align:center}
-    /* ── EXPORT / REPORT BUTTON ─────────────────────────────── */
+    /* ── SEARCH BAR ──────────────────────────────────────────── */
+    #search-wrap{display:flex;align-items:center;gap:0;background:#0f172a;border:1px solid #1e293b;border-radius:5px;overflow:hidden;transition:border-color .2s}
+    #search-wrap:focus-within{border-color:#34d399}
+    #search-input{background:none;border:none;color:#e2e8f0;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;padding:6px 10px;width:200px;outline:none}
+    #search-input::placeholder{color:#334155}
+    #search-btn{background:none;border:none;color:#334155;padding:6px 10px;cursor:pointer;font-size:11px;transition:color .15s}
+    #search-btn:hover{color:#34d399}
+    #search-clear{background:none;border:none;color:#334155;padding:6px 8px;cursor:pointer;font-size:10px;display:none}
+    #search-clear.visible{display:block}
+
+    /* ── SEARCH RESULTS PANEL ────────────────────────────────── */
+    #search-panel{position:fixed;top:0;right:0;bottom:0;width:360px;background:#0d1117;border-left:1px solid #1e293b;z-index:2000;display:none;flex-direction:column;transform:translateX(100%);transition:transform .25s ease}
+    #search-panel.open{display:flex;transform:translateX(0)}
+    #sp-header{padding:12px 16px;border-bottom:1px solid #1e293b;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    #sp-title{font-size:10px;letter-spacing:2px;color:#34d399}
+    #sp-count{font-size:9px;color:#475569;letter-spacing:1px}
+    #sp-close{background:none;border:none;color:#475569;font-size:16px;cursor:pointer;padding:0 4px}
+    #sp-close:hover{color:#e2e8f0}
+    #sp-list{flex:1;overflow-y:auto;padding:6px}
+    #sp-list::-webkit-scrollbar{width:3px}
+    #sp-list::-webkit-scrollbar-thumb{background:#1e293b}
+    .sp-card{background:#060910;border:1px solid #1e293b;border-radius:5px;padding:8px 10px;margin-bottom:4px;cursor:pointer;transition:all .15s}
+    .sp-card:hover{background:#0f172a;border-color:#334155}
+    .sp-card-top{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+    .sp-topic{font-size:7px;letter-spacing:1px;font-weight:700;padding:1px 5px;border-radius:2px}
+    .sp-loc{font-size:9px;color:#94a3b8;font-weight:600;flex:1}
+    .sp-age{font-size:8px;color:#334155}
+    .sp-summary{font-size:9px;color:#64748b;line-height:1.5}
+    .sp-highlight{background:#34d39930;color:#34d399;border-radius:2px;padding:0 2px}
+    #sp-empty{padding:30px;text-align:center;font-size:9px;color:#334155;letter-spacing:2px}
+
+    /* ── EXPORT / REPORT BUTTON ──────────────────────────────── */
+     ─────────────────────────────── */
     #export-btn{position:absolute;bottom:30px;left:10px;z-index:1001;background:#0d1117;border:1px solid #1e293b;color:#64748b;padding:7px 14px;border-radius:5px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;transition:all .2s;display:flex;align-items:center;gap:6px}
     #export-btn:hover{border-color:#a78bfa;color:#a78bfa;background:#a78bfa12}
     #export-btn.loading{border-color:#f59e0b;color:#f59e0b;animation:exportPulse 1s ease-in-out infinite}
@@ -212,8 +244,27 @@
   </style>
 </head>
 <body>
+<!-- SEARCH RESULTS PANEL -->
+<div id="search-panel">
+  <div id="sp-header">
+    <span id="sp-title">◈ SEARCH RESULTS</span>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span id="sp-count">— events</span>
+      <button id="sp-close" onclick="closeSearch()">✕</button>
+    </div>
+  </div>
+  <div id="sp-list"><div id="sp-empty">ENTER A KEYWORD TO SEARCH</div></div>
+</div>
+
 <div id="header">
   <h1>MENA <span>MONITOR</span> · GEOINTEL</h1>
+  <div style="display:flex;align-items:center;gap:8px;margin-left:20px;flex:1">
+    <div id="search-wrap">
+      <input id="search-input" type="text" placeholder="SEARCH EVENTS..." onkeydown="if(event.key==='Enter')runSearch()" oninput="onSearchInput(this.value)">
+      <button id="search-clear" onclick="clearSearch()">✕</button>
+      <button id="search-btn" onclick="runSearch()">⌕</button>
+    </div>
+  </div>
   <div class="header-stats">
     <div class="stat"><span class="pulse"></span>LIVE</div>
     <div class="stat">EVENTS: <b id="stat-total">—</b></div>
@@ -240,6 +291,7 @@
       <button class="rss-tab" onclick="showCat('maritime',this)">🚢 SEA</button>
       <button class="rss-tab" onclick="showCat('air',this)">✈ AIR</button>
       <button class="rss-tab" onclick="showCat('sat',this)">🛰 SAT</button>
+      <button class="rss-tab" onclick="showCat('analysts',this)">🎙 ANALYSTS</button>
     </div>
 
     <div id="rss-list">
@@ -351,6 +403,21 @@
         <a class="osint-link" href="https://celestrak.org/cesium/orbit-viz.php" target="_blank"><span class="ol-dot" style="background:#f97316"></span>Celestrak · Orbit Viz<span class="ol-arrow">↗</span></a>
         <a class="osint-link" href="https://www.n2yo.com" target="_blank"><span class="ol-dot" style="background:#60a5fa"></span>N2YO · Satellite Tracker<span class="ol-arrow">↗</span></a>
       </div>
+
+      <!-- ANALYSTS -->
+      <div class="osint-cat" id="cat-analysts" style="display:none">
+        <div class="osint-group-label">◈ HETERODOX ANALYSTS</div>
+        <a class="osint-link" href="https://t.me/s/ScottRitterChannel" target="_blank"><span class="ol-dot" style="background:#f97316"></span>Scott Ritter · Ex-Marine/UNSCOM<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://sonar21.com" target="_blank"><span class="ol-dot" style="background:#f97316"></span>Larry Johnson · SONAR21<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.youtube.com/@ColMacgregor" target="_blank"><span class="ol-dot" style="background:#f97316"></span>Douglas Macgregor · YouTube<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.youtube.com/results?search_query=john+mearsheimer+2025" target="_blank"><span class="ol-dot" style="background:#f97316"></span>John Mearsheimer · U. Chicago<span class="ol-arrow">↗</span></a>
+        <div class="osint-group-label" style="margin-top:8px">◈ THINK TANKS / MAINSTREAM</div>
+        <a class="osint-link" href="https://www.foreignaffairs.com" target="_blank"><span class="ol-dot" style="background:#3b82f6"></span>Foreign Affairs<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.chathamhouse.org/regions/middle-east-and-north-africa" target="_blank"><span class="ol-dot" style="background:#3b82f6"></span>Chatham House · MENA<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.crisisgroup.org/middle-east-north-africa" target="_blank"><span class="ol-dot" style="background:#3b82f6"></span>ICG · MENA Watch<span class="ol-arrow">↗</span></a>
+        <a class="osint-link" href="https://www.iiss.org/regions/middle-east-and-north-africa/" target="_blank"><span class="ol-dot" style="background:#3b82f6"></span>IISS · Middle East<span class="ol-arrow">↗</span></a>
+      </div>
+
     </div>
   </div>
 
@@ -495,34 +562,42 @@
         <button class="rp-close" onclick="closeReportPanel()">✕</button>
       </div>
 
-      <!-- SCOPE -->
+      <!-- THEATER -->
       <div class="rp-section">
-        <div class="rp-section-title">SCOPE</div>
-        <div class="rp-label">THEATER</div>
+        <div class="rp-section-title">THEATER</div>
         <div class="rp-row" id="rp-theater-row">
-          <span class="rp-chip active" onclick="rpToggle(this,'theater','all')">ALL</span>
+          <span class="rp-chip active" onclick="rpToggle(this,'theater','all')">🌍 ALL</span>
           <span class="rp-chip" onclick="rpToggle(this,'theater','iran')">🇮🇷 IRAN</span>
           <span class="rp-chip" onclick="rpToggle(this,'theater','syria')">🇸🇾 SYRIA</span>
         </div>
-        <div class="rp-label" style="margin-top:8px">TOPICS</div>
+      </div>
+
+      <!-- ACTIVITY TYPE -->
+      <div class="rp-section">
+        <div class="rp-section-title">ACTIVITY TYPE</div>
         <div class="rp-row" id="rp-topic-row">
           <span class="rp-chip active" onclick="rpTopicToggle(this,'military')">⚔ MILITARY</span>
           <span class="rp-chip active" onclick="rpTopicToggle(this,'diplomacy')">🤝 DIPLOMACY</span>
           <span class="rp-chip active" onclick="rpTopicToggle(this,'politics')">🏛 POLITICS</span>
           <span class="rp-chip active" onclick="rpTopicToggle(this,'humanitarian')">🆘 HUMANITARIAN</span>
         </div>
-        <div class="rp-label" style="margin-top:8px">TIME WINDOW</div>
-        <select class="rp-select" id="rp-hours">
-          <option value="6">Last 6 hours</option>
-          <option value="12">Last 12 hours</option>
-          <option value="24" selected>Last 24 hours</option>
-          <option value="48">Last 48 hours</option>
-          <option value="72">Last 72 hours</option>
-          <option value="0">All available</option>
-        </select>
       </div>
 
-      <!-- SECTIONS TO INCLUDE -->
+      <!-- TIME WINDOW -->
+      <div class="rp-section">
+        <div class="rp-section-title">TIME WINDOW</div>
+        <div class="rp-row" id="rp-tw-row">
+          <span class="rp-chip active" onclick="rpSetHours(2,this)">2H</span>
+          <span class="rp-chip" onclick="rpSetHours(6,this)">6H</span>
+          <span class="rp-chip" onclick="rpSetHours(12,this)">12H</span>
+          <span class="rp-chip" onclick="rpSetHours(24,this)">24H</span>
+          <span class="rp-chip" onclick="rpSetHours(48,this)">48H</span>
+          <span class="rp-chip" onclick="rpSetHours(72,this)">72H</span>
+          <span class="rp-chip" onclick="rpSetHours(0,this)">ALL</span>
+        </div>
+      </div>
+
+      <!-- INCLUDE -->
       <div class="rp-section">
         <div class="rp-section-title">INCLUDE IN BRIEF</div>
         <div class="rp-toggle-row">
@@ -537,22 +612,9 @@
           <span class="rp-toggle-label">🗺 Map screenshot</span>
           <button class="rp-toggle on-green" id="tog-map" onclick="rpToggleSwitch(this)"></button>
         </div>
-        <div class="rp-toggle-row">
-          <span class="rp-toggle-label">🤖 AI analysis</span>
-          <button class="rp-toggle on" id="tog-ai" onclick="rpToggleSwitch(this)"></button>
-        </div>
-        <div class="rp-toggle-row">
-          <span class="rp-toggle-label">📡 Classification level</span>
-          <select class="rp-select" id="rp-classification" style="width:auto;padding:3px 8px">
-            <option value="OSINT">OSINT</option>
-            <option value="UNCLASSIFIED">UNCLASSIFIED</option>
-            <option value="CONFIDENTIAL">CONFIDENTIAL</option>
-            <option value="FOR OFFICIAL USE ONLY">FOUO</option>
-          </select>
-        </div>
       </div>
 
-      <!-- LIVE STATS PREVIEW -->
+      <!-- SCOPE PREVIEW -->
       <div class="rp-section" id="rp-stats-section">
         <div class="rp-section-title">SCOPE PREVIEW <span id="rp-event-count" style="color:#34d399">— events</span></div>
         <div class="rp-stats-grid" id="rp-stats-grid">
@@ -565,20 +627,9 @@
         </div>
       </div>
 
-      <!-- AI PREVIEW -->
-      <div class="rp-section" id="rp-ai-section">
-        <div class="rp-section-title">AI ANALYSIS PREVIEW</div>
-        <div class="rp-preview" id="rp-ai-preview">Click "Generate AI Analysis" to produce a Claude-powered intelligence assessment of the selected events.</div>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <button class="rp-chip" style="flex:1;padding:7px" onclick="generateAIAnalysis()" id="rp-ai-btn">▶ GENERATE AI ANALYSIS</button>
-          <button class="rp-chip" style="padding:7px 10px" onclick="document.getElementById('rp-ai-preview').textContent='Click generate to produce analysis.'">✕</button>
-        </div>
-      </div>
-
-      <!-- ACTIONS -->
+      <!-- GENERATE -->
       <div class="rp-section" style="border-bottom:none">
-        <button class="rp-generate" onclick="generateFullPDF()" id="rp-pdf-btn">⬇ EXPORT OSINT BRIEF — PDF</button>
-        <button class="rp-quick" onclick="quickExport(this)">⚡ QUICK EXPORT — CURRENT VIEW</button>
+        <button class="rp-generate" onclick="generateFullPDF()" id="rp-pdf-btn">⬇ GENERATE OSINT BRIEF — PDF</button>
       </div>
     </div>
   </div>
@@ -2176,6 +2227,7 @@ let rpAIText='';
 
 // ── Panel open/close ──────────────────────────────────────────────────────
 function openReportPanel(){
+  rpSelectedHours = 2; // default 2h
   document.getElementById('report-panel').classList.add('open');
   // Disable map interaction so scroll works in panel
   map.scrollWheelZoom.disable();
@@ -2224,21 +2276,20 @@ function rpToggleSwitch(btn){
   btn.classList.toggle('on-green',rpToggles[id] && id!=='ai');
   if(id==='ai') btn.classList.toggle('on',rpToggles[id]);
   // Show/hide sections
-  const map_={'stats':'rp-stats-section','ai':'rp-ai-section'};
-  if(map_[id]) document.getElementById(map_[id]).style.display=rpToggles[id]?'':'none';
+  const map_={'stats':'rp-stats-section'};
+  if(map_[id] && document.getElementById(map_[id])) document.getElementById(map_[id]).style.display=rpToggles[id]?'':'none';
 }
 
-document.getElementById('rp-hours').addEventListener('change',function(){
-  rpHours=parseInt(this.value)||0;
-  rpUpdatePreview();
-});
+// rpSetHours called from time window chips
+function updateRpPreview(){ rpUpdatePreview(); }
 
 // ── Get scoped events ─────────────────────────────────────────────────────
 function rpGetEvents(){
   return allEvents.filter(e=>{
     if(rpTheater!=='all' && e.theater!==rpTheater) return false;
     if(!rpTopics.has(e.topic)) return false;
-    if(rpHours>0 && getAgeHours(e.captured_at)>rpHours) return false;
+    const _h = typeof rpSelectedHours!=='undefined' ? rpSelectedHours : rpHours;
+    if(_h>0 && getAgeHours(e.captured_at)>_h) return false;
     return true;
   });
 }
@@ -2329,32 +2380,7 @@ Use professional intelligence analyst language. Be concise and factual. Do not s
   btn.disabled=false;
 }
 
-// ── QUICK EXPORT (current visible map) ───────────────────────────────────
-async function quickExport(btn){
-  if(!btn) btn=document.querySelector('.rp-quick');
-  if(!btn) return;
-  const origText=btn.textContent;
-  btn.textContent='◌ CAPTURING...';
-  btn.disabled=true;
-  try{
-    // Use currently visible events (respects active map filters)
-    const evs=allEvents.filter(e=>{
-      if(currentTopic!=='all'&&e.topic!==currentTopic)return false;
-      if(currentTheater!=='all'&&e.theater!==currentTheater)return false;
-      if(currentHours>0&&getAgeHours(e.captured_at)>currentHours)return false;
-      return true;
-    });
-    const classification=document.getElementById('rp-classification')?.value||'OSINT';
-    await buildAndDownloadPDF(evs, classification, true);
-  }catch(err){
-    console.error('[QuickExport]',err);
-    alert('Export failed: '+err.message);
-  }
-  btn.textContent=origText;
-  btn.disabled=false;
-}
 
-// ── FULL PDF EXPORT ───────────────────────────────────────────────────────
 async function generateFullPDF(){
   const btn=document.getElementById('rp-pdf-btn');
   if(btn){btn.textContent='◌ GENERATING PDF...';btn.disabled=true;}
@@ -2366,8 +2392,7 @@ async function generateFullPDF(){
     }
     const evs=rpGetEvents();
     if(!evs.length){alert('No events in current scope. Adjust filters.');if(btn){btn.textContent='⬇ EXPORT OSINT BRIEF — PDF';btn.disabled=false;}return;}
-    const classification=document.getElementById('rp-classification')?.value||'OSINT';
-    await buildAndDownloadPDF(evs, classification, false);
+    await buildAndDownloadPDF(evs, 'OSINT', false);
   }catch(err){
     console.error('[PDF Export]',err);
     alert('PDF export failed: '+err.message);
@@ -2376,263 +2401,381 @@ async function generateFullPDF(){
   if(btn){btn.textContent='⬇ EXPORT OSINT BRIEF — PDF';btn.disabled=false;}
 }
 
-// ── CORE PDF BUILDER ──────────────────────────────────────────────────────
+// ── CORE PDF BUILDER — INTELLIGENCE CABLE FORMAT ─────────────────────────
 async function buildAndDownloadPDF(evs, classification, isQuick){
   if(typeof window.jspdf==='undefined') throw new Error('jsPDF not loaded — refresh and try again');
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const W=210, H=297;
-  const M=15; // margin
-  const CW=W-2*M; // content width
+  const W=210, H=297, M=14, CW=W-2*M;
   let y=M;
+  let pageNum=1;
 
-  // ── Color palette ──
   const COL={
-    bg:[13,17,23],
-    panel:[15,23,42],
-    border:[30,41,59],
-    white:[226,232,240],
-    muted:[71,85,105],
-    accent:[167,139,250],  // purple
-    red:[239,68,68],
-    orange:[249,115,22],
-    green:[52,211,153],
-    yellow:[245,158,11],
-    cyan:[6,182,212],
+    bg:[6,9,14], panel:[13,17,23], border:[30,41,59],
+    white:[226,232,240], muted:[71,85,105], dimmed:[51,65,85],
+    accent:[167,139,250], red:[239,68,68], orange:[249,115,22],
+    green:[52,211,153], yellow:[245,158,11], cyan:[6,182,212],
+    blue:[59,130,246],
   };
+  const TOPIC_COL={military:COL.red,diplomacy:COL.blue,politics:COL.accent,
+    humanitarian:COL.yellow,economy:COL.green,social:COL.cyan,other:COL.dimmed};
+  const URG_COL={high:COL.red,medium:COL.yellow,low:COL.dimmed};
 
-  function setColor(rgb){doc.setTextColor(...rgb);}
-  function setFill(rgb){doc.setFillColor(...rgb);}
-  function setDraw(rgb){doc.setDrawColor(...rgb);}
+  const s=c=>doc.setTextColor(...c);
+  const f=c=>doc.setFillColor(...c);
+  const d=c=>doc.setDrawColor(...c);
 
-  // ── Background ──
-  setFill(COL.bg);
-  doc.rect(0,0,W,H,'F');
+  // ── Page background ──
+  function bgPage(){f(COL.bg);doc.rect(0,0,W,H,'F');}
+  bgPage();
 
-  // ── Header banner ──
-  setFill(COL.panel);
-  setDraw(COL.border);
-  doc.setLineWidth(0.3);
-  doc.rect(0,0,W,28,'FD');
+  // ── Footer ──
+  function drawFooter(){
+    f(COL.panel);doc.rect(0,H-10,W,10,'F');
+    d(COL.border);doc.setLineWidth(0.2);doc.line(0,H-10,W,H-10);
+    s(COL.dimmed);doc.setFontSize(6);doc.setFont('helvetica','normal');
+    doc.text('MENAMonitorBot · YANOMETRICS · OSINT — ALL SOURCE OPEN INTELLIGENCE',M,H-5);
+    doc.text(`PAGE ${pageNum}`,W-M,H-5,{align:'right'});
+  }
 
-  // Classification stripe
-  const classColors={
-    'OSINT':COL.green,
-    'UNCLASSIFIED':COL.green,
-    'CONFIDENTIAL':COL.red,
-    'FOR OFFICIAL USE ONLY':COL.yellow,
-  };
-  const classCol=classColors[classification]||COL.muted;
-  setFill(classCol);
-  doc.rect(0,0,W,4,'F');
-  setFill(classCol);
-  doc.rect(0,24,W,4,'F');
+  // ── Classification stripe ──
+  const CLASS_COLORS={'OSINT':COL.green,'UNCLASSIFIED':COL.green,'CONFIDENTIAL':COL.red,'FOR OFFICIAL USE ONLY':COL.yellow};
+  const classCol=CLASS_COLORS[classification]||COL.muted;
+  function drawClassStripe(){
+    f(classCol);doc.rect(0,0,W,3,'F');doc.rect(0,H-3,W,3,'F');
+    s(classCol);doc.setFontSize(6);doc.setFont('helvetica','bold');
+    doc.text(classification,W/2,2.2,{align:'center'});
+  }
+  drawClassStripe();
 
-  setColor(classCol);
-  doc.setFontSize(7);
-  doc.setFont('helvetica','bold');
-  doc.text(classification,W/2,2.8,{align:'center'});
-  doc.text(classification,W/2,26.8,{align:'center'});
+  // ── CABLE HEADER ──────────────────────────────────────────────────────────
+  f(COL.panel);d(COL.border);doc.setLineWidth(0.3);
+  doc.rect(M,4,CW,32,'FD');
 
-  // Title
-  setColor(COL.accent);
-  doc.setFontSize(16);
-  doc.setFont('helvetica','bold');
-  doc.text('MENA MONITOR',M,14);
+  // Left accent bar
+  f(classCol);doc.rect(M,4,3,32,'F');
 
-  setColor(COL.muted);
-  doc.setFontSize(8);
-  doc.setFont('helvetica','normal');
+  const refNum=`MENA-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(evs.length).padStart(4,'0')}`;
+  const nowUTC=new Date().toISOString().slice(0,16).replace('T',' ')+' UTC';
   const theaterLabel=rpTheater==='all'?'ALL THEATERS':rpTheater.toUpperCase()+' THEATER';
-  const nowStr=new Date().toISOString().slice(0,16).replace('T',' ')+' UTC';
-  doc.text(`OSINT BRIEF  ·  ${theaterLabel}  ·  ${nowStr}`,M,19);
+  const hoursLabel=rpSelectedHours===0?'ALL TIME':`LAST ${rpSelectedHours}H`;
 
-  // MENAMonitorBot badge
-  setColor(COL.muted);
-  doc.setFontSize(7);
-  doc.text('MENAMonitorBot  ·  OSINT  ·  YANOMETRICS',W-M,14,{align:'right'});
-  doc.text(`Events: ${evs.length}  ·  ${isQuick?'Quick Export':'Full Brief'}`,W-M,19,{align:'right'});
+  s(COL.dimmed);doc.setFontSize(6.5);doc.setFont('helvetica','normal');
+  doc.text('REFERENCE',M+7,10);
+  doc.text('SUBJECT',M+7,15);
+  doc.text('DATE/TIME',M+7,20);
+  doc.text('THEATER',M+7,25);
+  doc.text('SOURCE',M+7,30);
 
-  y=36;
+  s(COL.white);doc.setFontSize(7);doc.setFont('helvetica','bold');
+  doc.text(refNum,M+35,10);
+  s(COL.accent);doc.setFontSize(8);
+  doc.text(`MENA MONITOR — OSINT INTELLIGENCE BRIEF`,M+35,15);
+  s(COL.white);doc.setFontSize(7);doc.setFont('helvetica','normal');
+  doc.text(nowUTC,M+35,20);
+  doc.text(`${theaterLabel}  ·  ${hoursLabel}  ·  ${evs.length} EVENTS`,M+35,25);
+  doc.text('OPEN SOURCE INTELLIGENCE (OSINT) — TELEGRAM / SOCIAL MEDIA',M+35,30);
 
-  // ── Stats bar ──
-  if((isQuick||rpToggles.stats)&&evs.length>0){
-    const mil=evs.filter(e=>e.topic==='military').length;
-    const dip=evs.filter(e=>e.topic==='diplomacy').length;
-    const pol=evs.filter(e=>e.topic==='politics').length;
-    const hum=evs.filter(e=>e.topic==='humanitarian').length;
+  // YANOMETRICS badge
+  s(COL.dimmed);doc.setFontSize(7);doc.setFont('helvetica','bold');
+  doc.text('YANOMETRICS',W-M-3,10,{align:'right'});
+  s(COL.dimmed);doc.setFontSize(6);doc.setFont('helvetica','normal');
+  doc.text('mena.monitor25',W-M-3,14,{align:'right'});
+
+  y=42;
+
+  // ── STATISTICS PANEL ─────────────────────────────────────────────────────
+  if(rpToggles.stats){
+    const cats=[
+      {k:'military',label:'MILITARY',col:COL.red},
+      {k:'diplomacy',label:'DIPLOMACY',col:COL.blue},
+      {k:'politics',label:'POLITICS',col:COL.accent},
+      {k:'humanitarian',label:'HUMANITARIAN',col:COL.yellow},
+    ];
     const hi=evs.filter(e=>e.urgency==='high').length;
-    const iran=evs.filter(e=>e.theater==='iran').length;
+    const iranC=evs.filter(e=>e.theater==='iran').length;
+    const syrC=evs.filter(e=>e.theater==='syria').length;
 
-    const stats=[
-      {label:'TOTAL',val:evs.length,col:COL.white},
-      {label:'MILITARY',val:mil,col:COL.red},
-      {label:'DIPLOMACY',val:dip,col:COL.cyan},
-      {label:'POLITICS',val:pol,col:COL.yellow},
-      {label:'HUMAN.',val:hum,col:COL.green},
-      {label:'HIGH URG',val:hi,col:COL.red},
-      {label:'🇮🇷 IRAN',val:iran,col:COL.orange},
+    // Section header
+    s(COL.dimmed);doc.setFontSize(7);doc.setFont('helvetica','bold');
+    doc.text('1. ACTIVITY BREAKDOWN',M,y);
+    d(COL.border);doc.setLineWidth(0.15);doc.line(M+38,y-1,M+CW,y-1);
+    y+=4;
+
+    // Stats boxes row 1 — topics
+    const bw=(CW-3)/4;
+    cats.forEach((cat,i)=>{
+      const cnt=evs.filter(e=>e.topic===cat.k).length;
+      const bx=M+i*(bw+1);
+      f(COL.panel);d(cat.col.map(v=>v*0.4));doc.setLineWidth(0.2);
+      doc.rect(bx,y,bw,12,'FD');
+      f(cat.col);doc.rect(bx,y,bw,2,'F');
+      s(cat.col);doc.setFontSize(12);doc.setFont('helvetica','bold');
+      doc.text(String(cnt),bx+bw/2,y+9,{align:'center'});
+      s(COL.dimmed);doc.setFontSize(5.5);doc.setFont('helvetica','normal');
+      doc.text(cat.label,bx+bw/2,y+11.5,{align:'center'});
+    });
+    y+=15;
+
+    // Stats row 2 — urgency + theater
+    const stats2=[
+      {label:'TOTAL EVENTS',val:evs.length,col:COL.white},
+      {label:'HIGH URGENCY',val:hi,col:COL.red},
+      {label:'🇮🇷 IRAN',val:iranC,col:COL.orange},
+      {label:'🇸🇾 SYRIA',val:syrC,col:COL.cyan},
+    ];
+    const bw2=(CW-3)/4;
+    stats2.forEach((st,i)=>{
+      const bx=M+i*(bw2+1);
+      f(COL.panel);d(COL.border);doc.setLineWidth(0.1);
+      doc.rect(bx,y,bw2,9,'FD');
+      s(st.col);doc.setFontSize(10);doc.setFont('helvetica','bold');
+      doc.text(String(st.val),bx+bw2/2,y+6.5,{align:'center'});
+      s(COL.dimmed);doc.setFontSize(5);doc.setFont('helvetica','normal');
+      doc.text(st.label,bx+bw2/2,y+8.5,{align:'center'});
+    });
+    y+=13;
+  }
+
+  // ── EVENTS BY SECTION ─────────────────────────────────────────────────────
+  if(rpToggles.events && evs.length>0){
+    const sections=[
+      {key:'military',   label:'2. MILITARY & SECURITY ACTIVITY',   col:COL.red},
+      {key:'diplomacy',  label:'3. DIPLOMATIC DEVELOPMENTS',         col:COL.blue},
+      {key:'politics',   label:'4. POLITICAL DEVELOPMENTS',          col:COL.accent},
+      {key:'humanitarian',label:'5. HUMANITARIAN SITUATION',         col:COL.yellow},
+      {key:'other',      label:'6. OTHER NOTABLE EVENTS',            col:COL.dimmed},
     ];
 
-    const boxW=(CW-6)/stats.length;
-    stats.forEach((s,i)=>{
-      const bx=M+i*(boxW+1);
-      setFill(COL.panel);
-      setDraw(COL.border);
-      doc.setLineWidth(0.2);
-      doc.rect(bx,y,boxW,16,'FD');
-      setColor(s.col);
-      doc.setFontSize(14);
-      doc.setFont('helvetica','bold');
-      doc.text(String(s.val),bx+boxW/2,y+9,{align:'center'});
-      setColor(COL.muted);
-      doc.setFontSize(6);
-      doc.setFont('helvetica','normal');
-      doc.text(s.label,bx+boxW/2,y+14,{align:'center'});
+    // Merge economy/social into other
+    const buckets={};
+    sections.forEach(s=>buckets[s.key]=[]);
+    evs.forEach(e=>{
+      const k=buckets[e.topic]!==undefined?e.topic:'other';
+      buckets[k].push(e);
     });
-    y+=22;
-  }
+    // Sort each bucket: high urgency first
+    const urgOrder={high:0,medium:1,low:2};
+    Object.values(buckets).forEach(arr=>arr.sort((a,b)=>(urgOrder[a.urgency]||2)-(urgOrder[b.urgency]||2)));
 
-  // ── AI Analysis ──
-  if(!isQuick&&rpToggles.ai&&rpAIText){
-    setFill(COL.panel);
-    setDraw(COL.accent);
-    doc.setLineWidth(0.3);
-    const lines=doc.setFontSize(8).splitTextToSize(rpAIText,CW-8);
-    const boxH=Math.min(lines.length*4.5+12,80);
-    if(y+boxH>H-20){doc.addPage();setFill(COL.bg);doc.rect(0,0,W,H,'F');y=M;}
-    doc.rect(M,y,CW,boxH,'FD');
+    for(const sec of sections){
+      const sEvs=buckets[sec.key];
+      if(!sEvs||sEvs.length===0) continue;
 
-    setColor(COL.accent);
-    doc.setFontSize(8);
-    doc.setFont('helvetica','bold');
-    doc.text('◈ AI ANALYSIS',M+4,y+6);
-
-    setColor(COL.white);
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(7.5);
-    const visLines=lines.slice(0,Math.floor((boxH-12)/4.5));
-    doc.text(visLines,M+4,y+12);
-    y+=boxH+5;
-  }
-
-  // ── Event list ──
-  if((isQuick||rpToggles.events)&&evs.length>0){
-    // Section header
-    setColor(COL.muted);
-    doc.setFontSize(8);
-    doc.setFont('helvetica','bold');
-    doc.text('EVENT LOG',M,y+4);
-    setDraw(COL.border);
-    doc.setLineWidth(0.2);
-    doc.line(M+18,y+3,M+CW,y+3);
-    y+=8;
-
-    const topicColors={'military':COL.red,'diplomacy':COL.cyan,'politics':COL.yellow,'humanitarian':COL.green};
-    const urgColors={'high':COL.red,'medium':COL.yellow,'low':COL.muted};
-
-    const maxEvs=isQuick?30:evs.length;
-    for(let i=0;i<Math.min(maxEvs,evs.length);i++){
-      const e=evs[i];
-      const tCol=topicColors[e.topic]||COL.muted;
-      const uCol=urgColors[e.urgency]||COL.muted;
-      const summary=(e.brief_summary||e.translated_text||e.original_text||'').slice(0,200);
-      const sumLines=doc.setFontSize(7).splitTextToSize(summary,CW-28);
-      const rowH=Math.max(10,sumLines.length*3.5+8);
-
-      if(y+rowH>H-15){
-        doc.addPage();
-        setFill(COL.bg);doc.rect(0,0,W,H,'F');
-        y=M;
+      if(y>H-30){
+        drawFooter();doc.addPage();bgPage();drawClassStripe();pageNum++;y=M+5;
       }
 
-      // Row bg
-      setFill(i%2===0?COL.bg:COL.panel);
-      setDraw(COL.border);
-      doc.setLineWidth(0.1);
-      doc.rect(M,y,CW,rowH,'FD');
+      // Section header
+      f(sec.col.map(v=>Math.round(v*0.15)));
+      doc.rect(M,y,CW,7,'F');
+      d(sec.col.map(v=>Math.round(v*0.6)));doc.setLineWidth(0.3);
+      doc.rect(M,y,CW,7,'D');
+      f(sec.col);doc.rect(M,y,3,7,'F');
 
-      // Left accent strip (topic color)
-      setFill(tCol);
-      doc.rect(M,y,2,rowH,'F');
+      s(sec.col);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+      doc.text(sec.label,M+6,y+4.8);
+      s(COL.dimmed);doc.setFontSize(6.5);
+      doc.text(`${sEvs.length} events`,W-M-3,y+4.8,{align:'right'});
+      y+=9;
 
-      // Index
-      setColor(COL.muted);
-      doc.setFontSize(7);
-      doc.setFont('helvetica','bold');
-      doc.text(String(i+1).padStart(2,'0'),M+4,y+5);
+      for(let i=0;i<sEvs.length;i++){
+        const e=sEvs[i];
+        const uCol=URG_COL[e.urgency]||COL.dimmed;
+        const summary=(e.brief_summary||e.translated_text||'—').slice(0,220);
+        const sumLines=doc.setFontSize(7).splitTextToSize(summary,CW-26);
+        const actorLine=e.actors?(e.actors.slice(0,80)):'';
+        const rowH=Math.max(11,sumLines.length*3.6+(actorLine?4:0)+6);
 
-      // Topic + urgency badges
-      setColor(tCol);
-      doc.setFontSize(6.5);
-      doc.text((e.topic||'?').toUpperCase().slice(0,4),M+11,y+5);
+        if(y+rowH>H-14){
+          drawFooter();doc.addPage();bgPage();drawClassStripe();pageNum++;y=M+5;
+        }
 
-      setColor(uCol);
-      doc.setFontSize(6);
-      doc.text((e.urgency||'').toUpperCase().slice(0,3),M+11,y+9);
+        // Row
+        f(i%2===0?COL.bg:COL.panel);
+        d(COL.border);doc.setLineWidth(0.08);
+        doc.rect(M,y,CW,rowH,'FD');
 
-      // Location
-      setColor(COL.white);
-      doc.setFontSize(7.5);
-      doc.setFont('helvetica','bold');
-      doc.text((e.location||'Unknown').slice(0,35),M+28,y+5);
+        // Urgency indicator
+        f(uCol);doc.rect(M,y,1.8,rowH,'F');
 
-      // Age
-      const age=getAgeHours(e.captured_at);
-      setColor(COL.muted);
-      doc.setFontSize(6.5);
-      doc.setFont('helvetica','normal');
-      doc.text(age<1?`${Math.round(age*60)}min ago`:age<24?`${Math.round(age)}h ago`:`${Math.round(age/24)}d ago`,W-M-2,y+5,{align:'right'});
+        // Number
+        s(COL.dimmed);doc.setFontSize(6);doc.setFont('helvetica','bold');
+        doc.text(String(i+1).padStart(2,'0'),M+3.5,y+4.5);
 
-      // Summary
-      setColor([148,163,184]);
-      doc.setFontSize(7);
-      doc.text(sumLines,M+28,y+10);
+        // Location + channel
+        s(COL.white);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+        doc.text((e.location||'Unknown').slice(0,32),M+12,y+4.5);
+        s(COL.dimmed);doc.setFontSize(5.5);doc.setFont('helvetica','normal');
+        doc.text((e.channel_title||'').slice(0,28),M+12,y+8.2);
 
-      y+=rowH+1;
-    }
+        // Urgency badge
+        const urgLabel=(e.urgency||'').toUpperCase().slice(0,3);
+        s(uCol);doc.setFontSize(6);doc.setFont('helvetica','bold');
+        doc.text(urgLabel,W-M-3,y+4.5,{align:'right'});
 
-    if(evs.length>maxEvs){
-      setColor(COL.muted);
-      doc.setFontSize(7);
-      doc.text(`... and ${evs.length-maxEvs} more events not shown`,M,y+5);
-      y+=10;
+        // Age
+        const age=getAgeHours(e.captured_at);
+        s(COL.dimmed);doc.setFontSize(5.5);doc.setFont('helvetica','normal');
+        const ageStr=age<1?`${Math.round(age*60)}m`:age<24?`${Math.round(age)}h`:`${Math.round(age/24)}d`;
+        doc.text(ageStr+' ago',W-M-3,y+8.2,{align:'right'});
+
+        // Summary
+        s([148,163,184]);doc.setFontSize(6.8);doc.setFont('helvetica','normal');
+        doc.text(sumLines,M+12,y+12);
+
+        // Actors
+        if(actorLine){
+          s(COL.dimmed);doc.setFontSize(5.8);
+          doc.text('KEY ACTORS: '+actorLine,M+12,y+rowH-2);
+        }
+
+        y+=rowH+0.8;
+      }
+      y+=3;
     }
   }
 
-  // ── Map screenshot ──
-  if(rpToggles.map&&!isQuick){
+  // ── MAP SCREENSHOT ────────────────────────────────────────────────────────
+  if(rpToggles.map){
     try{
       const mapEl=document.getElementById('map');
-      const canvas=await html2canvas(mapEl,{useCORS:true,scale:1.2,logging:false,backgroundColor:'#0d1117'});
-      const imgData=canvas.toDataURL('image/jpeg',0.7);
-      doc.addPage();
-      setFill(COL.bg);doc.rect(0,0,W,H,'F');
+      const canvas=await html2canvas(mapEl,{useCORS:true,scale:1.2,logging:false,backgroundColor:'#060910'});
+      const imgData=canvas.toDataURL('image/jpeg',0.75);
+      drawFooter();doc.addPage();bgPage();drawClassStripe();pageNum++;
+      y=M+5;
 
-      setColor(COL.muted);
-      doc.setFontSize(8);doc.setFont('helvetica','bold');
-      doc.text('◈ MAP SCREENSHOT',M,M+4);
-      doc.setLineWidth(0.2);setDraw(COL.border);
-      doc.line(M+30,M+3,M+CW,M+3);
+      // Map section header
+      f(COL.panel);d(COL.border);doc.setLineWidth(0.3);
+      doc.rect(M,y,CW,7,'FD');
+      f(COL.green);doc.rect(M,y,3,7,'F');
+      s(COL.green);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+      doc.text(`${sections?sections.length+1:7}. OPERATIONAL MAP — ${theaterLabel}`,M+6,y+4.8);
+      y+=10;
 
-      const imgY=M+10;
-      const imgH=(CW/canvas.width)*canvas.height;
-      doc.addImage(imgData,'JPEG',M,imgY,CW,Math.min(imgH,H-imgY-20));
+      const imgH=Math.min((CW/canvas.width)*canvas.height, H-y-20);
+      doc.addImage(imgData,'JPEG',M,y,CW,imgH);
+      y+=imgH+3;
+
+      s(COL.dimmed);doc.setFontSize(6);doc.setFont('helvetica','normal');
+      doc.text(`Map captured: ${nowUTC}  ·  Events shown: ${evs.length}`,M,y);
     }catch(err){
       console.warn('[PDF] Map screenshot failed:',err.message);
     }
   }
 
-  // ── Footer on last page ──
-  setColor(COL.muted);
-  doc.setFontSize(7);
-  doc.setFont('helvetica','normal');
-  doc.text('Generated by MENAMonitorBot · YANOMETRICS · mena.monitor25@gmail.com',W/2,H-8,{align:'center'});
-  doc.text(`All data sourced from open channels · ${new Date().toISOString().slice(0,10)}`,W/2,H-4,{align:'center'});
+  // ── Final footer ──
+  drawFooter();
 
   // ── Save ──
-  const fname=`MENA-Brief-${new Date().toISOString().slice(0,10)}-${rpTheater.toUpperCase()}.pdf`;
+  const fname=`MENA-OSINT-BRIEF-${new Date().toISOString().slice(0,10)}-${rpTheater.toUpperCase()}-${refNum.split('-').pop()}.pdf`;
   doc.save(fname);
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// SEARCH SYSTEM
+// ══════════════════════════════════════════════════════════════════════
+let searchQuery = '';
+
+function onSearchInput(val) {
+  const clearBtn = document.getElementById('search-clear');
+  if (clearBtn) clearBtn.classList.toggle('visible', val.length > 0);
+}
+
+function runSearch() {
+  const input = document.getElementById('search-input');
+  if (!input) return;
+  const q = input.value.trim().toLowerCase();
+  if (!q) return;
+  searchQuery = q;
+  const panel = document.getElementById('search-panel');
+  panel.classList.add('open');
+  renderSearchResults(q);
+}
+
+function clearSearch() {
+  const input = document.getElementById('search-input');
+  if (input) input.value = '';
+  searchQuery = '';
+  const clearBtn = document.getElementById('search-clear');
+  if (clearBtn) clearBtn.classList.remove('visible');
+  closeSearch();
+}
+
+function closeSearch() {
+  document.getElementById('search-panel').classList.remove('open');
+}
+
+function renderSearchResults(q) {
+  const list = document.getElementById('sp-list');
+  const countEl = document.getElementById('sp-count');
+  if (!list) return;
+
+  const topicColors = {military:'#ef4444',diplomacy:'#3b82f6',politics:'#a78bfa',
+    humanitarian:'#f59e0b',economy:'#10b981',social:'#06b6d4',other:'#475569'};
+
+  const matches = allEvents.filter(ev => {
+    const haystack = [
+      ev.brief_summary, ev.location, ev.channel_title,
+      ev.actors, ev.translated_text, ev.original_text
+    ].join(' ').toLowerCase();
+    return haystack.includes(q);
+  });
+
+  countEl.textContent = `${matches.length} events`;
+
+  if (!matches.length) {
+    list.innerHTML = `<div id="sp-empty">NO RESULTS FOR "${q.toUpperCase()}"</div>`;
+    return;
+  }
+
+  // Highlight helper
+  function hl(text, q) {
+    if (!text) return '';
+    const escaped = q.replace(/[-.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp('(' + escaped + ')', 'gi');
+    return text.replace(re, '<span class="sp-highlight">$1</span>');
+  }
+
+  function timeAgo(ts) {
+    if (!ts) return '';
+    const diff = Math.floor((Date.now() - new Date(ts)) / 60000);
+    if (diff < 60) return `${diff}m ago`;
+    if (diff < 1440) return `${Math.floor(diff/60)}h ago`;
+    return `${Math.floor(diff/1440)}d ago`;
+  }
+
+  list.innerHTML = matches.map(ev => {
+    const color = topicColors[ev.topic] || '#475569';
+    const summary = hl((ev.brief_summary||'').slice(0,120), q);
+    return `<div class="sp-card" onclick="flyToEvent(${ev.latitude},${ev.longitude})">
+      <div class="sp-card-top">
+        <span class="sp-topic" style="background:${color}22;color:${color};border:1px solid ${color}44">${(ev.topic||'').toUpperCase()}</span>
+        <span class="sp-loc">${hl(ev.location||'',q)}</span>
+        <span class="sp-age">${timeAgo(ev.captured_at)}</span>
+      </div>
+      <div class="sp-summary">${summary}${(ev.brief_summary||'').length>120?'…':''}</div>
+    </div>`;
+  }).join('');
+}
+
+function flyToEvent(lat, lon) {
+  if (!lat || !lon) return;
+  map.flyTo([lat, lon], 8, {duration: 1.2});
+  closeSearch();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// REPORT PANEL — rpSetHours
+// ══════════════════════════════════════════════════════════════════════
+let rpSelectedHours = 2;
+
+function rpSetHours(h, el) {
+  rpSelectedHours = h;
+  document.querySelectorAll('#rp-tw-row .rp-chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  updateRpPreview();
 }
 
 // ── QUICK EXPORT BUTTON (bottom-left shortcut) ────────────────────────────
