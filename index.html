@@ -2822,16 +2822,33 @@ async function buildAndDownloadPDF(evs, classification, isQuick){
       doc.text(descLines, M+55, y+5.5);
       y += 9;
 
-      // Channel rows
-      channels.forEach((ch, i) => {
+      // Channel rows — group Arabic/non-ASCII names together
+      const safeChannels = [];
+      let arabicCount = 0, arabicEvents = 0;
+      channels.forEach(ch => {
+        // Check if name is mostly ASCII (Latin-script)
+        const asciiRatio = (ch.ch.match(/[ -~]/g)||[]).length / Math.max(ch.ch.length,1);
+        if(asciiRatio >= 0.6) {
+          safeChannels.push(ch);
+        } else {
+          arabicCount++;
+          arabicEvents += ch.count;
+        }
+      });
+      if(arabicCount > 0) {
+        safeChannels.push({ ch: `Arabic/RTL channels (${arabicCount} sources)`, count: arabicEvents });
+      }
+      safeChannels.forEach((ch, i) => {
         const rh = 6;
         checkPage(rh);
         f(i%2===0 ? C.offWhite : C.white);
         lw(0.05); d(C.border);
         doc.rect(M, y, CW, rh, 'FD');
-        s(C.dark); doc.setFontSize(7); doc.setFont('helvetica','normal');
-        doc.text(ch.ch.slice(0,55), M+8, y+4.3);
-        s(C.muted); doc.setFontSize(6.5);
+        const isGrouped = ch.ch.startsWith('Arabic/RTL');
+        s(isGrouped ? C.muted : C.dark);
+        doc.setFontSize(7); doc.setFont('helvetica', isGrouped ? 'italic' : 'normal');
+        doc.text(ch.ch.slice(0,60), M+8, y+4.3);
+        s(C.muted); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
         doc.text(String(ch.count)+' events', W-M-3, y+4.3, {align:'right'});
         y += rh;
       });
