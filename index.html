@@ -42,7 +42,7 @@
     .osint-link:hover .ol-arrow{color:#475569}
     #rss-status{padding:16px;font-size:9px;color:#475569;letter-spacing:1px;text-align:center}
     /* ── AIRSPACE LAYER ─────────────────────────────────────── */
-    #airspace-panel{position:absolute;top:50px;right:10px;width:260px;background:#0d1117;border:1px solid #1e293b;border-radius:6px;z-index:1200;display:none;max-height:70vh;overflow-y:auto}
+    #airspace-panel{position:absolute;top:50px;right:10px;width:260px;background:#0d1117;border:1px solid #1e293b;border-radius:6px;z-index:1200;display:none;max-height:70vh;overflow-y:auto;pointer-events:auto;overscroll-behavior:contain}
     #airspace-panel.open{display:block}
     #airspace-panel::-webkit-scrollbar{width:3px}
     #airspace-panel::-webkit-scrollbar-thumb{background:#1e293b}
@@ -94,7 +94,7 @@
 
     /* ── EXPORT / REPORT BUTTON ──────────────────────────────── */
      ─────────────────────────────── */
-    #export-btn{position:absolute;bottom:30px;left:10px;z-index:1001;background:#0d1117;border:1px solid #1e293b;color:#64748b;padding:7px 14px;border-radius:5px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;transition:all .2s;display:flex;align-items:center;gap:6px}
+    #export-btn{position:absolute;bottom:60px;left:10px;z-index:1500;background:#0d1117;border:1px solid #1e293b;color:#64748b;padding:7px 14px;border-radius:5px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;transition:all .2s;display:flex;align-items:center;gap:6px;pointer-events:auto}
     #export-btn:hover{border-color:#a78bfa;color:#a78bfa;background:#a78bfa12}
     #export-btn.loading{border-color:#f59e0b;color:#f59e0b;animation:exportPulse 1s ease-in-out infinite}
     @keyframes exportPulse{0%,100%{opacity:1}50%{opacity:.5}}
@@ -2879,6 +2879,13 @@ function toggleAirspace(btn) {
 }
 
 async function loadAirspaceData() {
+  // Prevent map from capturing scroll events on the panel
+  const panelEl = document.getElementById('airspace-panel');
+  if (panelEl && !panelEl._scrollFixed) {
+    L.DomEvent.disableScrollPropagation(panelEl);
+    L.DomEvent.disableClickPropagation(panelEl);
+    panelEl._scrollFixed = true;
+  }
   const content = document.getElementById('ap-content');
   const updated = document.getElementById('ap-updated');
   content.innerHTML = '<div class="ap-section"><div class="ap-section-title" style="color:#334155">◌ FETCHING METAR DATA...</div></div>';
