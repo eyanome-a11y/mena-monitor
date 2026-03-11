@@ -643,6 +643,10 @@
           <span class="rp-toggle-label">🗺 Map screenshot</span>
           <button class="rp-toggle on-green" id="tog-map" onclick="rpToggleSwitch(this)"></button>
         </div>
+        <div class="rp-toggle-row">
+          <span class="rp-toggle-label">📡 Source list &amp; bias</span>
+          <button class="rp-toggle" id="tog-sources" onclick="rpToggleSwitch(this)"></button>
+        </div>
       </div>
 
       <!-- SCOPE PREVIEW -->
@@ -2253,7 +2257,7 @@ function initACLEDDates(){
 let rpTheater='all';
 let rpTopics=new Set(['military','diplomacy','politics','humanitarian']);
 let rpHours=24;
-let rpToggles={stats:true,events:true,map:true,ai:true};
+let rpToggles={stats:true,events:true,map:true,ai:false,sources:false};
 let rpAIText='';
 
 // ── Panel open/close ──────────────────────────────────────────────────────
@@ -2762,6 +2766,79 @@ async function buildAndDownloadPDF(evs, classification, isQuick){
   // ══════════════════════════════════════════════════════════════════════
   // 7. MAP SCREENSHOT (if enabled)
   // ══════════════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════════
+  // 8. SOURCE LIST & BIAS
+  // ══════════════════════════════════════════════════════════════════
+  if(rpToggles.sources){
+    sectionHeader('SOURCE LIST & BIAS DECLARATION');
+
+    // Build unique sources from current events
+    const sourceBiasDesc = {
+      'GoS Official':      'Syrian Government official channels — pro-Assad, state narrative',
+      'Pro GoS':           'Pro-Syrian Government outlets — regime-aligned civilian media',
+      'Pro GoS/Anti-SDF':  'Pro-Damascus, hostile to Kurdish SDF administration',
+      'Pro SA':            'Pro-Syrian Arab (opposition/SNA) — anti-Assad framing',
+      'Iranian State':     'IRGC-aligned or state media — official Tehran narrative',
+      'Israeli Official':  'IDF / Israeli government channels — official Israeli framing',
+      'Pan-Arab':          'Regional Arabic-language outlets — mixed editorial lines',
+      'Pro-Resistance':    'Hezbollah / Hamas / Houthi aligned — axis of resistance framing',
+      'Western Media':     'Western mainstream outlets — generally critical of Iran/Assad',
+      'OSINT Independent': 'Independent open-source analysts — varied political alignment',
+      'Unknown':           'Unclassified or unidentified source',
+    };
+
+    // Collect unique channels from events
+    const channelMap = {};
+    evs.forEach(e => {
+      const ch = e.channel_title || 'Unknown';
+      const bias = e.source_bias || 'Unknown';
+      if (!channelMap[ch]) channelMap[ch] = { bias, count: 0 };
+      channelMap[ch].count++;
+    });
+
+    const channelEntries = Object.entries(channelMap)
+      .sort((a,b) => b[1].count - a[1].count);
+
+    // Group by bias
+    const byBias = {};
+    channelEntries.forEach(([ch, info]) => {
+      if (!byBias[info.bias]) byBias[info.bias] = [];
+      byBias[info.bias].push({ ch, count: info.count });
+    });
+
+    // Bias description header rows
+    for (const [bias, channels] of Object.entries(byBias)) {
+      const desc = sourceBiasDesc[bias] || 'No description available';
+      checkPage(20);
+
+      // Bias group header
+      f([240,240,248]); lw(0.2); d([200,200,220]);
+      doc.rect(M, y, CW, 9, 'FD');
+      s(C.navy); doc.setFontSize(8); doc.setFont('helvetica','bold');
+      doc.text(bias, M+3, y+6);
+      s(C.muted); doc.setFontSize(7); doc.setFont('helvetica','normal');
+      // wrap desc
+      const descLines = doc.setFontSize(6.5).splitTextToSize(desc, CW-60);
+      doc.text(descLines, M+55, y+5.5);
+      y += 9;
+
+      // Channel rows
+      channels.forEach((ch, i) => {
+        const rh = 6;
+        checkPage(rh);
+        f(i%2===0 ? C.offWhite : C.white);
+        lw(0.05); d(C.border);
+        doc.rect(M, y, CW, rh, 'FD');
+        s(C.dark); doc.setFontSize(7); doc.setFont('helvetica','normal');
+        doc.text(ch.ch.slice(0,55), M+8, y+4.3);
+        s(C.muted); doc.setFontSize(6.5);
+        doc.text(String(ch.count)+' events', W-M-3, y+4.3, {align:'right'});
+        y += rh;
+      });
+      y += 3;
+    }
+  }
+
   if(rpToggles.map){
     try{
       // Close report panel so map is visible for screenshot
