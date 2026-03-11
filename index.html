@@ -41,6 +41,26 @@
     .ol-arrow{margin-left:auto;color:#1e293b;font-size:9px}
     .osint-link:hover .ol-arrow{color:#475569}
     #rss-status{padding:16px;font-size:9px;color:#475569;letter-spacing:1px;text-align:center}
+    /* ── AIRSPACE LAYER ─────────────────────────────────────── */
+    #airspace-panel{position:absolute;top:50px;right:10px;width:260px;background:#0d1117;border:1px solid #1e293b;border-radius:6px;z-index:1200;display:none;max-height:70vh;overflow-y:auto}
+    #airspace-panel.open{display:block}
+    #airspace-panel::-webkit-scrollbar{width:3px}
+    #airspace-panel::-webkit-scrollbar-thumb{background:#1e293b}
+    .ap-header{padding:8px 12px;border-bottom:1px solid #1e293b;display:flex;align-items:center;justify-content:space-between}
+    .ap-title{font-size:9px;letter-spacing:2px;color:#60a5fa}
+    .ap-status{font-size:8px;color:#475569}
+    .ap-section{padding:6px 10px;border-bottom:1px solid #0f172a}
+    .ap-section-title{font-size:7px;letter-spacing:2px;color:#334155;margin-bottom:4px}
+    .ap-item{display:flex;align-items:flex-start;gap:6px;padding:3px 0;border-bottom:1px solid #0f172a11}
+    .ap-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:2px}
+    .ap-name{font-size:8px;color:#94a3b8;font-weight:600;flex:1}
+    .ap-detail{font-size:7px;color:#475569;line-height:1.4}
+    .ap-badge{font-size:6px;padding:1px 4px;border-radius:2px;font-weight:700;letter-spacing:1px}
+    .ap-badge.closed{background:#ef444422;color:#ef4444;border:1px solid #ef444444}
+    .ap-badge.restricted{background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44}
+    .ap-badge.open{background:#34d39922;color:#34d399;border:1px solid #34d39944}
+    .ap-badge.notam{background:#a78bfa22;color:#a78bfa;border:1px solid #a78bfa44}
+
     /* ── SEARCH BAR ──────────────────────────────────────────── */
     #search-wrap{display:flex;align-items:center;gap:0;background:#0f172a;border:1px solid #1e293b;border-radius:5px;overflow:hidden;transition:border-color .2s}
     #search-wrap:focus-within{border-color:#34d399}
@@ -424,6 +444,18 @@
   <!-- MAP -->
   <div id="map">
     <div id="loading"><div class="spinner"></div>LOADING INTEL...</div>
+    <button id="export-btn" onclick="openReportPanel()">📄 EXPORT BRIEF</button>
+
+    <!-- AIRSPACE PANEL -->
+    <div id="airspace-panel">
+      <div class="ap-header">
+        <span class="ap-title">✈ AIRSPACE STATUS — MENA</span>
+        <span class="ap-status" id="ap-updated">—</span>
+      </div>
+      <div id="ap-content">
+        <div class="ap-section"><div class="ap-section-title">LOADING...</div></div>
+      </div>
+    </div>
     <div id="basemap-switcher">
       <button class="basemap-btn active" onclick="setBasemap('dark',this)">◼ DARK</button>
       <button class="basemap-btn" onclick="setBasemap('sentinel',this)">🛰 SENTINEL-2</button>
@@ -634,9 +666,6 @@
     </div>
   </div>
 
-  <!-- EXPORT BUTTON (bottom-left of map) -->
-  <button id="export-btn" onclick="openReportPanel()">📄 EXPORT BRIEF</button>
-
         <div id="map-controls">
       <button id="layers-toggle" onclick="toggleLayersMenu(this)">⊞ LAYERS ▾</button>
       <div id="layers-submenu">
@@ -648,6 +677,7 @@
         <button class="map-btn" id="btn-frontlines" onclick="toggleFrontlines(this)">🗾 FRONTLINES</button>
         <button class="map-btn" id="btn-shodan"     onclick="toggleCCTV(this)">🔍 SHODAN</button>
         <button class="map-btn" id="missile-btn"    onclick="toggleMissiles(this)">⚡ ALERTS</button>
+        <button class="map-btn" id="btn-airspace"   onclick="toggleAirspace(this)">✈ AIRSPACE</button>
       </div>
     </div>
   </div>
@@ -2776,6 +2806,221 @@ function rpSetHours(h, el) {
   document.querySelectorAll('#rp-tw-row .rp-chip').forEach(c => c.classList.remove('active'));
   if (el) el.classList.add('active');
   updateRpPreview();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// AIRSPACE STATUS LAYER
+// ══════════════════════════════════════════════════════════════════════
+let airspaceActive = false;
+let airspaceMarkers = [];
+
+// MENA major airports with ICAO codes
+const MENA_AIRPORTS = [
+  // Israel / Palestine
+  {icao:'LLBG',name:'Ben Gurion (TLV)',city:'Tel Aviv',lat:32.011,lon:34.887,country:'IL'},
+  {icao:'LLRM',name:'Ramon (ETM)',city:'Eilat',lat:29.723,lon:35.012,country:'IL'},
+  {icao:'LLET',name:'Eilat',city:'Eilat',lat:29.561,lon:34.958,country:'IL'},
+  // Iran
+  {icao:'OIIE',name:'Imam Khomeini (IKA)',city:'Tehran',lat:35.416,lon:51.152,country:'IR'},
+  {icao:'OIII',name:'Mehrabad (THR)',city:'Tehran',lat:35.689,lon:51.314,country:'IR'},
+  {icao:'OIFM',name:'Shiraz (SYZ)',city:'Shiraz',lat:29.539,lon:52.590,country:'IR'},
+  {icao:'OIKB',name:'Bandar Abbas (BND)',city:'Bandar Abbas',lat:27.218,lon:56.378,country:'IR'},
+  {icao:'OISS',name:'Mashhad (MHD)',city:'Mashhad',lat:36.235,lon:59.641,country:'IR'},
+  // Syria
+  {icao:'OSDI',name:'Damascus (DAM)',city:'Damascus',lat:33.411,lon:36.516,country:'SY'},
+  {icao:'OSAP',name:'Aleppo (ALP)',city:'Aleppo',lat:36.180,lon:37.224,country:'SY'},
+  {icao:'OSLK',name:'Latakia (LTK)',city:'Latakia',lat:35.401,lon:35.949,country:'SY'},
+  // Jordan
+  {icao:'OJAI',name:'Queen Alia (AMM)',city:'Amman',lat:31.722,lon:35.993,country:'JO'},
+  // Lebanon
+  {icao:'OLBA',name:'Beirut (BEY)',city:'Beirut',lat:33.821,lon:35.488,country:'LB'},
+  // Iraq
+  {icao:'ORBI',name:'Baghdad (BGW)',city:'Baghdad',lat:33.263,lon:44.235,country:'IQ'},
+  {icao:'ORER',name:'Erbil (EBL)',city:'Erbil',lat:36.238,lon:43.963,country:'IQ'},
+  // Saudi Arabia
+  {icao:'OERK',name:'King Khalid (RUH)',city:'Riyadh',lat:24.958,lon:46.699,country:'SA'},
+  {icao:'OEJN',name:'King Abdulaziz (JED)',city:'Jeddah',lat:21.679,lon:39.157,country:'SA'},
+  // UAE
+  {icao:'OMDB',name:'Dubai (DXB)',city:'Dubai',lat:25.253,lon:55.366,country:'AE'},
+  {icao:'OMAA',name:'Abu Dhabi (AUH)',city:'Abu Dhabi',lat:24.433,lon:54.651,country:'AE'},
+  // Egypt
+  {icao:'HECA',name:'Cairo (CAI)',city:'Cairo',lat:30.121,lon:31.406,country:'EG'},
+  // Turkey
+  {icao:'LTFM',name:'Istanbul (IST)',city:'Istanbul',lat:41.275,lon:28.752,country:'TR'},
+  // Kuwait
+  {icao:'OKBK',name:'Kuwait (KWI)',city:'Kuwait',lat:29.227,lon:47.969,country:'KW'},
+  // Qatar
+  {icao:'OTHH',name:'Hamad (DOH)',city:'Doha',lat:25.273,lon:51.608,country:'QA'},
+  // Yemen
+  {icao:'OYSN',name:'Sanaa (SAH)',city:'Sanaa',lat:15.477,lon:44.220,country:'YE'},
+];
+
+// High-risk airspaces (known conflict zones / restricted)
+const HIGH_RISK_ZONES = {
+  'SY': {level:'CLOSED', reason:'Active conflict — all civil aviation suspended'},
+  'YE': {level:'CLOSED', reason:'Active conflict — Houthi missile/drone activity'},
+  'IQ': {level:'RESTRICTED', reason:'Partial restrictions — check NOTAMs'},
+  'LB': {level:'RESTRICTED', reason:'Monitor situation — proximity to conflict'},
+  'IR': {level:'RESTRICTED', reason:'Regional tensions — possible airspace closure'},
+};
+
+function toggleAirspace(btn) {
+  airspaceActive = !airspaceActive;
+  btn.classList.toggle('active', airspaceActive);
+  const panel = document.getElementById('airspace-panel');
+  if (airspaceActive) {
+    panel.classList.add('open');
+    loadAirspaceData();
+  } else {
+    panel.classList.remove('open');
+    airspaceMarkers.forEach(m => map.removeLayer(m));
+    airspaceMarkers = [];
+  }
+}
+
+async function loadAirspaceData() {
+  const content = document.getElementById('ap-content');
+  const updated = document.getElementById('ap-updated');
+  content.innerHTML = '<div class="ap-section"><div class="ap-section-title" style="color:#334155">◌ FETCHING METAR DATA...</div></div>';
+
+  // Fetch METAR for all airports via AviationWeather API (free, no key)
+  const icaos = MENA_AIRPORTS.map(a => a.icao).join(',');
+  let metarData = {};
+  
+  try {
+    const url = `https://aviationweather.gov/api/data/metar?ids=${icaos}&format=json&taf=false`;
+    const res = await fetch(url, {signal: AbortSignal.timeout(8000)});
+    if (res.ok) {
+      const data = await res.json();
+      data.forEach(m => {
+        metarData[m.icaoId] = m;
+      });
+    }
+  } catch(e) {
+    console.warn('[Airspace] METAR fetch failed:', e.message);
+  }
+
+  // Clear old markers
+  airspaceMarkers.forEach(m => map.removeLayer(m));
+  airspaceMarkers = [];
+
+  // Build display
+  const closedAirports = [];
+  const restrictedAirports = [];
+  const openAirports = [];
+
+  MENA_AIRPORTS.forEach(airport => {
+    const risk = HIGH_RISK_ZONES[airport.country];
+    const metar = metarData[airport.icao];
+    
+    let status = risk ? risk.level : 'OPEN';
+    let reason = risk ? risk.reason : 'Normal operations';
+    let flightCat = metar ? metar.fltcat : null;
+
+    // Override based on flight category
+    if (flightCat === 'LIFR') { status = 'RESTRICTED'; reason = 'Low IFR — visibility < 1 mile'; }
+    
+    const entry = {airport, status, reason, flightCat, metar};
+    if (status === 'CLOSED') closedAirports.push(entry);
+    else if (status === 'RESTRICTED') restrictedAirports.push(entry);
+    else openAirports.push(entry);
+
+    // Add map marker
+    const colors = {CLOSED:'#ef4444', RESTRICTED:'#f59e0b', OPEN:'#34d399'};
+    const col = colors[status] || '#475569';
+    
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="width:10px;height:10px;background:${col};border:2px solid ${col}44;border-radius:50%;box-shadow:0 0 6px ${col}88"></div>`,
+      iconSize: [10,10],
+      iconAnchor: [5,5],
+    });
+
+    const flightCatLabel = flightCat ? ` · ${flightCat}` : '';
+    const marker = L.marker([airport.lat, airport.lon], {icon})
+      .bindPopup(`<div style="background:#0d1117;color:#e2e8f0;padding:8px;font-family:monospace;font-size:11px;min-width:180px">
+        <b style="color:${col}">${airport.name}</b><br>
+        <span style="color:#64748b">${airport.city} · ${airport.icao}${flightCatLabel}</span><br>
+        <span style="color:${col};font-size:10px">${status}</span><br>
+        <span style="color:#475569;font-size:10px">${reason}</span>
+        ${metar && metar.rawOb ? `<br><span style="color:#334155;font-size:9px;word-break:break-all">${metar.rawOb}</span>` : ''}
+      </div>`, {className:'dark-popup'});
+    
+    if (airspaceActive) {
+      marker.addTo(map);
+      airspaceMarkers.push(marker);
+    }
+  });
+
+  // Build panel HTML
+  const now = new Date().toISOString().slice(11,16) + ' UTC';
+  updated.textContent = now;
+
+  let html = '';
+
+  if (closedAirports.length) {
+    html += `<div class="ap-section">
+      <div class="ap-section-title">🔴 CLOSED / SUSPENDED (${closedAirports.length})</div>`;
+    closedAirports.forEach(({airport, reason}) => {
+      html += `<div class="ap-item">
+        <div class="ap-dot" style="background:#ef4444"></div>
+        <div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <span class="ap-name">${airport.name}</span>
+            <span class="ap-badge closed">CLOSED</span>
+          </div>
+          <div class="ap-detail">${reason}</div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  if (restrictedAirports.length) {
+    html += `<div class="ap-section">
+      <div class="ap-section-title">🟡 RESTRICTED / MONITOR (${restrictedAirports.length})</div>`;
+    restrictedAirports.forEach(({airport, reason, flightCat}) => {
+      html += `<div class="ap-item">
+        <div class="ap-dot" style="background:#f59e0b"></div>
+        <div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <span class="ap-name">${airport.name}</span>
+            <span class="ap-badge restricted">${flightCat||'RESTR'}</span>
+          </div>
+          <div class="ap-detail">${reason}</div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  if (openAirports.length) {
+    html += `<div class="ap-section">
+      <div class="ap-section-title">🟢 OPERATIONAL (${openAirports.length})</div>`;
+    openAirports.slice(0,8).forEach(({airport, flightCat}) => {
+      html += `<div class="ap-item">
+        <div class="ap-dot" style="background:#34d399"></div>
+        <div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <span class="ap-name">${airport.name}</span>
+            <span class="ap-badge open">${flightCat||'VFR'}</span>
+          </div>
+          <div class="ap-detail">${airport.city} · ${airport.icao}</div>
+        </div>
+      </div>`;
+    });
+    if (openAirports.length > 8) {
+      html += `<div class="ap-detail" style="padding:4px 0;color:#334155">+${openAirports.length-8} more operational airports</div>`;
+    }
+    html += '</div>';
+  }
+
+  html += `<div class="ap-section" style="border:none">
+    <div class="ap-section-title" style="color:#1e293b">SOURCE: AVIATIONWEATHER.GOV METAR · CONFLICT STATUS: MANUAL</div>
+    <a href="https://www.notams.faa.gov/dinsQueryWeb/" target="_blank" style="color:#334155;font-size:7px;text-decoration:none;letter-spacing:1px">→ CHECK NOTAMS FOR FULL DETAILS ↗</a>
+  </div>`;
+
+  content.innerHTML = html;
 }
 
 // ── QUICK EXPORT BUTTON (bottom-left shortcut) ────────────────────────────
