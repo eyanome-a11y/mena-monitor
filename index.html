@@ -1401,9 +1401,23 @@ function createIcon(e){
   });
 }
 function formatTime(ts){if(!ts)return'—';try{return new Date(ts).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}catch{return ts.slice(0,16).replace('T',' ')}}
-function buildPopup(e){
+function buildPopup(e, sources){
   const color=TOPIC_COLORS[e.topic]||"#64748b",uc=e.urgency==='high'?'#ef4444':e.urgency==='medium'?'#f59e0b':'#3b82f6',sc=e.sentiment==='negative'?'#ef4444':e.sentiment==='positive'?'#34d399':'#94a3b8',tc=THEATER_COLORS[e.theater]||"#fff";
-  return `<div class="popup-theater" style="color:${tc}">${e.theater==='iran'?'IRAN-ISRAEL THEATER':'SYRIA THEATER'}</div>
+  const multiSource = sources && sources.length > 1;
+  // Build sources block
+  const sourcesHtml = multiSource
+    ? `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #1e293b">
+        <span style="font-size:8px;letter-spacing:1px;color:#f59e0b">◈ ${sources.length} SOURCES REPORTED THIS EVENT</span>
+        ${sources.map((s,i)=>`
+          <div style="display:flex;align-items:center;gap:4px;margin-top:3px">
+            <span style="font-size:8px;color:#64748b;min-width:10px">${i+1}.</span>
+            <span style="font-size:8px;color:#94a3b8;flex:1">${s.channel||'—'}</span>
+            <span style="font-size:7px;color:#475569;background:#1e293b;padding:1px 4px">${s.bias||'?'}</span>
+            <span style="font-size:7px;color:#334155">${formatTime(s.time)}</span>
+          </div>`).join('')}
+      </div>`
+    : '';
+  return `<div class="popup-theater" style="color:${tc}">${e.theater==='iran'?'IRAN-ISRAEL THEATER':'SYRIA THEATER'}${multiSource?` <span style="color:#f59e0b;font-size:8px">· ${sources.length} SOURCES</span>`:''}</div>
     <div class="popup-topic" style="color:${color}">${(e.topic||'EVENT').toUpperCase()}</div>
     <div class="popup-location">${e.location||'—'}</div>
     <div class="popup-grid">
@@ -1412,7 +1426,7 @@ function buildPopup(e){
       <span class="popup-label">SENTIMENT</span><span class="popup-value" style="color:${sc}">${(e.sentiment||'—').toUpperCase()}</span>
       <span class="popup-label">BIAS</span><span class="popup-value">${e.source_bias||'—'}</span>
       <span class="popup-label">TIME</span><span class="popup-value">${formatTime(e.captured_at)}</span>
-    </div>${e.brief_summary?`<div class="popup-summary">${e.brief_summary}</div>`:''}`;
+    </div>${e.brief_summary?`<div class="popup-summary">${e.brief_summary}</div>`:''}${sourcesHtml}`;
 }
 function getFiltered(){
   return allEvents.filter(e=>(currentTopic==='all'||e.topic===currentTopic)&&(currentTheater==='all'||e.theater===currentTheater)&&(currentHours===0||getAgeHours(e.captured_at)<=currentHours)&&(timelineHours===0||getAgeHours(e.captured_at)>=timelineHours));
@@ -1448,21 +1462,62 @@ function initOMS(){
   });
 }
 
+// ── Keyword extractor for dedup ──────────────────────────────────────
+function _kw(text){
+  if(!text)return new Set();
+  const stop=new Set(['the','a','an','in','on','at','to','for','of','and','or','is','was','with','that','this','are','were','been','has','have','had','by','from','after','during','near']);
+  return new Set(text.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(w=>w.length>3&&!stop.has(w)));
+}
+function _similar(s1,s2,t=0.3){
+  const w1=_kw(s1),w2=_kw(s2);
+  if(!w1.size||!w2.size)return false;
+  const inter=[...w1].filter(w=>w2.has(w));
+  return inter.length/new Set([...w1,...w2]).size>=t;
+}
+
+// ── Group events into clusters for map (same event, multiple sources) ─
+function clusterEvents(events){
+  const clusters=[];
+  events.forEach(e=>{
+    const lat=parseFloat(e.latitude),lon=parseFloat(e.longitude);
+    if(isNaN(lat)||isNaN(lon))return;
+    // Find existing cluster: within ~0.15 deg AND similar summary
+    const existing=clusters.find(cl=>{
+      const dlat=Math.abs(cl.lat-lat),dlon=Math.abs(cl.lon-lon);
+      return dlat<0.15&&dlon<0.15&&_similar(cl.representative.brief_summary,e.brief_summary);
+    });
+    if(existing){
+      existing.sources.push({channel:e.channel_title,bias:e.source_bias,time:e.captured_at,theater:e.theater});
+    } else {
+      clusters.push({
+        lat, lon,
+        representative: e,
+        sources:[{channel:e.channel_title,bias:e.source_bias,time:e.captured_at,theater:e.theater}]
+      });
+    }
+  });
+  return clusters;
+}
+
 function renderMarkers(){
   // Remove old markers
   markers.forEach(m=>{try{map.removeLayer(m);}catch(e){}});
   markers=[];
-  // Re-init OMS so leg lines are cleared
   if(oms){oms.clearMarkers();}
   initOMS();
 
-  getFiltered().forEach((e,i)=>{
-    const lat=parseFloat(e.latitude),lon=parseFloat(e.longitude);
-    if(isNaN(lat)||isNaN(lon))return;
-    const m=L.marker([lat,lon],{icon:createIcon(e)});
-    m.bindPopup(buildPopup(e),{maxWidth:280});
-    // Track sidebar selection on popup open
-    m.on('popupopen',()=>{selectedIdx=i;renderSidebar();});
+  const filtered=getFiltered();
+  const clusters=clusterEvents(filtered);
+
+  clusters.forEach((cl,i)=>{
+    const e=cl.representative;
+    const m=L.marker([cl.lat,cl.lon],{icon:createIcon(e)});
+    m.bindPopup(buildPopup(e,cl.sources),{maxWidth:300});
+    m.on('popupopen',()=>{
+      // Highlight first matching event in sidebar
+      const idx=filtered.findIndex(ev=>ev===e);
+      selectedIdx=idx;renderSidebar();
+    });
     m.addTo(map);
     oms.addMarker(m);
     markers.push(m);
@@ -1488,9 +1543,19 @@ function renderSidebar(){
   }).join('');
 }
 function selectEvent(i){
-  selectedIdx=i;const e=getFiltered()[i];
+  selectedIdx=i;
+  const e=getFiltered()[i];
   const lat=parseFloat(e.latitude),lon=parseFloat(e.longitude);
-  if(!isNaN(lat)&&!isNaN(lon)){map.setView([lat,lon],8,{animate:true});if(markers[i])markers[i].openPopup();}
+  if(!isNaN(lat)&&!isNaN(lon)){
+    map.setView([lat,lon],8,{animate:true});
+    // Find the cluster marker that represents this event
+    const clusters=clusterEvents(getFiltered());
+    const clIdx=clusters.findIndex(cl=>
+      cl.representative===e ||
+      _similar(cl.representative.brief_summary, e.brief_summary)
+    );
+    if(clIdx>=0 && markers[clIdx]) markers[clIdx].openPopup();
+  }
   renderSidebar();
 }
 function setTopicFilter(topic,btn){
