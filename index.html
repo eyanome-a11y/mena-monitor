@@ -707,7 +707,8 @@
     <div class="filter-row" id="time-row">
       <button class="filter-btn time-btn" onclick="setTimeFilter(6,this)">6H</button>
       <button class="filter-btn time-btn" onclick="setTimeFilter(24,this)">24H</button>
-      <button class="filter-btn time-btn active" onclick="setTimeFilter(72,this)">72H</button>
+      <button class="filter-btn time-btn active" onclick="setTimeFilter(48,this)">48H</button>
+      <button class="filter-btn time-btn" onclick="setTimeFilter(72,this)">72H</button>
       <button class="filter-btn time-btn" onclick="setTimeFilter(0,this)">ALL</button>
     </div>
     <div class="filter-row" id="topic-row">
@@ -735,7 +736,7 @@ const TOPIC_COLORS={military:"#ef4444",diplomacy:"#8b5cf6",humanitarian:"#06b6d4
 const URGENCY_SIZES={high:14,medium:10,low:7};
 const THEATER_COLORS={iran:"#f97316",syria:"#06b6d4"};
 let map,allEvents=[],markers=[],selectedIdx=null;
-let currentTopic='all',currentHours=72,currentTheater='all',timelineHours=0;
+let currentTopic='all',currentHours=48,currentTheater='all',timelineHours=0;
 
 map=L.map('map',{zoomControl:false}).setView([33.0,42.0],5);
 L.control.zoom({position:'bottomright'}).addTo(map);
